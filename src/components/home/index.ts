@@ -1,10 +1,4 @@
 
-import HomeLayout from "./HomeLayout";
-import SmoothScroll from "./SmoothScroll";
-import CurrencyDisplay from "./CurrencyDisplay";
-
-export {
-  HomeLayout,
-  SmoothScroll,
-  CurrencyDisplay
-};
+export { default as HomeLayout } from "./HomeLayout";
+export { default as SmoothScroll } from "./SmoothScroll";
+export { default as CurrencyDisplay } from "./CurrencyDisplay";

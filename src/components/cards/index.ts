@@ -1,6 +1,2 @@
 
-import CategoryCard from "./CategoryCard";
-
-export {
-  CategoryCard
-};
+export { default as CategoryCard } from "./CategoryCard";
