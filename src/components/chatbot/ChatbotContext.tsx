@@ -22,8 +22,7 @@ interface ChatbotContextType {
   handleReset: () => void;
 }
 
-// Make sure to export the ChatbotContext
-export const ChatbotContext = createContext<ChatbotContextType | undefined>(undefined);
+const ChatbotContext = createContext<ChatbotContextType | undefined>(undefined);
 
 export const ChatbotProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<ChatbotState>({

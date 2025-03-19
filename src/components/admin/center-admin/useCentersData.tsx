@@ -27,7 +27,6 @@ export const useCentersData = () => {
     location: "",
     description: "",
   });
-  const [currentCenter, setCurrentCenter] = useState<any>(null);
   
   const { toast } = useToast();
   
@@ -58,8 +57,6 @@ export const useCentersData = () => {
   };
 
   const handleEditCenter = () => {
-    if (!currentCenter) return;
-    
     const updatedCenters = centers.map(center => 
       center.id === currentCenter.id 
         ? { 
@@ -81,8 +78,6 @@ export const useCentersData = () => {
   };
 
   const handleDeleteCenter = () => {
-    if (!currentCenter) return;
-    
     const updatedCenters = centers.filter(center => center.id !== currentCenter.id);
     setCenters(updatedCenters);
     
@@ -92,12 +87,13 @@ export const useCentersData = () => {
     });
   };
 
+  // This variable is needed by the hook for its internal logic
+  let currentCenter: any = null;
+
   return {
     centers,
     centerFormData,
     setCenterFormData,
-    currentCenter,
-    setCurrentCenter,
     handleAddCenter,
     handleEditCenter,
     handleDeleteCenter,

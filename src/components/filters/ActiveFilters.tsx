@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { FilterState, availableFeatures, categories, locations, ratings } from './types';
-import { useCategoryOptions } from "@/hooks/useCategoryOptions";
 
 type ActiveFiltersProps = {
   filters: FilterState;
@@ -13,25 +12,7 @@ type ActiveFiltersProps = {
 };
 
 const ActiveFilters = ({ filters, removeFilter, hasActiveFilters, clearFilters }: ActiveFiltersProps) => {
-  const { getSubcategories } = useCategoryOptions();
-  
   if (!hasActiveFilters()) return null;
-  
-  // Get subcategory labels for the current category
-  const getSubcategoryLabels = () => {
-    if (!filters.category || filters.category === 'all') return {};
-    
-    const subcategoryOptions = getSubcategories(filters.category);
-    const labelMap: Record<string, string> = {};
-    
-    subcategoryOptions.forEach(option => {
-      labelMap[option.value] = option.label;
-    });
-    
-    return labelMap;
-  };
-  
-  const subcategoryLabels = getSubcategoryLabels();
   
   return (
     <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -64,28 +45,6 @@ const ActiveFilters = ({ filters, removeFilter, hasActiveFilters, clearFilters }
           </Button>
         </Badge>
       )}
-      
-      {/* Show multiple subcategory badges */}
-      {filters.subcategories && filters.subcategories.length > 0 && 
-        filters.subcategories.map(subcategoryId => (
-          <Badge 
-            key={`subcategory-${subcategoryId}`} 
-            variant="outline" 
-            className="rounded-full px-3 py-1 bg-primary/5 flex items-center gap-1"
-          >
-            Subcategory: {subcategoryLabels[subcategoryId]}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="h-4 w-4 rounded-full ml-1 p-0 hover:bg-primary/10"
-              onClick={() => removeFilter('subcategories', subcategoryId)}
-            >
-              <X className="h-3 w-3" />
-              <span className="sr-only">Remove filter</span>
-            </Button>
-          </Badge>
-        ))
-      }
       
       {filters.location !== 'all' && (
         <Badge variant="outline" className="rounded-full px-3 py-1 bg-primary/5 flex items-center gap-1">

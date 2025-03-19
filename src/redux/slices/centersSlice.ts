@@ -1,4 +1,3 @@
-
 import { createSlice } from '@reduxjs/toolkit';
 import { CentersState } from '../types/centerSliceTypes';
 import { mockCenters } from '../data/mockCenters';

@@ -9,6 +9,8 @@ export const fetchCenters = createAsyncThunk(
   'centers/fetchCenters',
   async () => {
     // In real app, this would be an API call
+    // const response = await axios.get('/api/centers');
+    // return response.data;
     return mockCenters;
   }
 );
@@ -17,6 +19,8 @@ export const addCenterAsync = createAsyncThunk(
   'centers/addCenter',
   async (formData: CenterFormData) => {
     // In real app, this would be an API call
+    // const response = await axios.post('/api/centers', formData);
+    // return response.data;
     return {
       id: Math.floor(Math.random() * 10000),
       name: formData.name,
@@ -41,6 +45,8 @@ export const updateCenterAsync = createAsyncThunk(
   'centers/updateCenter',
   async ({ id, formData }: { id: number, formData: CenterFormData }) => {
     // In real app, this would be an API call
+    // const response = await axios.put(`/api/centers/${id}`, formData);
+    // return response.data;
     return {
       id,
       name: formData.name,
@@ -58,6 +64,7 @@ export const deleteCenterAsync = createAsyncThunk(
   'centers/deleteCenter',
   async (id: number) => {
     // In real app, this would be an API call
+    // await axios.delete(`/api/centers/${id}`);
     return id;
   }
 );
@@ -71,6 +78,11 @@ export const toggleVerificationAsync = createAsyncThunk(
     if (!center) throw new Error('Center not found');
     
     // In real app, this would be an API call
+    // const response = await axios.patch(`/api/centers/${id}/verify`, {
+    //   verified: !center.verified
+    // });
+    // return response.data;
+    
     return {
       id,
       verified: !center.verified

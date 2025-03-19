@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -26,8 +25,6 @@ const Discover = () => {
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: "",
     category: "all",
-    subcategory: null,
-    subcategories: [],
     location: "all",
     rating: "any",
     priceRange: [0, 1000],
@@ -46,8 +43,6 @@ const Discover = () => {
     setFilters({
       searchQuery: "",
       category: "all",
-      subcategory: null,
-      subcategories: [],
       location: "all",
       rating: "any",
       priceRange: [0, 1000],

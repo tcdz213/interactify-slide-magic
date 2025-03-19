@@ -37,33 +37,15 @@ export const useFilteredCenters = (filters: FilterState) => {
       }
     }
     
-    // Apply subcategory filter - check both single subcategory and multiple subcategories
-    if (filters.category && filters.category !== 'all') {
+    // Apply subcategory filter
+    if (filters.subcategory && filters.subcategory !== 'all' && filters.category && filters.category !== 'all') {
       const categoryObj = categories.find(c => c.id.toString() === filters.category);
       if (categoryObj) {
-        // Check if there are multiple subcategories selected
-        if (filters.subcategories && filters.subcategories.length > 0) {
-          // Get the subcategory names from their IDs
-          const subcategoryNames = filters.subcategories.map(subId => {
-            const subcategoryObj = categoryObj.subcategories.find(s => s.id.toString() === subId);
-            return subcategoryObj?.name.en || '';
-          }).filter(name => name !== '');
-          
-          // Filter centers by any of the selected subcategories
-          if (subcategoryNames.length > 0) {
-            results = results.filter(center => 
-              subcategoryNames.includes(center.subcategory || '')
-            );
-          }
-        } 
-        // Legacy support for single subcategory filter
-        else if (filters.subcategory && filters.subcategory !== 'all') {
-          const subcategoryObj = categoryObj.subcategories.find(s => s.id.toString() === filters.subcategory);
-          if (subcategoryObj) {
-            results = results.filter(center => 
-              center.subcategory === subcategoryObj.name.en
-            );
-          }
+        const subcategoryObj = categoryObj.subcategories.find(s => s.id.toString() === filters.subcategory);
+        if (subcategoryObj) {
+          results = results.filter(center => 
+            center.subcategory === subcategoryObj.name.en
+          );
         }
       }
     }
