@@ -1,0 +1,168 @@
+{
+  "header": {
+    "home": "Home",
+    "discover": "Discover",
+    "howItWorks": "How it Works",
+    "pricing": "Pricing",
+    "about": "About",
+    "login": "Log in",
+    "signup": "Sign up",
+    "forTrainingCenters": "For Training Centers",
+    "forTeachers": "For Teachers",
+    "categories": "Categories",
+    "TeachingJobs": "Teaching Jobs"
+  },
+  "hero": {
+    "tagline": "Find your perfect training experience",
+    "title": "Discover and Connect with the Best Training Centers",
+    "description": "Search, compare, and book the perfect training center for your needs. From fitness to professional development, all in one place.",
+    "searchPlaceholder": "Search for training centers or courses...",
+    "location": "Location",
+    "filters": "Filters",
+    "search": "Search",
+    "popular": "Popular:"
+  },
+  "howItWorks": {
+    "title": "How It Works",
+    "description": "Finding and booking your ideal training center is simple and straightforward with our platform. Follow these easy steps to begin your learning journey.",
+    "steps": {
+      "step1": {
+        "title": "Search & Discover",
+        "description": "Use our powerful search to find training centers based on location, category, price, and ratings."
+      },
+      "step2": {
+        "title": "Book & Schedule",
+        "description": "Reserve your spot at your preferred training center with our easy-to-use booking system."
+      },
+      "step3": {
+        "title": "Pay Securely",
+        "description": "Complete your booking with our secure payment gateway using your preferred payment method."
+      },
+      "step4": {
+        "title": "Learn & Grow",
+        "description": "Attend your training sessions and develop new skills with expert instructors and quality resources."
+      }
+    }
+  },
+  "callToAction": {
+    "title": "Ready to Find Your Perfect Training Center?",
+    "description": "Join thousands of people who have found their ideal training centers and started their learning journey through our platform.",
+    "steps": {
+      "step1": {
+        "title": "Create your account",
+        "description": "Sign up in less than 2 minutes"
+      },
+      "step2": {
+        "title": "Discover training centers",
+        "description": "Browse and filter based on your needs"
+      },
+      "step3": {
+        "title": "Book and start learning",
+        "description": "Secure your spot with our easy booking system"
+      }
+    },
+    "getStarted": "Get Started Now",
+    "forTrainingCenters": "For Training Centers"
+  },
+  "languageSwitcher": {
+    "language": "Language"
+  },
+  "categories": {
+    "title": "Training Categories",
+    "subtitle": "Explore our wide range of training categories and find the perfect course for you",
+    "browseBy": "Browse By Category",
+    "viewAll": "View All",
+    "allCategories": "All Categories",
+    "popular": "Popular",
+    "trending": "Trending",
+    "new": "New",
+    "viewSubcategories": "View Subcategories",
+    "comingSoon": "Coming soon..."
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "We connect learners with the best training centers worldwide.",
+    "mission": {
+      "title": "Our Mission",
+      "content": "Our mission is to make quality education and skill development accessible to everyone. We believe that the right training can transform lives, careers, and communities. By connecting learners with exceptional training centers, we're building a world where everyone can access the skills they need to thrive."
+    },
+    "story": {
+      "title": "Our Story",
+      "part1": "Founded in 2023, our platform emerged from a simple observation: finding the right training center was unnecessarily complicated. Too many people were missing out on valuable learning opportunities because they couldn't easily discover and evaluate their options.",
+      "part2": "We set out to solve this problem by creating a comprehensive marketplace that brings transparency, convenience, and trust to the process of finding and booking training experiences."
+    },
+    "forLearners": {
+      "title": "For Learners",
+      "content": "We provide a seamless experience to discover, compare, and book training centers based on your specific needs, preferences, and location. With verified reviews and detailed profiles, you can make informed decisions with confidence."
+    },
+    "forCenters": {
+      "title": "For Training Centers",
+      "content": "We offer training centers a powerful platform to showcase their offerings, connect with motivated learners, and grow their business. Our tools help centers manage bookings, build their reputation, and optimize their operations."
+    },
+    "values": {
+      "title": "Our Values",
+      "quality": {
+        "title": "Quality",
+        "content": "We uphold high standards and only partner with centers committed to excellence."
+      },
+      "accessibility": {
+        "title": "Accessibility",
+        "content": "We believe learning opportunities should be available to everyone, regardless of background."
+      },
+      "transparency": {
+        "title": "Transparency",
+        "content": "We provide clear, honest information to help users make informed decisions."
+      },
+      "innovation": {
+        "title": "Innovation",
+        "content": "We continuously improve our platform to better serve learners and training centers."
+      }
+    },
+    "team": {
+      "title": "Our Team",
+      "content": "We're a diverse team of educators, technologists, and lifelong learners passionate about transforming how people access learning opportunities."
+    }
+  },
+  "teacherJobPost": {
+    "title": "Teacher Job Application",
+    "subtitle": "Submit your profile to find teaching opportunities at top training centers",
+    "form": {
+      "fullName": "Full Name",
+      "email": "Email",
+      "phone": "Phone Number",
+      "location": "Location",
+      "specialization": "Specialization",
+      "experience": "Years of Experience",
+      "qualification": "Highest Qualification",
+      "bio": "Professional Bio",
+      "bioPlaceholder": "Tell us about your teaching experience, skills, and what makes you a great instructor...",
+      "availability": "Availability",
+      "resume": "Resume URL (Optional)",
+      "portfolio": "Portfolio/Website (Optional)",
+      "submit": "Submit Application",
+      "submitting": "Submitting..."
+    },
+    "success": "Your application has been submitted successfully!",
+    "error": "Failed to submit your application. Please try again."
+  },
+  "teacherListings": {
+    "title": "Browse Teacher Listings",
+    "subtitle": "Find qualified teachers and instructors for your training center",
+    "searchPlaceholder": "Search by title, center, or skills...",
+    "categoryPlaceholder": "Filter by Category",
+    "typePlaceholder": "Filter by Job Type",
+    "allCategories": "All Categories",
+    "programming": "Programming",
+    "fitness": "Fitness & Health",
+    "language": "Language Learning",
+    "arts": "Arts & Design",
+    "professional": "Professional Skills",
+    "allTypes": "All Types",
+    "fullTime": "Full-time",
+    "partTime": "Part-time",
+    "contract": "Contract",
+    "result": "result found",
+    "results": "results found",
+    "viewDetails": "View Details"
+  }
+}

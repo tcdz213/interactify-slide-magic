@@ -1,0 +1,185 @@
+
+{
+  "header": {
+    "home": "Accueil",
+    "discover": "Découvrir",
+    "howItWorks": "Comment ça marche",
+    "pricing": "Tarifs",
+    "about": "À propos",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "forTrainingCenters": "Pour les centres de formation",
+    "forTeachers": "Pour les enseignants",
+    "categories": "Catégories",
+    "TeachingJobs": "Emplois d'enseignement",
+    "community": "Communauté"
+  },
+  "hero": {
+    "tagline": "Trouvez votre expérience de formation parfaite",
+    "title": "Découvrez et connectez-vous avec les meilleurs centres de formation",
+    "description": "Recherchez, comparez et réservez le centre de formation idéal pour vos besoins. Du fitness au développement professionnel, tout en un seul endroit.",
+    "searchPlaceholder": "Rechercher des centres de formation ou des cours...",
+    "location": "Emplacement",
+    "filters": "Filtres",
+    "search": "Rechercher",
+    "popular": "Populaire:"
+  },
+  "howItWorks": {
+    "title": "Comment ça marche",
+    "description": "Trouver et réserver votre centre de formation idéal est simple et direct avec notre plateforme. Suivez ces étapes faciles pour commencer votre parcours d'apprentissage.",
+    "steps": {
+      "step1": {
+        "title": "Rechercher & Découvrir",
+        "description": "Utilisez notre puissant moteur de recherche pour trouver des centres de formation selon l'emplacement, la catégorie, le prix et les évaluations."
+      },
+      "step2": {
+        "title": "Réserver & Planifier",
+        "description": "Réservez votre place dans votre centre de formation préféré avec notre système de réservation facile à utiliser."
+      },
+      "step3": {
+        "title": "Payer en Sécurité",
+        "description": "Finalisez votre réservation avec notre passerelle de paiement sécurisée en utilisant votre méthode de paiement préférée."
+      },
+      "step4": {
+        "title": "Apprendre & Évoluer",
+        "description": "Assistez à vos sessions de formation et développez de nouvelles compétences avec des instructeurs experts et des ressources de qualité."
+      }
+    }
+  },
+  "callToAction": {
+    "title": "Prêt à trouver votre centre de formation idéal?",
+    "description": "Rejoignez des milliers de personnes qui ont trouvé leurs centres de formation idéaux et commencé leur parcours d'apprentissage grâce à notre plateforme.",
+    "steps": {
+      "step1": {
+        "title": "Créez votre compte",
+        "description": "Inscrivez-vous en moins de 2 minutes"
+      },
+      "step2": {
+        "title": "Découvrez les centres de formation",
+        "description": "Naviguez et filtrez selon vos besoins"
+      },
+      "step3": {
+        "title": "Réservez et commencez à apprendre",
+        "description": "Sécurisez votre place avec notre système de réservation facile"
+      }
+    },
+    "getStarted": "Commencer maintenant",
+    "forTrainingCenters": "Pour les centres de formation"
+  },
+  "languageSwitcher": {
+    "language": "Langue"
+  },
+  "categories": {
+    "title": "Catégories de Formation",
+    "subtitle": "Explorez notre large gamme de catégories de formation et trouvez le cours parfait pour vous",
+    "browseBy": "Parcourir par catégorie",
+    "viewAll": "Voir tout",
+    "allCategories": "Toutes les catégories",
+    "popular": "Populaire",
+    "trending": "Tendance",
+    "new": "Nouveau",
+    "viewSubcategories": "Voir les sous-catégories",
+    "comingSoon": "Bientôt disponible...",
+    "explore": "Explorer les catégories",
+    "subcategories": "Sous-catégories"
+  },
+  "about": {
+    "title": "À Propos de Nous",
+    "subtitle": "Nous connectons les apprenants avec les meilleurs centres de formation dans le monde entier.",
+    "mission": {
+      "title": "Notre Mission",
+      "content": "Notre mission est de rendre l'éducation de qualité et le développement des compétences accessibles à tous. Nous croyons que la bonne formation peut transformer des vies, des carrières et des communautés. En reliant les apprenants à des centres de formation exceptionnels, nous construisons un monde où chacun peut accéder aux compétences dont il a besoin pour s'épanouir."
+    },
+    "story": {
+      "title": "Notre Histoire",
+      "part1": "Fondée en 2023, notre plateforme est née d'une simple observation : trouver le bon centre de formation était inutilement compliqué. Trop de personnes manquaient des opportunités d'apprentissage précieuses parce qu'elles ne pouvaient pas facilement découvrir et évaluer leurs options.",
+      "part2": "Nous avons entrepris de résoudre ce problème en créant une marketplace complète qui apporte transparence, commodité et confiance au processus de recherche et de réservation d'expériences de formation."
+    },
+    "forLearners": {
+      "title": "Pour les Apprenants",
+      "content": "Nous fournissons une expérience fluide pour découvrir, comparer et réserver des centres de formation en fonction de vos besoins spécifiques, préférences et localisation. Avec des avis vérifiés et des profils détaillés, vous pouvez prendre des décisions éclairées en toute confiance."
+    },
+    "forCenters": {
+      "title": "Pour les Centres de Formation",
+      "content": "Nous offrons aux centres de formation une plateforme puissante pour présenter leurs offres, se connecter avec des apprenants motivés et développer leur activité. Nos outils aident les centres à gérer les réservations, à construire leur réputation et à optimiser leurs opérations."
+    },
+    "values": {
+      "title": "Nos Valeurs",
+      "quality": {
+        "title": "Qualité",
+        "content": "Nous maintenons des normes élevées et ne nous associons qu'à des centres engagés dans l'excellence."
+      },
+      "accessibility": {
+        "title": "Accessibilité",
+        "content": "Nous croyons que les opportunités d'apprentissage devraient être accessibles à tous, indépendamment de leur origine."
+      },
+      "transparency": {
+        "title": "Transparence",
+        "content": "Nous fournissons des informations claires et honnêtes pour aider les utilisateurs à prendre des décisions éclairées."
+      },
+      "innovation": {
+        "title": "Innovation",
+        "content": "Nous améliorons continuellement notre plateforme pour mieux servir les apprenants et les centres de formation."
+      }
+    },
+    "team": {
+      "title": "Notre Équipe",
+      "content": "Nous sommes une équipe diversifiée d'éducateurs, de technologues et d'apprenants perpétuels passionnés par la transformation de l'accès aux opportunités d'apprentissage."
+    }
+  },
+  "teacherJobPost": {
+    "title": "Candidature d'Enseignant",
+    "subtitle": "Soumettez votre profil pour trouver des opportunités d'enseignement dans les meilleurs centres de formation",
+    "form": {
+      "fullName": "Nom Complet",
+      "email": "Email",
+      "phone": "Numéro de téléphone",
+      "location": "Emplacement",
+      "specialization": "Spécialisation",
+      "experience": "Années d'expérience",
+      "qualification": "Diplôme le plus élevé",
+      "bio": "Biographie Professionnelle",
+      "bioPlaceholder": "Parlez-nous de votre expérience d'enseignement, de vos compétences et de ce qui fait de vous un excellent instructeur...",
+      "availability": "Disponibilité",
+      "resume": "URL du CV (Optionnel)",
+      "portfolio": "Portfolio/Site Web (Optionnel)",
+      "submit": "Soumettre la candidature",
+      "submitting": "Soumission en cours..."
+    },
+    "success": "Votre candidature a été soumise avec succès!",
+    "error": "Échec de la soumission de votre candidature. Veuillez réessayer."
+  },
+  "teacherListings": {
+    "title": "Parcourir les annonces d'enseignants",
+    "subtitle": "Trouvez des enseignants et des instructeurs qualifiés pour votre centre de formation",
+    "searchPlaceholder": "Rechercher par titre, centre ou compétences...",
+    "categoryPlaceholder": "Filtrer par catégorie",
+    "typePlaceholder": "Filtrer par type d'emploi",
+    "allCategories": "Toutes les catégories",
+    "programming": "Programmation",
+    "fitness": "Fitness & Santé",
+    "language": "Apprentissage des langues",
+    "arts": "Arts & Design",
+    "professional": "Compétences professionnelles",
+    "allTypes": "Tous les types",
+    "fullTime": "Temps plein",
+    "partTime": "Temps partiel",
+    "contract": "Contrat",
+    "result": "résultat trouvé",
+    "results": "résultats trouvés",
+    "viewDetails": "Voir les détails"
+  },
+  "community": {
+    "title": "Communauté",
+    "subtitle": "Connectez-vous avec d'autres apprenants et partagez vos expériences",
+    "tabs": {
+      "discussions": "Discussions",
+      "messaging": "Messagerie",
+      "showcase": "Vitrine"
+    },
+    "newPost": "Nouvelle Publication",
+    "recentDiscussions": "Discussions Récentes",
+    "topContributors": "Meilleurs Contributeurs",
+    "noPostsFound": "Aucune publication trouvée dans cette catégorie."
+  }
+}
