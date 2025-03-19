@@ -14,6 +14,7 @@ import PopularCategoriesGrid from "./PopularCategoriesGrid";
 import TestimonialsGrid from "./TestimonialsGrid";
 import StatsRow from "./StatsRow";
 import CTABanner from "./CTABanner";
+import FeaturedTeachersSection from "./FeaturedTeachersSection";
 
 export {
   HeroSection,
@@ -30,5 +31,6 @@ export {
   PopularCategoriesGrid,
   TestimonialsGrid,
   StatsRow,
-  CTABanner
+  CTABanner,
+  FeaturedTeachersSection
 };
