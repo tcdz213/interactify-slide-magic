@@ -1,3 +1,4 @@
+
 import ThemeToggle from "@/components/ThemeToggle";
 import CurrencySelect from "@/components/filters/CurrencySelect";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
