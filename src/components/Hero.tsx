@@ -1,10 +1,13 @@
 
-import HeroTitle from "./hero/HeroTitle";
-import HeroActions from "./hero/HeroActions";
-import HeroBackground from "./hero/HeroBackground";
-import ScrollIndicator from "./hero/ScrollIndicator";
-import NeonGlowCursor from "./hero/NeonGlowCursor";
 import { memo } from "react";
+import { 
+  HeroTitle, 
+  HeroActions, 
+  HeroBackground, 
+  ScrollIndicator, 
+  NeonGlowCursor,
+  SearchBox
+} from "./hero";
 
 const Hero = () => {
   return (
@@ -13,8 +16,9 @@ const Hero = () => {
       <NeonGlowCursor />
 
       <div className="container-custom relative z-10">
-        <HeroTitle className="mb-12 md:mb-16" />
-        <HeroActions className="mt-8" />
+        <HeroTitle className="mb-8 md:mb-10" />
+        <SearchBox className="mt-6 mb-8" />
+        <HeroActions className="mt-6" />
       </div>
 
       <ScrollIndicator targetId="featured" className="z-10" />

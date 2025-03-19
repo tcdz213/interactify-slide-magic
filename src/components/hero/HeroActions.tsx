@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Search, ArrowRight, PlusCircle } from 'lucide-react';
+import { Search, ArrowRight, PlusCircle, BookOpen, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { memo, useCallback } from 'react';
@@ -17,6 +17,10 @@ const HeroActions = ({ className = '' }: HeroActionsProps) => {
     navigate('/discover');
   }, [navigate]);
   
+  const handleGetStarted = useCallback(() => {
+    navigate('/get-started');
+  }, [navigate]);
+
   const handleListCenter = useCallback(() => {
     navigate('/for-training-centers');
   }, [navigate]);
@@ -29,10 +33,10 @@ const HeroActions = ({ className = '' }: HeroActionsProps) => {
       <Button 
         size="lg" 
         className="group rounded-full px-6 py-6 transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px]"
-        onClick={handleFindCenter}
+        onClick={handleGetStarted}
       >
-        <Search className="mr-2 h-5 w-5" />
-        Find a Training Center
+        <BookOpen className="mr-2 h-5 w-5" />
+        Get Started Free
         <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
       </Button>
       
@@ -40,10 +44,20 @@ const HeroActions = ({ className = '' }: HeroActionsProps) => {
         variant="outline" 
         size="lg"
         className="group rounded-full px-6 py-6 border-2 transition-all duration-300 hover:bg-primary/5 hover:shadow-md"
+        onClick={handleFindCenter}
+      >
+        <Search className="mr-2 h-5 w-5" />
+        Explore Courses
+      </Button>
+
+      <Button 
+        variant="secondary" 
+        size="lg"
+        className="group rounded-full px-6 py-6 transition-all duration-300 hover:shadow-md"
         onClick={handleListCenter}
       >
-        <PlusCircle className="mr-2 h-5 w-5" />
-        List Your Center
+        <User className="mr-2 h-5 w-5" />
+        For Teachers
       </Button>
     </div>
   );

@@ -1,8 +1,6 @@
 
 import React from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import Sponsors from "@/components/Sponsors";
+import Layout from "@/components/Layout";
 
 interface HomeLayoutProps {
   children: React.ReactNode;
@@ -10,12 +8,9 @@ interface HomeLayoutProps {
 
 const HomeLayout: React.FC<HomeLayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main>{children}</main>
-      <Sponsors />
-      <Footer />
-    </div>
+    <Layout>
+      {children}
+    </Layout>
   );
 };
 
