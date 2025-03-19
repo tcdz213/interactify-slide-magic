@@ -5,6 +5,7 @@ import VIPCenters from "@/components/VIPCenters";
 import FeaturedCenters from "@/components/FeaturedCenters";
 import Testimonials from "@/components/Testimonials";
 import CallToAction from "@/components/CallToAction";
+import { FeaturedTeachersSection } from "@/components/sections";
 
 const Index = () => {
   return (
@@ -12,6 +13,7 @@ const Index = () => {
       <SmoothScroll />
       <Hero />
       <VIPCenters />
+      <FeaturedTeachersSection />
       <FeaturedCenters />
       <Testimonials />
       <CallToAction />
