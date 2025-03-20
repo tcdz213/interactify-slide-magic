@@ -11,6 +11,8 @@ export function TeacherFilter({ onFilterChange }: TeacherFilterProps) {
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: '',
     category: 'all',
+    subcategory: null,
+    subcategories: [],
     location: 'all',
     rating: 'any',
     priceRange: [0, 200],

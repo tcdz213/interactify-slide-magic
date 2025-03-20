@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Search, ArrowRight, BookOpen, User, PlusCircle } from 'lucide-react';
+import { Search, ArrowRight, PlusCircle, Sparkles } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { memo, useCallback } from 'react';
@@ -18,66 +18,73 @@ const HeroActions = ({ className = '' }: HeroActionsProps) => {
     navigate('/discover');
   }, [navigate]);
   
+  const handleListCenter = useCallback(() => {
+    navigate('/for-training-centers');
+  }, [navigate]);
+
   const handleGetStarted = useCallback(() => {
     navigate('/get-started');
   }, [navigate]);
 
-  const handleListCenter = useCallback(() => {
-    navigate('/for-training-centers');
-  }, [navigate]);
-  
-  const handleTeacherSignup = useCallback(() => {
-    navigate('/teacher-signup');
-  }, [navigate]);
+  // Animation variants
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
 
   return (
     <motion.div 
-      className={`flex flex-wrap justify-center gap-4 ${className}`} 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.3 }}
+      className={`flex flex-col sm:flex-row gap-4 justify-center ${className}`}
+      variants={container}
+      initial="hidden"
+      animate="show"
     >
-      <Button 
-        size="lg" 
-        className="group rounded-full px-6 py-6 transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px]"
-        onClick={handleGetStarted}
-      >
-        <BookOpen className="mr-2 h-5 w-5" />
-        Get Started Free
-        <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        size="lg"
-        className="group rounded-full px-6 py-6 border-2 transition-all duration-300 hover:bg-primary/5 hover:shadow-md"
-        onClick={handleFindCenter}
-      >
-        <Search className="mr-2 h-5 w-5" />
-        Explore Courses
-      </Button>
-
-      <div className="w-full flex flex-wrap justify-center gap-4 mt-4">
+      <motion.div variants={item}>
         <Button 
-          variant="secondary" 
+          size="lg" 
+          className="group rounded-full px-6 py-6 transition-all duration-300 hover:shadow-xl hover:translate-y-[-2px] relative overflow-hidden w-full sm:w-auto"
+          onClick={handleFindCenter}
+        >
+          <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary to-primary/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+          <Search className="mr-2 h-5 w-5 relative z-10" />
+          <span className="relative z-10">Find a Training Center</span>
+          <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 relative z-10" />
+        </Button>
+      </motion.div>
+      
+      <motion.div variants={item}>
+        <Button 
           size="lg"
-          className="group rounded-full px-6 py-6 transition-all duration-300 hover:shadow-md"
+          className="group rounded-full px-6 py-6 transition-all duration-300 hover:shadow-lg hover:translate-y-[-2px] bg-secondary hover:bg-secondary/90 w-full sm:w-auto"
+          onClick={handleGetStarted}
+        >
+          <Sparkles className="mr-2 h-5 w-5" />
+          Get Started
+          <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
+        </Button>
+      </motion.div>
+      
+      <motion.div variants={item}>
+        <Button 
+          variant="outline" 
+          size="lg"
+          className="group rounded-full px-6 py-6 border-2 transition-all duration-300 hover:bg-primary/5 hover:shadow-md w-full sm:w-auto"
           onClick={handleListCenter}
         >
           <PlusCircle className="mr-2 h-5 w-5" />
           List Your Center
         </Button>
-        
-        <Button 
-          variant="ghost" 
-          size="lg"
-          className="group rounded-full px-6 py-6 border border-border transition-all duration-300 hover:bg-secondary/5"
-          onClick={handleTeacherSignup}
-        >
-          <User className="mr-2 h-5 w-5" />
-          Join as Teacher
-        </Button>
-      </div>
+      </motion.div>
     </motion.div>
   );
 };

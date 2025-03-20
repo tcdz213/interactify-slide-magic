@@ -2,7 +2,8 @@
 export type FilterState = {
   searchQuery: string;
   category: string;
-  subcategory?: string | null;
+  subcategory: string | null;
+  subcategories: string[];
   location: string;
   rating: string;
   priceRange: number[];

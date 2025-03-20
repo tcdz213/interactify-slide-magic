@@ -1,4 +1,3 @@
-
 import { centersData } from "./centers/centersData";
 import { useVisibilityObserver } from "@/hooks/useVisibilityObserver";
 import VIPCentersHeader from "./centers/VIPCentersHeader";
@@ -9,7 +8,9 @@ import { Center as CenterType } from "@/types/center.types";
 const VIPCenters = () => {
   const { isVisible, elementRef } = useVisibilityObserver();
   // Cast the data to the unified Center type
-  const vipCenters = centersData.filter((center) => center.featured) as unknown as CenterType[];
+  const vipCenters = centersData.filter(
+    (center) => center.featured
+  ) as unknown as CenterType[];
 
   return (
     <section

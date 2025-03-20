@@ -1,4 +1,3 @@
-
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Center } from "@/types/center.types"; // Use the unified Center type
@@ -17,10 +16,10 @@ interface VIPCenterCarouselProps {
   isLoading?: boolean;
 }
 
-const VIPCenterCarousel = ({ 
-  centers, 
-  isVisible, 
-  isLoading = false 
+const VIPCenterCarousel = ({
+  centers,
+  isVisible,
+  isLoading = false,
 }: VIPCenterCarouselProps) => {
   const navigate = useNavigate();
   const [loadingPlaceholders, setLoadingPlaceholders] = useState<number[]>([]);
@@ -37,31 +36,36 @@ const VIPCenterCarousel = ({
   };
 
   return (
-    <Carousel 
-      className={`w-full ${isVisible ? "animate-fade-up animate-delay-150" : "opacity-0"}`}
+    <Carousel
+      className={`w-full mx-auto ${
+        isVisible ? "animate-fade-up animate-delay-150" : "opacity-0"
+      }`}
       opts={{ loop: true }}
     >
       <CarouselContent className="-ml-4 md:-ml-6">
-        {isLoading 
+        {isLoading
           ? loadingPlaceholders.map((index) => (
-              <CarouselItem key={`loading-${index}`} className="pl-4 md:pl-6 md:basis-1/3 lg:basis-1/4">
+              <CarouselItem
+                key={`loading-${index}`}
+                className="pl-4 md:pl-6 md:basis-1/3 lg:basis-1/12"
+              >
                 <div className="flex justify-center w-full">
                   <InstagramStoryCard
-                    center={{ 
-                      id: 0, 
-                      name: "", 
-                      rating: 0, 
-                      reviews: 0, 
-                      category: "General", 
-                      location: "", 
-                      image: "", 
-                      price: "", 
-                      currency: "USD", 
-                      featured: false, 
-                      description: "", 
+                    center={{
+                      id: 0,
+                      name: "",
+                      rating: 0,
+                      reviews: 0,
+                      category: "General",
+                      location: "",
+                      image: "",
+                      price: "",
+                      currency: "USD",
+                      featured: false,
+                      description: "",
                       features: [],
                       status: "inactive",
-                      verified: false
+                      verified: false,
                     }}
                     onViewDetails={() => {}}
                     isLoading={true}
@@ -70,7 +74,10 @@ const VIPCenterCarousel = ({
               </CarouselItem>
             ))
           : centers.map((center: Center) => (
-              <CarouselItem key={center.id} className="pl-4 md:pl-6 md:basis-1/3 lg:basis-1/4">
+              <CarouselItem
+                key={center.id}
+                className="pl-4 md:pl-6 md:basis-1/3 lg:basis-2/12"
+              >
                 <div className="flex justify-center w-full">
                   <InstagramStoryCard
                     center={center as any}
@@ -78,8 +85,7 @@ const VIPCenterCarousel = ({
                   />
                 </div>
               </CarouselItem>
-            ))
-        }
+            ))}
       </CarouselContent>
       <CarouselPrevious className="-left-6 md:-left-8 bg-background/80 backdrop-blur-sm hover:bg-background shadow-md" />
       <CarouselNext className="-right-6 md:-right-8 bg-background/80 backdrop-blur-sm hover:bg-background shadow-md" />

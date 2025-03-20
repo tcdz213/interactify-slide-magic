@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
@@ -26,7 +27,10 @@ const FilterBar = ({
   onSearch,
   totalResults,
 }: FilterBarProps) => {
-  const [localFilters, setLocalFilters] = useState<FilterState>(filters);
+  const [localFilters, setLocalFilters] = useState<FilterState>({
+    ...filters,
+    subcategories: filters.subcategories || []
+  });
   const isMobile = useIsMobile();
   const [activeFeatures, setActiveFeatures] = useState<string[]>(
     filters.features || []
@@ -54,6 +58,8 @@ const FilterBar = ({
     const resetFilters: FilterState = {
       searchQuery: "",
       category: "all",
+      subcategory: null,
+      subcategories: [],
       location: "all",
       rating: "any",
       priceRange: [0, 1000],
@@ -73,10 +79,18 @@ const FilterBar = ({
         (feature) => feature !== value
       );
       setActiveFeatures((prev) => prev.filter((feature) => feature !== value));
+    } else if (filterKey === "subcategories" && value) {
+      newFilters.subcategories = newFilters.subcategories.filter(
+        (subcategory) => subcategory !== value
+      );
     } else if (filterKey === "priceRange") {
       newFilters.priceRange = [0, 1000];
     } else {
-      if (filterKey === "category") newFilters.category = "all";
+      if (filterKey === "category") {
+        newFilters.category = "all";
+        newFilters.subcategory = null;
+        newFilters.subcategories = [];
+      }
       if (filterKey === "location") newFilters.location = "all";
       if (filterKey === "rating") newFilters.rating = "any";
       if (filterKey === "searchQuery") newFilters.searchQuery = "";
@@ -89,6 +103,7 @@ const FilterBar = ({
     return (
       localFilters.searchQuery !== "" ||
       localFilters.category !== "all" ||
+      localFilters.subcategories.length > 0 ||
       localFilters.location !== "all" ||
       localFilters.rating !== "any" ||
       localFilters.priceRange[0] > 0 ||
@@ -123,7 +138,13 @@ const FilterBar = ({
                   value={localFilters.category}
                   onChange={(value) => {
                     handleInputChange("category", value);
-                    onFilterChange({ ...localFilters, category: value });
+                    handleInputChange("subcategories", []);
+                    onFilterChange({ 
+                      ...localFilters, 
+                      category: value,
+                      subcategory: null,
+                      subcategories: [] 
+                    });
                   }}
                 />
 

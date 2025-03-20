@@ -2,11 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { FilterState } from './types';
 import CategorySelect from './CategorySelect';
-import SubcategorySelect from './SubcategorySelect';
 import LocationSelect from './LocationSelect';
 import RatingFilter from './RatingFilter';
 import PriceRangeFilter from './PriceRangeFilter';
 import FeaturesFilter from './FeaturesFilter';
+import MultiSubcategorySelect from './MultiSubcategorySelect';
+import { useState } from 'react';
 
 type FilterContentProps = {
   filters: FilterState;
@@ -25,14 +26,23 @@ const FilterContent = ({
   applyFilters, 
   clearFilters 
 }: FilterContentProps) => {
+  // State for tracking selected subcategories
+  const [selectedSubcategories, setSelectedSubcategories] = useState<string[]>(
+    filters.subcategories || []
+  );
+  
   // Update category when it changes
   const handleCategoryChange = (value: string) => {
     onChange('category', value);
+    // Reset subcategories when category changes
+    setSelectedSubcategories([]);
+    onChange('subcategories', []);
   };
   
-  // Update subcategory when it changes
-  const handleSubcategoryChange = (value: string) => {
-    onChange('subcategory', value);
+  // Update multiple subcategories when they change
+  const handleMultiSubcategoryChange = (values: string[]) => {
+    setSelectedSubcategories(values);
+    onChange('subcategories', values);
   };
 
   // Update location when it changes
@@ -62,11 +72,11 @@ const FilterContent = ({
 
       {filters.category && filters.category !== 'all' && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium">Subcategory</h3>
-          <SubcategorySelect
-            value={filters.subcategory}
+          <h3 className="text-sm font-medium">Subcategories</h3>
+          <MultiSubcategorySelect
+            values={selectedSubcategories}
             categoryId={filters.category}
-            onChange={handleSubcategoryChange}
+            onChange={handleMultiSubcategoryChange}
           />
         </div>
       )}
