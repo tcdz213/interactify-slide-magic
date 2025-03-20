@@ -3,7 +3,7 @@ import { HomeLayout, SmoothScroll } from "@/components/home";
 import Hero from "@/components/sections/Hero";
 import VIPCenters from "@/components/sections/VIPCenters";
 import FeaturedCenters from "@/components/sections/FeaturedCenters";
-import Testimonials from "@/components/Testimonials";
+import Testimonials from "@/components/testimonials";
 import CallToAction from "@/components/sections/CallToAction";
 import HowItWorks from "@/components/sections/HowItWorks";
 import FeaturedTeachers from "@/components/sections/FeaturedTeachers";
