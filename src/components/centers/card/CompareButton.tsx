@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { SplitSquareVertical, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -7,8 +6,8 @@ import { cn } from "@/lib/utils";
 interface CompareButtonProps {
   isCompared: boolean;
   onToggle: (e: React.MouseEvent) => void;
-  size?: 'default' | 'sm' | 'lg' | 'icon';
-  variant?: 'default' | 'outline' | 'ghost';
+  size?: "default" | "sm" | "lg" | "icon";
+  variant?: "default" | "outline" | "ghost";
   className?: string;
   showLabel?: boolean;
 }
@@ -16,16 +15,16 @@ interface CompareButtonProps {
 const CompareButton: React.FC<CompareButtonProps> = ({
   isCompared,
   onToggle,
-  size = 'sm',
+  size = "sm",
   variant,
-  className = '',
-  showLabel = true
+  className = "",
+  showLabel = true,
 }) => {
   return (
-    <Button 
-      size={size} 
-      variant={isCompared ? "default" : "outline"}
-      className={cn(`h-auto`, isCompared ? 'bg-primary' : '', className)}
+    <Button
+      size={size}
+      variant={isCompared ? "default" : "ghost"}
+      className={cn(`h-auto`, isCompared ? "bg-primary" : "", className)}
       onClick={onToggle}
     >
       {isCompared ? (
@@ -33,7 +32,7 @@ const CompareButton: React.FC<CompareButtonProps> = ({
       ) : (
         <SplitSquareVertical className="h-3.5 w-3.5 mr-1" />
       )}
-      {showLabel && (isCompared ? 'Added to compare' : 'Compare')}
+      {showLabel && (isCompared ? "Added to compare" : "Compare")}
     </Button>
   );
 };
