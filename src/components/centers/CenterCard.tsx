@@ -6,10 +6,15 @@ import { toast } from "sonner";
 import { Center } from './types';
 import { useWishlist } from '@/hooks/useWishlist';
 import { useCourseComparison } from '@/hooks/centers';
-import { CardImage, GridCardContent, ListCardContent, ListCardImage } from './card';
+import { 
+  CardImage, 
+  GridCardContent, 
+  ListCardContent, 
+  ListCardImage,
+  FavoriteButton,
+  CompareButton 
+} from './card';
 import CenterCardSkeleton from './CenterCardSkeleton';
-import { Button } from '@/components/ui/button';
-import { SplitSquareVertical, Check } from 'lucide-react';
 
 interface CenterCardProps {
   center: Center;
@@ -74,23 +79,6 @@ const CenterCard: React.FC<CenterCardProps> = ({ center, viewMode, isLoading = f
     }
   };
 
-  // Define CompareButton component with consistent styling
-  const CompareButton = () => (
-    <Button 
-      size="sm" 
-      variant={isCompared ? "default" : "outline"}
-      className={`px-3 py-1 h-auto text-xs rounded-md ${isCompared ? 'bg-primary' : ''}`}
-      onClick={handleToggleComparison}
-    >
-      {isCompared ? (
-        <Check className="h-3.5 w-3.5 mr-1" />
-      ) : (
-        <SplitSquareVertical className="h-3.5 w-3.5 mr-1" />
-      )}
-      {isCompared ? 'Added to compare' : 'Compare'}
-    </Button>
-  );
-
   return (
     <>
       {error && (
@@ -109,7 +97,10 @@ const CenterCard: React.FC<CenterCardProps> = ({ center, viewMode, isLoading = f
               isToggling={isToggling}
             />
             <div className="absolute bottom-3 right-3 z-10">
-              <CompareButton />
+              <CompareButton 
+                isCompared={isCompared} 
+                onToggle={handleToggleComparison} 
+              />
             </div>
           </div>
           <CardContent className="p-0">
@@ -127,7 +118,10 @@ const CenterCard: React.FC<CenterCardProps> = ({ center, viewMode, isLoading = f
             />
             <ListCardContent center={center} handleViewDetails={handleViewDetails} />
             <div className="absolute bottom-3 right-[120px] z-10">
-              <CompareButton />
+              <CompareButton 
+                isCompared={isCompared} 
+                onToggle={handleToggleComparison} 
+              />
             </div>
           </div>
         </Card>
