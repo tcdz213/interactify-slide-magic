@@ -1,3 +1,4 @@
+
 import HeroTitle from "./HeroTitle";
 import HeroActions from "./HeroActions";
 import HeroBackground from "./HeroBackground";
@@ -9,15 +10,6 @@ export {
   HeroTitle,
   HeroActions,
   HeroBackground,
-  ScrollIndicator,
-  SearchBox,
-  NeonGlowCursor,
-};
-
-export default {
-  Title: HeroTitle,
-  Actions: HeroActions,
-  Background: HeroBackground,
   ScrollIndicator,
   SearchBox,
   NeonGlowCursor,

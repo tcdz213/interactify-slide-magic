@@ -1,7 +1,11 @@
 
 import { useState, useEffect, memo } from "react";
 import { motion } from "framer-motion";
-import { HeroTitle, HeroActions, HeroBackground, ScrollIndicator, NeonGlowCursor } from "@/components/hero";
+import HeroTitle from "@/components/hero/HeroTitle";
+import HeroActions from "@/components/hero/HeroActions";
+import HeroBackground from "@/components/hero/HeroBackground";
+import ScrollIndicator from "@/components/hero/ScrollIndicator";
+import NeonGlowCursor from "@/components/hero/NeonGlowCursor";
 import SearchBox from "@/components/hero/SearchBox";
 
 const Hero = () => {
