@@ -17,8 +17,8 @@ interface ShareButtonsProps {
   centerName: string;
   className?: string;
   showLabel?: boolean;
-  size?: 'sm' | 'md' | 'lg';
-  variant?: 'default' | 'subtle';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  variant?: 'default' | 'outline' | 'ghost' | 'subtle';
   trackShare?: boolean;
 }
 
@@ -27,8 +27,8 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({
   centerName,
   className,
   showLabel = false,
-  size = 'md',
-  variant = 'default',
+  size = 'sm',
+  variant = 'outline',
   trackShare = true
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -83,36 +83,20 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({
     toast.success("Link copied to clipboard");
   };
 
-  const getButtonSize = () => {
-    switch(size) {
-      case 'sm': return 'h-8 px-3 text-xs';
-      case 'lg': return 'h-10 px-4 text-base';
-      default: return 'h-9 px-3 text-sm';
-    }
-  };
-
-  const getIconSize = () => {
-    switch(size) {
-      case 'sm': return 'h-3.5 w-3.5';
-      case 'lg': return 'h-5 w-5';
-      default: return 'h-4 w-4';
-    }
-  };
-
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
-          variant={variant === 'subtle' ? "outline" : "outline"} 
-          size={showLabel ? undefined : "icon"}
+          variant={variant === 'subtle' ? "outline" : variant} 
+          size={showLabel ? size : "icon"}
           className={cn(
             "transition-all flex items-center", 
             variant === 'subtle' ? "hover:bg-primary/5" : "",
-            showLabel ? getButtonSize() : "h-9 w-9",
+            showLabel ? "" : "h-9 w-9",
             className
           )}
         >
-          <Share2 className={getIconSize()} />
+          <Share2 className={cn("h-4 w-4")} />
           {showLabel && <span className="ml-2">Share</span>}
         </Button>
       </DropdownMenuTrigger>

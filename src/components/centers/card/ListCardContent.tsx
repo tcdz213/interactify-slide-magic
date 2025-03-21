@@ -1,11 +1,9 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Center, featureLabels } from '../types';
-import ShareButtons from '../ShareButtons';
 import { CurrencyDisplay } from '@/components/home';
-import { ExternalLink } from 'lucide-react';
+import { ShareButton, ViewDetailsButton } from './';
 
 interface ListCardContentProps {
   center: Center;
@@ -57,19 +55,15 @@ const ListCardContent: React.FC<ListCardContentProps> = ({
           <CurrencyDisplay amount={center.price} currency={center.currency} />
         </div>
         <div className="flex space-x-2">
-          <ShareButtons 
+          <ShareButton 
             centerId={center.id} 
             centerName={center.name} 
             size="sm" 
             variant="subtle"
           />
-          <Button 
-            className="flex items-center justify-center" 
+          <ViewDetailsButton 
             onClick={() => handleViewDetails(center.id)}
-          >
-            <span>View Details</span>
-            <ExternalLink className="h-4 w-4 ml-2" />
-          </Button>
+          />
         </div>
       </div>
     </div>

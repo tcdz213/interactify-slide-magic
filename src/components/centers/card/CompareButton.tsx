@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { SplitSquareVertical, Check } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface CompareButtonProps {
   isCompared: boolean;
@@ -9,6 +10,7 @@ interface CompareButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
   variant?: 'default' | 'outline' | 'ghost';
   className?: string;
+  showLabel?: boolean;
 }
 
 const CompareButton: React.FC<CompareButtonProps> = ({
@@ -16,13 +18,14 @@ const CompareButton: React.FC<CompareButtonProps> = ({
   onToggle,
   size = 'sm',
   variant,
-  className = ''
+  className = '',
+  showLabel = true
 }) => {
   return (
     <Button 
       size={size} 
       variant={isCompared ? "default" : "outline"}
-      className={`px-3 py-1 h-auto text-xs rounded-md ${isCompared ? 'bg-primary' : ''} ${className}`}
+      className={cn(`h-auto`, isCompared ? 'bg-primary' : '', className)}
       onClick={onToggle}
     >
       {isCompared ? (
@@ -30,7 +33,7 @@ const CompareButton: React.FC<CompareButtonProps> = ({
       ) : (
         <SplitSquareVertical className="h-3.5 w-3.5 mr-1" />
       )}
-      {isCompared ? 'Added to compare' : 'Compare'}
+      {showLabel && (isCompared ? 'Added to compare' : 'Compare')}
     </Button>
   );
 };

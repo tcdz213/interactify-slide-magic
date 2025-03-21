@@ -6,3 +6,5 @@ export { default as ListCardImage } from './ListCardImage';
 export { default as RecommendationCard } from './RecommendationCard';
 export { default as FavoriteButton } from './FavoriteButton';
 export { default as CompareButton } from './CompareButton';
+export { default as ShareButton } from './ShareButton';
+export { default as ViewDetailsButton } from './ViewDetailsButton';

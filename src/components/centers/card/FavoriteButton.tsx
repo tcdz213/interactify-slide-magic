@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
-import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface FavoriteButtonProps {
   isFavorite: boolean;
@@ -10,6 +10,8 @@ interface FavoriteButtonProps {
   isToggling?: boolean;
   size?: 'default' | 'sm' | 'lg' | 'icon';
   variant?: 'default' | 'ghost' | 'outline';
+  showLabel?: boolean;
+  className?: string;
 }
 
 const FavoriteButton: React.FC<FavoriteButtonProps> = ({
@@ -17,20 +19,29 @@ const FavoriteButton: React.FC<FavoriteButtonProps> = ({
   onToggle,
   isToggling = false,
   size = 'sm',
-  variant = 'ghost'
+  variant = 'ghost',
+  showLabel = false,
+  className
 }) => {
   return (
     <Button
-      size={size}
+      size={showLabel ? size : "icon"}
       variant={variant}
-      className={`h-auto rounded-full ${isToggling ? 'opacity-50' : ''}`}
+      className={cn(
+        "transition-all", 
+        isToggling ? "opacity-50" : "",
+        !showLabel && "h-9 w-9 rounded-full",
+        className
+      )}
       onClick={onToggle}
       disabled={isToggling}
     >
-      <Heart className={`${isFavorite ? 'fill-red-500 text-red-500' : 'text-muted-foreground'} 
-        ${size === 'sm' ? 'h-4 w-4' : 'h-5 w-5'}`}
-      />
-      <span className="sr-only">{isFavorite ? 'Remove from favorites' : 'Add to favorites'}</span>
+      <Heart className={cn(
+        isFavorite ? "fill-red-500 text-red-500" : "text-muted-foreground",
+        size === 'sm' ? "h-4 w-4" : "h-5 w-5",
+        showLabel && "mr-2"
+      )} />
+      {showLabel && (isFavorite ? 'Remove from favorites' : 'Add to favorites')}
     </Button>
   );
 };

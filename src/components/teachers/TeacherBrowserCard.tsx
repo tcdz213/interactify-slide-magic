@@ -3,8 +3,9 @@ import React from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Star, MapPin, Clock, GraduationCap, SplitSquareVertical, Check, ExternalLink } from "lucide-react";
+import { Star, MapPin, Clock, GraduationCap, ExternalLink } from "lucide-react";
 import { useTeacherComparison } from "@/hooks/teachers/useTeacherComparison";
+import { CompareButton } from "@/components/centers/card";
 
 // Update the interface to match both the Teacher type and what's being passed to the component
 interface TeacherBrowserCardProps {
@@ -116,19 +117,11 @@ export const TeacherBrowserCard = ({ teacher, onContactClick }: TeacherBrowserCa
       </CardContent>
       
       <CardFooter className="bg-muted/30 p-3 flex justify-end gap-2">
-        <Button 
-          onClick={handleToggleComparison} 
-          size="sm" 
-          variant={isCompared ? "default" : "outline"}
-          className="flex items-center"
-        >
-          {isCompared ? (
-            <Check className="h-4 w-4 mr-1" />
-          ) : (
-            <SplitSquareVertical className="h-4 w-4 mr-1" />
-          )}
-          {isCompared ? 'Added to compare' : 'Compare'}
-        </Button>
+        <CompareButton 
+          isCompared={isCompared} 
+          onToggle={handleToggleComparison} 
+          showLabel={true}
+        />
         <Button 
           onClick={() => onContactClick(teacher.id)} 
           size="sm"
