@@ -6,7 +6,7 @@ import { SplitSquareVertical, Check } from "lucide-react";
 interface CompareButtonProps {
   isCompared: boolean;
   onToggle: (e: React.MouseEvent) => void;
-  size?: 'sm' | 'md';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   variant?: 'default' | 'outline' | 'ghost';
   className?: string;
 }

@@ -8,7 +8,7 @@ interface FavoriteButtonProps {
   isFavorite: boolean;
   onToggle: (e: React.MouseEvent) => void;
   isToggling?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   variant?: 'default' | 'ghost' | 'outline';
 }
 
