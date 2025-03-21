@@ -6,7 +6,12 @@ import VIPCenterCarousel from "@/components/centers/VIPCenterCarousel";
 import VIPCentersBackground from "@/components/centers/VIPCentersBackground";
 import { Center as CenterType } from "@/types/center.types";
 
-const VIPCenters = () => {
+interface VIPCentersProps {
+  className?: string;
+  showFullBackground?: boolean;
+}
+
+const VIPCenters = ({ className = "", showFullBackground = true }: VIPCentersProps) => {
   const { isVisible, elementRef } = useVisibilityObserver();
   // Cast the data to the unified Center type
   const vipCenters = centersData.filter(
@@ -17,9 +22,9 @@ const VIPCenters = () => {
     <section
       ref={elementRef}
       id="vip-centers"
-      className="relative py-16 md:py-20 px-4 md:px-6 my-8 rounded-xl bg-gradient-to-b from-background/50 to-muted/30"
+      className={`relative py-16 md:py-20 px-4 md:px-6 my-8 rounded-xl ${showFullBackground ? 'bg-gradient-to-b from-background/50 to-muted/30' : ''} ${className}`}
     >
-      <VIPCentersBackground />
+      {showFullBackground && <VIPCentersBackground />}
       <div className="container-custom max-w-7xl mx-auto relative z-10">
         <VIPCentersHeader isVisible={isVisible} />
         <VIPCenterCarousel centers={vipCenters} isVisible={isVisible} />

@@ -19,7 +19,7 @@ import {
 } from "@/components/centers";
 import { useCourseComparison } from "@/hooks/centers";
 import { addNotification } from "@/redux/slices/searchSlice";
-import VIPCenters from "@/components/VIPCenters";
+import VIPCenters from "@/components/sections/VIPCenters";
 
 const Discover = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -105,7 +105,7 @@ const Discover = () => {
           </div>
 
           <div className="mb-8">
-            <VIPCenters />
+            <VIPCenters showFullBackground={false} className="py-8 md:py-12 my-0" />
           </div>
 
           <div className="mb-8">
