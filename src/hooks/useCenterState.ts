@@ -1,6 +1,13 @@
 
 import { useCenterOperations } from "./centers/useCenterOperations";
+import { useCourseComparison } from "./centers";
 
 export const useCenterState = (searchTerm: string) => {
-  return useCenterOperations(searchTerm);
+  const centerOperations = useCenterOperations(searchTerm);
+  const comparisonOperations = useCourseComparison();
+  
+  return {
+    ...centerOperations,
+    ...comparisonOperations
+  };
 };

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Facebook, Twitter, Linkedin, Copy, Mail, Share2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -84,9 +85,9 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({
 
   const getButtonSize = () => {
     switch(size) {
-      case 'sm': return 'h-7 px-2 text-xs';
+      case 'sm': return 'h-8 px-3 text-xs';
       case 'lg': return 'h-10 px-4 text-base';
-      default: return 'h-8 px-3 text-sm';
+      default: return 'h-9 px-3 text-sm';
     }
   };
 
@@ -102,11 +103,12 @@ const ShareButtons: React.FC<ShareButtonsProps> = ({
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
-          variant={variant === 'subtle' ? "ghost" : "outline"} 
-          size="icon"
+          variant={variant === 'subtle' ? "outline" : "outline"} 
+          size={showLabel ? undefined : "icon"}
           className={cn(
-            "transition-all", 
+            "transition-all flex items-center", 
             variant === 'subtle' ? "hover:bg-primary/5" : "",
+            showLabel ? getButtonSize() : "h-9 w-9",
             className
           )}
         >

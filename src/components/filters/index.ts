@@ -1,5 +1,7 @@
 
 export { default as FilterBar } from './FilterBar';
+export { default as FilterInputs } from './FilterInputs';
+export { default as FilterActions } from './FilterActions';
 export { default as CategorySelect } from './CategorySelect';
 export { default as SubcategorySelect } from './SubcategorySelect';
 export { default as LocationSelect } from './LocationSelect';

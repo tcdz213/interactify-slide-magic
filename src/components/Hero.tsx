@@ -1,4 +1,3 @@
-
 import { useState, useEffect, memo } from "react";
 import HeroTitle from "./hero/HeroTitle";
 import HeroActions from "./hero/HeroActions";
@@ -9,20 +8,16 @@ import SearchBox from "./hero/SearchBox";
 
 const Hero = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const backgroundImages = [
-    "gradient-1",
-    "gradient-2",
-    "gradient-3"
-  ];
+  const backgroundImages = ["gradient-1", "gradient-2", "gradient-3"];
 
   // Change background image every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentImageIndex((prevIndex) => 
-        (prevIndex + 1) % backgroundImages.length
+      setCurrentImageIndex(
+        (prevIndex) => (prevIndex + 1) % backgroundImages.length
       );
     }, 5000);
-    
+
     return () => clearInterval(interval);
   }, []);
 

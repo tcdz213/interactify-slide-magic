@@ -16,6 +16,7 @@ import GetStarted from "./pages/GetStarted";
 import Categories from "./pages/Categories";
 import About from "./pages/About";
 import Admin from "./pages/Admin";
+import Reports from "./pages/Reports";
 import CenterOwnerDashboard from "./pages/CenterOwnerDashboard";
 import TeacherJobPost from "./pages/TeacherJobPost";
 import Login from "./pages/Login";
@@ -85,6 +86,22 @@ const AppContent = () => {
             redirectToLogin={true}
           >
             <Admin />
+          </RoleProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/reports" 
+        element={
+          <RoleProtectedRoute
+            allowedRoles={[
+              ROLES.PLATFORM_ADMIN,
+              ROLES.CENTER_OWNER,
+              ROLES.TECHNICAL_OWNER
+            ]}
+            fallbackPath="/"
+            redirectToLogin={true}
+          >
+            <Reports />
           </RoleProtectedRoute>
         } 
       />

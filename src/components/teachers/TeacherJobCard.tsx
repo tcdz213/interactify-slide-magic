@@ -3,7 +3,8 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, BriefcaseBusiness, Info } from "lucide-react";
+import { Calendar, MapPin, BriefcaseBusiness, Info, SplitSquareVertical, Check, ExternalLink } from "lucide-react";
+import { useJobComparison } from "@/hooks/teachers/useJobComparison";
 
 interface JobProps {
   job: {
@@ -21,8 +22,20 @@ interface JobProps {
 }
 
 export const TeacherJobCard = ({ job }: JobProps) => {
+  const { addToComparison, removeFromComparison, isInComparison } = useJobComparison();
+  const isCompared = isInComparison(job.id);
+
+  const handleToggleComparison = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isCompared) {
+      removeFromComparison(job.id);
+    } else {
+      addToComparison(job);
+    }
+  };
+
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
       <CardContent className="p-6">
         <div className="flex flex-col md:flex-row gap-4 md:items-start">
           <div className="flex-1">
@@ -54,10 +67,25 @@ export const TeacherJobCard = ({ job }: JobProps) => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2 px-6 pb-6 pt-0">
-        <Button variant="outline" size="sm">
-          <Info className="h-4 w-4 mr-2" /> Details
+        <Button 
+          size="sm"
+          variant={isCompared ? "default" : "outline"}
+          className="flex items-center gap-1"
+          onClick={handleToggleComparison}
+        >
+          {isCompared ? (
+            <Check className="h-4 w-4 mr-1" />
+          ) : (
+            <SplitSquareVertical className="h-4 w-4 mr-1" />
+          )}
+          {isCompared ? 'Added to compare' : 'Compare'}
         </Button>
-        <Button size="sm">Apply Now</Button>
+        <Button variant="outline" size="sm" className="flex items-center gap-1">
+          <Info className="h-4 w-4 mr-1" /> Details
+        </Button>
+        <Button size="sm" className="flex items-center gap-1">
+          Apply Now <ExternalLink className="h-4 w-4 ml-1" />
+        </Button>
       </CardFooter>
     </Card>
   );

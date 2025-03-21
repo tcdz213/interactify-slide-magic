@@ -15,7 +15,9 @@ import {
   useFilteredCenters,
   FavoritesTab,
   RecommendationsSection,
+  CourseComparisonTable,
 } from "@/components/centers";
+import { useCourseComparison } from "@/hooks/centers";
 import { addNotification } from "@/redux/slices/searchSlice";
 import VIPCenters from "@/components/VIPCenters";
 
@@ -36,6 +38,7 @@ const Discover = () => {
   });
 
   const { filteredCenters, applyFilters } = useFilteredCenters(filters);
+  const { compareCourses, removeFromComparison, clearComparison } = useCourseComparison();
   const dispatch = useDispatch();
 
   const handleFilterChange = (newFilters: FilterState) => {
@@ -122,6 +125,14 @@ const Discover = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="results">Search Results</TabsTrigger>
               <TabsTrigger value="favorites">Favorites</TabsTrigger>
+              <TabsTrigger value="compare" className="relative">
+                Compare
+                {compareCourses.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {compareCourses.length}
+                  </span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="saved">Saved Searches</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
@@ -145,6 +156,14 @@ const Discover = () => {
 
             <TabsContent value="favorites">
               <FavoritesTab viewMode={viewMode} />
+            </TabsContent>
+
+            <TabsContent value="compare">
+              <CourseComparisonTable 
+                courses={compareCourses}
+                onRemove={removeFromComparison}
+                onClear={clearComparison}
+              />
             </TabsContent>
 
             <TabsContent value="saved">

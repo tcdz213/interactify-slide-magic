@@ -14,6 +14,7 @@ export { default as RecommendationsSection } from './RecommendationsSection';
 export { default as VIPCentersHeader } from './VIPCentersHeader';
 export { default as VIPCenterCarousel } from './VIPCenterCarousel';
 export { default as VIPCentersBackground } from './VIPCentersBackground';
+export { default as CourseComparisonTable } from './CourseComparisonTable';
 export { centersData } from './centersData';
 export type { Center } from './types';
 export { useFilteredCenters } from './useFilteredCenters';

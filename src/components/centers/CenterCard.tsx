@@ -5,8 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { Center } from './types';
 import { useWishlist } from '@/hooks/useWishlist';
+import { useCourseComparison } from '@/hooks/centers';
 import { CardImage, GridCardContent, ListCardContent, ListCardImage } from './card';
 import CenterCardSkeleton from './CenterCardSkeleton';
+import { Button } from '@/components/ui/button';
+import { SplitSquareVertical, Check } from 'lucide-react';
 
 interface CenterCardProps {
   center: Center;
@@ -17,9 +20,11 @@ interface CenterCardProps {
 const CenterCard: React.FC<CenterCardProps> = ({ center, viewMode, isLoading = false }) => {
   const navigate = useNavigate();
   const { isFavorite, toggleFavoriteItem } = useWishlist();
+  const { addToComparison, removeFromComparison, isInComparison } = useCourseComparison();
   const isInFavorites = isFavorite(center.id);
   const [isToggling, setIsToggling] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const isCompared = isInComparison(center.id);
 
   // Show skeleton if loading
   if (isLoading) {
@@ -60,6 +65,32 @@ const CenterCard: React.FC<CenterCardProps> = ({ center, viewMode, isLoading = f
     }
   };
 
+  const handleToggleComparison = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isCompared) {
+      removeFromComparison(center.id);
+    } else {
+      addToComparison(center);
+    }
+  };
+
+  // Define CompareButton component with consistent styling
+  const CompareButton = () => (
+    <Button 
+      size="sm" 
+      variant={isCompared ? "default" : "outline"}
+      className={`px-3 py-1 h-auto text-xs rounded-md ${isCompared ? 'bg-primary' : ''}`}
+      onClick={handleToggleComparison}
+    >
+      {isCompared ? (
+        <Check className="h-3.5 w-3.5 mr-1" />
+      ) : (
+        <SplitSquareVertical className="h-3.5 w-3.5 mr-1" />
+      )}
+      {isCompared ? 'Added to compare' : 'Compare'}
+    </Button>
+  );
+
   return (
     <>
       {error && (
@@ -70,19 +101,24 @@ const CenterCard: React.FC<CenterCardProps> = ({ center, viewMode, isLoading = f
       
       {viewMode === 'grid' ? (
         <Card className="overflow-hidden border-0 rounded-xl shadow-sm hover-card-effect">
-          <CardImage 
-            center={center} 
-            isInFavorites={isInFavorites} 
-            handleToggleFavorite={handleToggleFavorite}
-            isToggling={isToggling}
-          />
+          <div className="relative">
+            <CardImage 
+              center={center} 
+              isInFavorites={isInFavorites} 
+              handleToggleFavorite={handleToggleFavorite}
+              isToggling={isToggling}
+            />
+            <div className="absolute bottom-3 right-3 z-10">
+              <CompareButton />
+            </div>
+          </div>
           <CardContent className="p-0">
             <GridCardContent center={center} handleViewDetails={handleViewDetails} />
           </CardContent>
         </Card>
       ) : (
         <Card className="overflow-hidden border-0 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex flex-col md:flex-row">
+          <div className="flex flex-col md:flex-row relative">
             <ListCardImage 
               center={center} 
               isInFavorites={isInFavorites} 
@@ -90,6 +126,9 @@ const CenterCard: React.FC<CenterCardProps> = ({ center, viewMode, isLoading = f
               isToggling={isToggling}
             />
             <ListCardContent center={center} handleViewDetails={handleViewDetails} />
+            <div className="absolute bottom-3 right-[120px] z-10">
+              <CompareButton />
+            </div>
           </div>
         </Card>
       )}

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Center, featureLabels } from '../types';
 import ShareButtons from '../ShareButtons';
 import { CurrencyDisplay } from '@/components/home';
+import { ExternalLink } from 'lucide-react';
 
 interface ListCardContentProps {
   center: Center;
@@ -16,7 +17,7 @@ const ListCardContent: React.FC<ListCardContentProps> = ({
   handleViewDetails
 }) => {
   return (
-    <div className="p-5 md:w-2/3 flex flex-col justify-between px-[20px]">
+    <div className="p-5 md:w-2/3 flex flex-col justify-between">
       <div className="flex justify-between items-start mb-2">
         <div>
           <h3 className="text-xl font-medium">{center.name}</h3>
@@ -51,14 +52,23 @@ const ListCardContent: React.FC<ListCardContentProps> = ({
         ))}
       </div>
       
-      <div className="flex justify-between items-center mt-4 px-[12px] my-[25px]">
+      <div className="flex justify-between items-center mt-4">
         <div className="text-primary font-medium text-lg">
           <CurrencyDisplay amount={center.price} currency={center.currency} />
         </div>
         <div className="flex space-x-2">
-          <ShareButtons centerId={center.id} centerName={center.name} showLabel={true} variant="default" size="md" />
-          <Button className="rounded-full px-6" onClick={() => handleViewDetails(center.id)}>
-            View Details
+          <ShareButtons 
+            centerId={center.id} 
+            centerName={center.name} 
+            size="sm" 
+            variant="subtle"
+          />
+          <Button 
+            className="flex items-center justify-center" 
+            onClick={() => handleViewDetails(center.id)}
+          >
+            <span>View Details</span>
+            <ExternalLink className="h-4 w-4 ml-2" />
           </Button>
         </div>
       </div>

@@ -1,21 +1,33 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { TeacherBrowser } from "./TeacherBrowser";
-import SearchBox from "../hero/SearchBox";
+import TeacherComparisonTable from "./TeacherComparisonTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Users, SplitSquareVertical } from "lucide-react";
 
 export const BrowseTeachersTab = () => {
-  const handleTeacherSearch = (searchValue: string) => {
-    console.log("Searching for teachers:", searchValue);
-    // Here you would implement the actual search functionality
-  };
+  const [activeTab, setActiveTab] = useState("browse");
 
   return (
-    <div className="grid gap-6">
-      <SearchBox 
-        className="mb-6" 
-        onSearch={handleTeacherSearch} 
-      />
-      <TeacherBrowser />
-    </div>
+    <Tabs defaultValue="browse" value={activeTab} onValueChange={setActiveTab}>
+      <TabsList className="mb-6">
+        <TabsTrigger value="browse" className="flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          Browse Teachers
+        </TabsTrigger>
+        <TabsTrigger value="compare" className="flex items-center gap-2">
+          <SplitSquareVertical className="h-4 w-4" />
+          Compare Teachers
+        </TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="browse">
+        <TeacherBrowser />
+      </TabsContent>
+      
+      <TabsContent value="compare">
+        <TeacherComparisonTable />
+      </TabsContent>
+    </Tabs>
   );
 };

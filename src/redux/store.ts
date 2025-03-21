@@ -7,6 +7,9 @@ import wishlistReducer from './slices/wishlistSlice';
 import shareTrackingReducer from './slices/shareTrackingSlice';
 import notificationsReducer from './slices/notificationsSlice';
 import centersReducer from './slices/centersSlice';
+import { comparisonReducer } from "@/hooks/centers/useCourseComparison";
+import { jobComparisonReducer } from "@/hooks/teachers/useJobComparison";
+import { teacherComparisonReducer } from "@/hooks/teachers/useTeacherComparison";
 
 export const store = configureStore({
   reducer: {
@@ -17,6 +20,9 @@ export const store = configureStore({
     shareTracking: shareTrackingReducer,
     notifications: notificationsReducer,
     centers: centersReducer,
+    comparison: comparisonReducer,
+    jobComparison: jobComparisonReducer,
+    teacherComparison: teacherComparisonReducer,
   },
 });
 

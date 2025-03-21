@@ -1,5 +1,3 @@
 
 export { default } from './Testimonials';
-export { default as TestimonialHeader } from './TestimonialHeader';
-export { default as TestimonialContent } from './TestimonialContent';
-export { default as TestimonialNavigation } from './TestimonialNavigation';
+export { TestimonialHeader, TestimonialContent, TestimonialNavigation } from './Testimonials';
