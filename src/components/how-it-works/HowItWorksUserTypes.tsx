@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   GraduationCap, 
@@ -8,8 +7,6 @@ import {
   Building, 
   ArrowRight
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -19,6 +16,7 @@ import {
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import type { CarouselApi } from "@/components/ui/carousel";
+import UserTypeCard from './UserTypeCard';
 import StepsProcess from './StepsProcess';
 
 const HowItWorksUserTypes = () => {
@@ -33,7 +31,12 @@ const HowItWorksUserTypes = () => {
       description: "Discover thousands of courses and training programs that match your interests and career goals.",
       color: "bg-blue-50 text-blue-600",
       route: "/discover",
-      buttonText: "Find Courses"
+      buttonText: "Find Courses",
+      steps: [
+        { title: "Browse courses by category", description: "Explore our extensive catalog of courses" },
+        { title: "Compare training centers", description: "Read reviews and compare features" },
+        { title: "Book your preferred course", description: "Secure your spot with our easy booking system" }
+      ]
     },
     {
       id: "teachers",
@@ -42,7 +45,12 @@ const HowItWorksUserTypes = () => {
       description: "Share your expertise and connect with students around the world. Create your teaching profile today.",
       color: "bg-emerald-50 text-emerald-600",
       route: "/teacher-job-post",
-      buttonText: "Start Teaching"
+      buttonText: "Start Teaching",
+      steps: [
+        { title: "Create your teacher profile", description: "Showcase your skills and experience" },
+        { title: "Browse teaching opportunities", description: "Find positions that match your expertise" },
+        { title: "Apply and connect", description: "Connect with training centers looking for your skills" }
+      ]
     },
     {
       id: "centers",
@@ -51,7 +59,12 @@ const HowItWorksUserTypes = () => {
       description: "Expand your reach and attract more students to your programs. List your courses on our platform.",
       color: "bg-amber-50 text-amber-600",
       route: "/for-training-centers",
-      buttonText: "Register Center"
+      buttonText: "Register Center",
+      steps: [
+        { title: "Register your training center", description: "Create your center's profile" },
+        { title: "Add your courses and programs", description: "List all your offerings with details" },
+        { title: "Manage bookings and grow", description: "Track applications and expand your reach" }
+      ]
     },
   ];
   
@@ -86,31 +99,20 @@ const HowItWorksUserTypes = () => {
           setApi={setCarouselApi}
         >
           <CarouselContent>
-            {userTypes.map((type, index) => {
-              const Icon = type.icon;
-              return (
-                <CarouselItem key={type.id} className="md:basis-1/2 lg:basis-1/3 pl-4">
-                  <Card className={cn(
-                    "border-0 shadow-md hover:shadow-lg rounded-xl overflow-hidden transition-all duration-500 h-full",
-                    activeIndex === index ? "ring-2 ring-primary ring-offset-2" : ""
-                  )}>
-                    <CardContent className="p-8 flex flex-col items-center text-center h-full">
-                      <div className={`h-16 w-16 rounded-full ${type.color} flex items-center justify-center mb-6`}>
-                        <Icon className="h-8 w-8" />
-                      </div>
-                      <h3 className="text-2xl font-semibold mb-3">{type.title}</h3>
-                      <p className="text-muted-foreground mb-8 flex-grow">{type.description}</p>
-                      <Button asChild className="mt-auto group">
-                        <Link to={type.route}>
-                          {type.buttonText}
-                          <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </CarouselItem>
-              );
-            })}
+            {userTypes.map((type, index) => (
+              <CarouselItem key={type.id} className="md:basis-1/2 lg:basis-1/3 pl-4">
+                <UserTypeCard
+                  icon={type.icon}
+                  title={type.title}
+                  description={type.description}
+                  color={type.color}
+                  route={type.route}
+                  buttonText={type.buttonText}
+                  isActive={activeIndex === index}
+                  steps={type.steps}
+                />
+              </CarouselItem>
+            ))}
           </CarouselContent>
           <div className="flex items-center justify-center mt-8">
             <CarouselPrevious className="relative static transform-none mx-2" />
