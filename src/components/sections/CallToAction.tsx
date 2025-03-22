@@ -2,16 +2,15 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-
 const CallToAction = () => {
-  const { t } = useTranslation();
-  
-  return (
-    <section className="section-padding bg-muted/50">
+  const {
+    t
+  } = useTranslation();
+  return <section className="section-padding bg-muted/50">
       <div className="container-custom">
         <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="grid md:grid-cols-2">
-            <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center">
+            <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center bg-slate-800">
               <h2 className="text-2xl md:text-3xl font-semibold mb-4">{t('callToAction.title')}</h2>
               <p className="text-muted-foreground mb-6">
                 {t('callToAction.description')}
@@ -61,18 +60,12 @@ const CallToAction = () => {
               </div>
             </div>
             <div className="hidden md:block relative">
-              <img 
-                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
-                alt="People learning together in a training center" 
-                className="w-full h-full object-cover"
-              />
+              <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="People learning together in a training center" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-primary/20"></div>
             </div>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default CallToAction;

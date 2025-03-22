@@ -20,11 +20,13 @@ import {
 import { useCourseComparison } from "@/hooks/centers";
 import { addNotification } from "@/redux/slices/searchSlice";
 import VIPCenters from "@/components/sections/VIPCenters";
+import { CoursesListWithFilters } from "@/components/courses";
 
 const Discover = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [activeTab, setActiveTab] = useState<string>("results");
   const [isLoading, setIsLoading] = useState(false);
+  const [resultsType, setResultsType] = useState<"centers" | "courses">("centers");
   const [filters, setFilters] = useState<FilterState>({
     searchQuery: "",
     category: "all",
@@ -113,7 +115,7 @@ const Discover = () => {
               filters={filters}
               onFilterChange={handleFilterChange}
               onSearch={handleSearch}
-              totalResults={filteredCenters.length}
+              totalResults={resultsType === "centers" ? filteredCenters.length : 6} // Use actual course count here
             />
           </div>
 
@@ -138,13 +140,37 @@ const Discover = () => {
             </TabsList>
 
             <TabsContent value="results">
-              <CentersList
-                centers={filteredCenters}
-                viewMode={viewMode}
-                setViewMode={setViewMode}
-                clearFilters={clearFilters}
-                isLoading={isLoading}
-              />
+              <div className="mb-8">
+                <ResultsCount
+                  totalResults={resultsType === "centers" ? filteredCenters.length : 6} // Use actual course count here
+                  sort={filters.sort}
+                  onSortChange={(value) => {
+                    handleFilterChange({ ...filters, sort: value });
+                  }}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  resultsType={resultsType}
+                  onResultsTypeChange={setResultsType}
+                />
+              </div>
+
+              {resultsType === "centers" ? (
+                <CentersList
+                  centers={filteredCenters}
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  clearFilters={clearFilters}
+                  isLoading={isLoading}
+                />
+              ) : (
+                <CoursesListWithFilters
+                  viewMode={viewMode}
+                  setViewMode={setViewMode}
+                  clearFilters={clearFilters}
+                  isLoading={isLoading}
+                  filters={filters}
+                />
+              )}
 
               {/* Add Recommendations Section */}
               {filteredCenters.length > 0 && !isLoading && (

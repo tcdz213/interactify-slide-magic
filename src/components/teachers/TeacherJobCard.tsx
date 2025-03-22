@@ -1,9 +1,16 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, MapPin, BriefcaseBusiness, Info, SplitSquareVertical, Check, ExternalLink } from "lucide-react";
+import {
+  Calendar,
+  MapPin,
+  BriefcaseBusiness,
+  Info,
+  SplitSquareVertical,
+  Check,
+  ExternalLink,
+} from "lucide-react";
 import { useJobComparison } from "@/hooks/teachers/useJobComparison";
 
 interface JobProps {
@@ -22,7 +29,8 @@ interface JobProps {
 }
 
 export const TeacherJobCard = ({ job }: JobProps) => {
-  const { addToComparison, removeFromComparison, isInComparison } = useJobComparison();
+  const { addToComparison, removeFromComparison, isInComparison } =
+    useJobComparison();
   const isCompared = isInComparison(job.id);
 
   const handleToggleComparison = (e: React.MouseEvent) => {
@@ -44,9 +52,11 @@ export const TeacherJobCard = ({ job }: JobProps) => {
                 <h3 className="text-xl font-bold">{job.title}</h3>
                 <p className="text-muted-foreground mb-2">{job.centerName}</p>
               </div>
-              <Badge className="bg-primary text-primary-foreground">{job.experience}</Badge>
+              <Badge className="bg-primary text-primary-foreground">
+                {job.experience}
+              </Badge>
             </div>
-            
+
             <div className="flex flex-wrap gap-y-2 gap-x-4 mt-3 text-sm text-muted-foreground">
               <div className="flex items-center gap-1">
                 <MapPin className="h-4 w-4" /> {job.location}
@@ -58,7 +68,7 @@ export const TeacherJobCard = ({ job }: JobProps) => {
                 <Calendar className="h-4 w-4" /> Posted {job.postedDate}
               </div>
             </div>
-            
+
             <div className="mt-4">
               <p className="font-medium">Salary: {job.salary}</p>
               <p className="mt-2 line-clamp-2">{job.description}</p>
@@ -67,7 +77,7 @@ export const TeacherJobCard = ({ job }: JobProps) => {
         </div>
       </CardContent>
       <CardFooter className="flex justify-end gap-2 px-6 pb-6 pt-0">
-        <Button 
+        <Button
           size="sm"
           variant={isCompared ? "default" : "outline"}
           className="flex items-center gap-1"
@@ -78,7 +88,7 @@ export const TeacherJobCard = ({ job }: JobProps) => {
           ) : (
             <SplitSquareVertical className="h-4 w-4 mr-1" />
           )}
-          {isCompared ? 'Added to compare' : 'Compare'}
+          {isCompared ? "Added to compare" : "Compare"}
         </Button>
         <Button variant="outline" size="sm" className="flex items-center gap-1">
           <Info className="h-4 w-4 mr-1" /> Details

@@ -23,10 +23,12 @@ import {
 } from "@/components/ui/carousel";
 import { cn } from "@/lib/utils";
 import { Slider } from "@/components/ui/slider";
+import type { CarouselApi } from "@/components/ui/carousel";
 
 const HowItWorks = () => {
   const { t } = useTranslation();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
   
   const userTypes = [
     {
@@ -85,9 +87,23 @@ const HowItWorks = () => {
     },
   ];
   
-  const handleSlideChange = (index: number) => {
-    setActiveIndex(index);
-  };
+  // Set up event listeners for the carousel
+  React.useEffect(() => {
+    if (!carouselApi) return;
+    
+    const onChange = () => {
+      setActiveIndex(carouselApi.selectedScrollSnap());
+    };
+    
+    carouselApi.on("select", onChange);
+    
+    // Initialize the index
+    setActiveIndex(carouselApi.selectedScrollSnap());
+    
+    return () => {
+      carouselApi.off("select", onChange);
+    };
+  }, [carouselApi]);
 
   return (
     <section id="how-it-works" className="section-padding py-24 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
@@ -139,10 +155,7 @@ const HowItWorks = () => {
               loop: true,
             }}
             className="w-full"
-            onSelect={(api) => {
-              const currentIndex = api?.selectedScrollSnap() || 0;
-              handleSlideChange(currentIndex);
-            }}
+            setApi={setCarouselApi}
           >
             <CarouselContent>
               {userTypes.map((type, index) => {

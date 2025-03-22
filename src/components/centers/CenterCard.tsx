@@ -1,5 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { Center } from "./types";
@@ -102,6 +102,7 @@ const CenterCard: React.FC<CenterCardProps> = ({
               isToggling={isToggling}
             />
             <div className="absolute bottom-3 right-3 z-10">
+              {" "}
               <CompareButton
                 isCompared={isCompared}
                 onToggle={handleToggleComparison}
@@ -117,7 +118,7 @@ const CenterCard: React.FC<CenterCardProps> = ({
         </Card>
       ) : (
         <Card className="overflow-hidden border-0 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex flex-col md:flex-row relative">
+          <CardFooter className="flex justify-end gap-2 px-6 pb-6 pt-0">
             <ListCardImage
               center={center}
               isInFavorites={isInFavorites}
@@ -128,11 +129,7 @@ const CenterCard: React.FC<CenterCardProps> = ({
               center={center}
               handleViewDetails={handleViewDetails}
             />
-            <CompareButton
-              isCompared={isCompared}
-              onToggle={handleToggleComparison}
-            />
-          </div>
+          </CardFooter>
         </Card>
       )}
     </>

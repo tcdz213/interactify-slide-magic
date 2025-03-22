@@ -23,6 +23,7 @@ import {
   Check,
   Plus,
   Send,
+  ExternalLink,
 } from "lucide-react";
 import InstagramStoryCard from "@/components/centers/InstagramStoryCard";
 import InstagramStyleCard from "@/components/centers/InstagramStyleCard";
@@ -307,6 +308,7 @@ const CenterDetails = () => {
   const [isInstructorModalOpen, setIsInstructorModalOpen] = useState(false);
   const [newReview, setNewReview] = useState({ rating: 5, comment: "" });
   const [isAddingReview, setIsAddingReview] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const { toast } = useToast();
   const [relatedCenters, setRelatedCenters] = useState<Center[]>([]);
 
@@ -413,6 +415,16 @@ const CenterDetails = () => {
       description:
         "Your review has been submitted. Thank you for your feedback!",
     });
+  };
+
+  const openBookingModalForCourse = (course: any) => {
+    setSelectedCourse(course);
+    setIsBookingModalOpen(true);
+  };
+
+  const handleViewCourseDetails = (courseName: string) => {
+    const courseId = center.courses.findIndex((c: any) => c.name === courseName) + 1;
+    navigate(`/course/${courseId}`);
   };
 
   if (loading) {
@@ -594,9 +606,23 @@ const CenterDetails = () => {
                               {course.price}
                             </div>
                           </div>
-                          <Button className="w-full" onClick={openBookingModal}>
-                            Book Now
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline"
+                              className="w-1/2 group"
+                              onClick={() => handleViewCourseDetails(course.name)}
+                            >
+                              <span>View Details</span>
+                              <ExternalLink className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
+                            </Button>
+                            <Button 
+                              className="w-1/2"
+                              onClick={() => openBookingModalForCourse(course)}
+                            >
+                              <span>Book Now</span>
+                              <Calendar className="h-4 w-4 ml-2" />
+                            </Button>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
@@ -838,7 +864,7 @@ const CenterDetails = () => {
           isOpen={isBookingModalOpen}
           onClose={closeBookingModal}
           centerName={center.name}
-          courses={center.courses}
+          courses={selectedCourse ? [selectedCourse] : center.courses}
         />
       )}
 

@@ -11,6 +11,7 @@ import { fetchCurrentUser } from "./redux/slices/authSlice";
 import Index from "./pages/Index";
 import Discover from "./pages/Discover";
 import CenterDetails from "./pages/CenterDetails";
+import CourseDetails from "./pages/CourseDetails";
 import ForTrainingCenters from "./pages/ForTrainingCenters";
 import GetStarted from "./pages/GetStarted";
 import Categories from "./pages/Categories";
@@ -56,6 +57,7 @@ const AppContent = () => {
       <Route path="/" element={<Index />} />
       <Route path="/discover" element={<Discover />} />
       <Route path="/center/:id" element={<CenterDetails />} />
+      <Route path="/course/:id" element={<CourseDetails />} />
       <Route path="/for-training-centers" element={<ForTrainingCenters />} />
       <Route path="/get-started" element={<GetStarted />} />
       <Route path="/categories" element={<Categories />} />

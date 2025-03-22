@@ -1,7 +1,7 @@
 
 import { HomeLayout, SmoothScroll } from "@/components/home";
 import Hero from "@/components/sections/Hero";
-import HowItWorks from "@/components/sections/HowItWorks";
+import HowItWorks from "@/components/how-it-works";
 import PopularCategories from "@/components/sections/PopularCategories";
 import VIPCenters from "@/components/sections/VIPCenters";
 import FeaturedCenters from "@/components/sections/FeaturedCenters";

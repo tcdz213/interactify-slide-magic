@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { SplitSquareVertical, Check } from "lucide-react";
@@ -23,14 +24,14 @@ const CompareButton: React.FC<CompareButtonProps> = ({
   return (
     <Button
       size={size}
-      variant={isCompared ? "default" : "ghost"}
-      className={cn(`h-auto`, isCompared ? "bg-primary" : "", className)}
+      variant={isCompared ? "default" : "outline"}
+      className={cn("flex items-center gap-1", className)}
       onClick={onToggle}
     >
       {isCompared ? (
-        <Check className="h-3.5 w-3.5 mr-1" />
+        <Check className="h-4 w-4 mr-1" />
       ) : (
-        <SplitSquareVertical className="h-3.5 w-3.5 mr-1" />
+        <SplitSquareVertical className="h-4 w-4 mr-1" />
       )}
       {showLabel && (isCompared ? "Added to compare" : "Compare")}
     </Button>
