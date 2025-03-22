@@ -1,26 +1,20 @@
 
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
 import Sponsors from "@/components/Sponsors";
 import Footer from "@/components/Footer";
-import { FilterBar, FilterState, ResultsCount } from "@/components/filters";
-import SavedSearches from "@/components/filters/SavedSearches";
-import NotificationsPanel from "@/components/notifications/NotificationsPanel";
-import {
-  CentersList,
-  DiscoverHeader,
-  BrowseCategoryButton,
-  useFilteredCenters,
-  FavoritesTab,
-  RecommendationsSection,
-  CourseComparisonTable,
-} from "@/components/centers";
+import { FilterState } from "@/components/filters/types";
+import { useFilteredCenters } from "@/components/centers";
 import { useCourseComparison } from "@/hooks/centers";
 import { addNotification } from "@/redux/slices/searchSlice";
 import VIPCenters from "@/components/sections/VIPCenters";
-import { CoursesListWithFilters } from "@/components/courses";
+import { 
+  DiscoverTabs, 
+  DiscoverResultsHeader, 
+  DiscoverPageHeader, 
+  DiscoverFilters 
+} from "@/components/discover";
 
 const Discover = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -96,110 +90,52 @@ const Discover = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const totalResults = resultsType === "centers" ? filteredCenters.length : 6; // Use actual course count here
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <main className="flex-grow pt-24 pb-16">
         <div className="container-custom">
-          <div className="flex justify-between items-center mb-8">
-            <DiscoverHeader />
-            <BrowseCategoryButton />
-          </div>
+          <DiscoverPageHeader />
 
           <div className="mb-8">
             <VIPCenters showFullBackground={false} className="py-8 md:py-12 my-0" />
           </div>
 
-          <div className="mb-8">
-            <FilterBar
+          <DiscoverFilters 
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onSearch={handleSearch}
+            totalResults={totalResults}
+          />
+
+          {activeTab === "results" && (
+            <DiscoverResultsHeader
+              totalResults={totalResults}
               filters={filters}
-              onFilterChange={handleFilterChange}
-              onSearch={handleSearch}
-              totalResults={resultsType === "centers" ? filteredCenters.length : 6} // Use actual course count here
+              handleFilterChange={handleFilterChange}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              resultsType={resultsType}
+              onResultsTypeChange={setResultsType}
             />
-          </div>
+          )}
 
-          <Tabs
-            defaultValue="results"
-            value={activeTab}
-            onValueChange={setActiveTab}
-          >
-            <TabsList className="mb-6">
-              <TabsTrigger value="results">Search Results</TabsTrigger>
-              <TabsTrigger value="favorites">Favorites</TabsTrigger>
-              <TabsTrigger value="compare" className="relative">
-                Compare
-                {compareCourses.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {compareCourses.length}
-                  </span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="saved">Saved Searches</TabsTrigger>
-              <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="results">
-              <div className="mb-8">
-                <ResultsCount
-                  totalResults={resultsType === "centers" ? filteredCenters.length : 6} // Use actual course count here
-                  sort={filters.sort}
-                  onSortChange={(value) => {
-                    handleFilterChange({ ...filters, sort: value });
-                  }}
-                  viewMode={viewMode}
-                  onViewModeChange={setViewMode}
-                  resultsType={resultsType}
-                  onResultsTypeChange={setResultsType}
-                />
-              </div>
-
-              {resultsType === "centers" ? (
-                <CentersList
-                  centers={filteredCenters}
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  clearFilters={clearFilters}
-                  isLoading={isLoading}
-                />
-              ) : (
-                <CoursesListWithFilters
-                  viewMode={viewMode}
-                  setViewMode={setViewMode}
-                  clearFilters={clearFilters}
-                  isLoading={isLoading}
-                  filters={filters}
-                />
-              )}
-
-              {/* Add Recommendations Section */}
-              {filteredCenters.length > 0 && !isLoading && (
-                <div className="mt-12">
-                  <RecommendationsSection />
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="favorites">
-              <FavoritesTab viewMode={viewMode} />
-            </TabsContent>
-
-            <TabsContent value="compare">
-              <CourseComparisonTable 
-                courses={compareCourses}
-                onRemove={removeFromComparison}
-                onClear={clearComparison}
-              />
-            </TabsContent>
-
-            <TabsContent value="saved">
-              <SavedSearches />
-            </TabsContent>
-
-            <TabsContent value="notifications">
-              <NotificationsPanel />
-            </TabsContent>
-          </Tabs>
+          <DiscoverTabs
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            filteredCenters={filteredCenters}
+            resultsType={resultsType}
+            filters={filters}
+            clearFilters={clearFilters}
+            isLoading={isLoading}
+            compareCourses={compareCourses}
+            removeFromComparison={removeFromComparison}
+            clearComparison={clearComparison}
+          />
         </div>
       </main>
       <Sponsors />
