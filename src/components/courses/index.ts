@@ -7,3 +7,4 @@ export { default as CourseCardHeader } from './components/CourseCardHeader';
 export { default as CourseCardContent } from './components/CourseCardContent';
 export { default as CourseListView } from './components/CourseListView';
 export { default as CourseSkeleton } from './components/CourseSkeleton';
+export { default as CompareButtonCourse } from './components/CompareButtonCourse';

@@ -8,6 +8,8 @@ import CourseCardHeader from "./components/CourseCardHeader";
 import CourseCardContent from "./components/CourseCardContent";
 import CourseListView from "./components/CourseListView";
 import CourseSkeleton from "./components/CourseSkeleton";
+import CompareButtonCourse from "./components/CompareButtonCourse";
+import { useCourseComparison } from "@/hooks/centers/useCourseComparison";
 
 // Define the Course type with minimal required properties
 interface Course {
@@ -39,6 +41,7 @@ const CourseCard: React.FC<CourseCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const { addToComparison, removeFromComparison, isInComparison } = useCourseComparison();
 
   // Show skeleton if loading
   if (isLoading) {
@@ -60,13 +63,32 @@ const CourseCard: React.FC<CourseCardProps> = ({
     setIsBookingModalOpen(true);
   };
 
+  const handleToggleCompare = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isInComparison(course.id)) {
+      removeFromComparison(course.id);
+    } else {
+      addToComparison(course);
+    }
+  };
+
   if (viewMode === "grid") {
     return (
       <>
         <Card 
-          className="overflow-hidden border-0 rounded-xl shadow-sm hover-card-effect cursor-pointer"
+          className="overflow-hidden border-0 rounded-xl shadow-sm hover-card-effect cursor-pointer relative"
           onClick={() => handleViewCourseDetails(course.id)}
         >
+          <div className="absolute top-3 right-3 z-10">
+            <CompareButtonCourse
+              isCompared={isInComparison(course.id)}
+              onToggle={handleToggleCompare}
+              showLabel={false}
+              size="sm"
+              className="bg-black/40 hover:bg-black/60 backdrop-blur-sm border-none"
+            />
+          </div>
+          
           <CourseCardHeader 
             image={course.image}
             name={course.name}
@@ -111,9 +133,18 @@ const CourseCard: React.FC<CourseCardProps> = ({
   return (
     <>
       <Card
-        className="overflow-hidden border-0 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        className="overflow-hidden border-0 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer relative"
         onClick={() => handleViewCourseDetails(course.id)}
       >
+        <div className="absolute top-3 right-3 z-10">
+          <CompareButtonCourse
+            isCompared={isInComparison(course.id)}
+            onToggle={handleToggleCompare}
+            showLabel={true}
+            size="sm"
+          />
+        </div>
+        
         <CourseListView 
           course={course}
           onViewCenter={handleViewCenterDetails}
