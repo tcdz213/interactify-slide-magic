@@ -10,6 +10,7 @@ import CourseListView from "./components/CourseListView";
 import CourseSkeleton from "./components/CourseSkeleton";
 import CompareButtonCourse from "./components/CompareButtonCourse";
 import { useCourseComparison } from "@/hooks/centers/useCourseComparison";
+import { Center } from "@/types/center.types";
 
 // Define the Course type with minimal required properties
 interface Course {
@@ -65,10 +66,29 @@ const CourseCard: React.FC<CourseCardProps> = ({
 
   const handleToggleCompare = (e: React.MouseEvent) => {
     e.stopPropagation();
+    
+    // Convert Course to Center format for comparison
+    const centerFormatCourse: Center = {
+      id: course.id,
+      name: course.name,
+      location: course.centerLocation,
+      status: "active", // Default value
+      verified: true, // Default value
+      description: course.description,
+      category: course.category,
+      image: course.image,
+      featured: course.featured,
+      rating: course.rating,
+      reviews: course.reviews,
+      price: course.price,
+      currency: "USD", // Default value
+      features: [] // Default empty features
+    };
+    
     if (isInComparison(course.id)) {
       removeFromComparison(course.id);
     } else {
-      addToComparison(course);
+      addToComparison(centerFormatCourse);
     }
   };
 
