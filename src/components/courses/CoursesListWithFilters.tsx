@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { coursesData } from './coursesData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,13 +14,23 @@ import { Button } from "@/components/ui/button";
 interface CoursesListWithFiltersProps {
   initialTab?: string;
   className?: string;
+  viewMode?: 'grid' | 'list';
+  setViewMode?: React.Dispatch<React.SetStateAction<'grid' | 'list'>>;
+  clearFilters?: () => void;
+  isLoading?: boolean;
+  filters?: FilterState;
 }
 
 const CoursesListWithFilters: React.FC<CoursesListWithFiltersProps> = ({ 
   initialTab = "all",
-  className 
+  className,
+  viewMode: externalViewMode,
+  setViewMode: externalSetViewMode,
+  clearFilters: externalClearFilters,
+  isLoading: externalIsLoading,
+  filters: externalFilters
 }) => {
-  const [filters, setFilters] = useState<FilterState>({
+  const [filters, setFilters] = useState<FilterState>(externalFilters || {
     searchQuery: "",
     category: "all",
     subcategory: null,
@@ -31,11 +42,28 @@ const CoursesListWithFilters: React.FC<CoursesListWithFiltersProps> = ({
     features: [],
   });
   const [filteredCourses, setFilteredCourses] = useState(coursesData);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(externalIsLoading || false);
+
+  // Use internal or external state for view mode
+  const [internalViewMode, setInternalViewMode] = useState<'grid' | 'list'>('grid');
+  const viewMode = externalViewMode || internalViewMode;
+  const setViewMode = externalSetViewMode || setInternalViewMode;
 
   useEffect(() => {
     applyFilters();
   }, []);
+
+  useEffect(() => {
+    if (externalFilters) {
+      setFilters(externalFilters);
+    }
+  }, [externalFilters]);
+
+  useEffect(() => {
+    if (externalIsLoading !== undefined) {
+      setIsLoading(externalIsLoading);
+    }
+  }, [externalIsLoading]);
 
   const applyFilters = () => {
     setIsLoading(true);
@@ -67,8 +95,22 @@ const CoursesListWithFilters: React.FC<CoursesListWithFiltersProps> = ({
     setFilters(newFilters);
   };
 
-  // Add state for view mode (grid or list)
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const clearFiltersInternal = () => {
+    setFilters({
+      searchQuery: "",
+      category: "all",
+      subcategory: null,
+      subcategories: [],
+      location: "all",
+      rating: "any",
+      priceRange: [0, 1000],
+      sort: "featured",
+      features: [],
+    });
+    if (externalClearFilters) {
+      externalClearFilters();
+    }
+  };
 
   // Function to toggle view mode
   const toggleViewMode = (mode: 'grid' | 'list') => {
