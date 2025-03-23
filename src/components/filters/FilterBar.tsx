@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FilterState } from "./types";
 import ActiveFilters from "./ActiveFilters";
@@ -10,6 +11,7 @@ type FilterBarProps = {
   onFilterChange: (filters: FilterState) => void;
   onSearch: () => void;
   totalResults: number;
+  activeTab?: string;
 };
 
 const FilterBar = ({
@@ -17,6 +19,7 @@ const FilterBar = ({
   onFilterChange,
   onSearch,
   totalResults,
+  activeTab,
 }: FilterBarProps) => {
   const [localFilters, setLocalFilters] = useState<FilterState>({
     ...filters,
@@ -103,30 +106,32 @@ const FilterBar = ({
 
   return (
     <div className="w-full space-y-2 md:space-y-4">
-      <div className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-md p-3 md:p-4">
-        <FilterInputs
-          filters={localFilters}
-          onChange={handleInputChange}
-          onFilterChange={onFilterChange}
-          activeFeatures={activeFeatures}
-          setActiveFeatures={setActiveFeatures}
-          applyFilters={applyFilters}
-          clearFilters={clearFilters}
-          hasActiveFilters={hasActiveFilters}
-        />
+      {activeTab !== "favorites" && (
+        <div className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-md p-3 md:p-4">
+          <FilterInputs
+            filters={localFilters}
+            onChange={handleInputChange}
+            onFilterChange={onFilterChange}
+            activeFeatures={activeFeatures}
+            setActiveFeatures={setActiveFeatures}
+            applyFilters={applyFilters}
+            clearFilters={clearFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
 
-        <ActiveFilters
-          filters={localFilters}
-          removeFilter={removeFilter}
-          hasActiveFilters={hasActiveFilters}
-          clearFilters={clearFilters}
-        />
+          <ActiveFilters
+            filters={localFilters}
+            removeFilter={removeFilter}
+            hasActiveFilters={hasActiveFilters}
+            clearFilters={clearFilters}
+          />
 
-        <FilterActions
-          hasActiveFilters={hasActiveFilters()}
-          onSaveSearch={() => {}}
-        />
-      </div>
+          <FilterActions
+            hasActiveFilters={hasActiveFilters()}
+            onSaveSearch={() => {}}
+          />
+        </div>
+      )}
     </div>
   );
 };
