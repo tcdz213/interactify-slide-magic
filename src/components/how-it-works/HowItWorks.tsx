@@ -9,7 +9,7 @@ const HowItWorks = () => {
       <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-primary/5 -translate-x-1/2 -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full translate-x-1/3 translate-y-1/3 bg-amber-100"></div>
       
-      <div className="container-custom relative z-10 my-0 py-[95px] bg-slate-800">
+      <div className="container-custom relative z-10 my-0 py-[95px] bg-transparent">
         {/* Header Section */}
         <HowItWorksHeader />
 

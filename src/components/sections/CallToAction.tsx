@@ -10,19 +10,19 @@ const CallToAction = () => {
       <div className="container-custom">
         <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="grid md:grid-cols-2">
-            <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center bg-slate-800">
-              <h2 className="text-2xl md:text-3xl font-semibold mb-4">{t('callToAction.title')}</h2>
-              <p className="text-muted-foreground mb-6">
+            <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center bg-transparent">
+              <h2 className="text-2xl md:text-3xl font-semibold mb-4 text-slate-800">{t('callToAction.title')}</h2>
+              <p className="mb-6 text-slate-900">
                 {t('callToAction.description')}
               </p>
-              <div className="space-y-4">
+              <div className="space-y-4 bg-transparent">
                 <div className="flex items-start">
                   <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mt-0.5 mr-3">
                     <span className="text-sm font-medium">1</span>
                   </div>
                   <div>
-                    <h3 className="text-base font-medium">{t('callToAction.steps.step1.title')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('callToAction.steps.step1.description')}</p>
+                    <h3 className="text-base font-medium text-slate-900">{t('callToAction.steps.step1.title')}</h3>
+                    <p className="text-sm text-slate-800">{t('callToAction.steps.step1.description')}</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -30,8 +30,8 @@ const CallToAction = () => {
                     <span className="text-sm font-medium">2</span>
                   </div>
                   <div>
-                    <h3 className="text-base font-medium">{t('callToAction.steps.step2.title')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('callToAction.steps.step2.description')}</p>
+                    <h3 className="text-base font-medium text-slate-900">{t('callToAction.steps.step2.title')}</h3>
+                    <p className="text-sm text-slate-800">{t('callToAction.steps.step2.description')}</p>
                   </div>
                 </div>
                 <div className="flex items-start">
@@ -39,8 +39,8 @@ const CallToAction = () => {
                     <span className="text-sm font-medium">3</span>
                   </div>
                   <div>
-                    <h3 className="text-base font-medium">{t('callToAction.steps.step3.title')}</h3>
-                    <p className="text-sm text-muted-foreground">{t('callToAction.steps.step3.description')}</p>
+                    <h3 className="text-base font-medium text-slate-900">{t('callToAction.steps.step3.title')}</h3>
+                    <p className="text-sm text-slate-800">{t('callToAction.steps.step3.description')}</p>
                   </div>
                 </div>
               </div>
