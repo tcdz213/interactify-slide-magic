@@ -1,12 +1,12 @@
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Lightbulb } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 
 const HowItWorksHeader = () => {
   const { t } = useTranslation();
-  
+
   return (
     <div className="text-center mb-16">
       <motion.div 

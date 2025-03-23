@@ -1,12 +1,11 @@
-
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { sortOptions } from './types';
+import { sortOptions } from "./types";
 
 type SortSelectProps = {
   value: string;
@@ -15,10 +14,7 @@ type SortSelectProps = {
 
 const SortSelect = ({ value, onChange }: SortSelectProps) => {
   return (
-    <Select 
-      value={value} 
-      onValueChange={onChange}
-    >
+    <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="w-[180px]">
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>

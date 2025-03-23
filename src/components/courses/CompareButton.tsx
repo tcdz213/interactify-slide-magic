@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SplitSquareVertical, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface CompareButtonCourseProps {
+interface CompareButtonProps {
   isCompared: boolean;
   onToggle: (e: React.MouseEvent) => void;
   size?: "default" | "sm" | "lg" | "icon";
@@ -13,7 +13,7 @@ interface CompareButtonCourseProps {
   showLabel?: boolean;
 }
 
-const CompareButtonCourse: React.FC<CompareButtonCourseProps> = ({
+const CompareButton: React.FC<CompareButtonProps> = ({
   isCompared,
   onToggle,
   size = "sm",
@@ -38,4 +38,4 @@ const CompareButtonCourse: React.FC<CompareButtonCourseProps> = ({
   );
 };
 
-export default CompareButtonCourse;
+export default CompareButton;

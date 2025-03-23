@@ -8,6 +8,7 @@ import shareTrackingReducer from './slices/shareTrackingSlice';
 import notificationsReducer from './slices/notificationsSlice';
 import centersReducer from './slices/centersSlice';
 import { comparisonReducer } from "@/hooks/centers/useCourseComparison";
+import { courseComparisonReducer } from "@/hooks/courses/useCourseComparison";
 import { jobComparisonReducer } from "@/hooks/teachers/useJobComparison";
 import { teacherComparisonReducer } from "@/hooks/teachers/useTeacherComparison";
 
@@ -21,6 +22,7 @@ export const store = configureStore({
     notifications: notificationsReducer,
     centers: centersReducer,
     comparison: comparisonReducer,
+    courseComparison: courseComparisonReducer,
     jobComparison: jobComparisonReducer,
     teacherComparison: teacherComparisonReducer,
   },

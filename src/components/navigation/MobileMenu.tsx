@@ -22,12 +22,6 @@ export const MobileMenu = ({
     { name: "Teaching Jobs", path: "/teacher-job-listings", icon: Briefcase },
     { name: "Community", path: "/community", icon: Users },
     { name: "About", path: "/about", icon: Info },
-    {
-      name: "Getstrted",
-      path: "/get-started",
-      icon: Mail,
-      className: "bg-primary text-primary",
-    },
   ];
 
   return (
@@ -55,8 +49,7 @@ export const MobileMenu = ({
             </Link>
           ))}
         </nav>
-
-        <MobileNavActions toggleMenu={toggleMenu} />
+        <MobileNavActions />
       </div>
     </div>
   );

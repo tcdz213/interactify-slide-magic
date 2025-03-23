@@ -1,140 +1,119 @@
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
 import { 
   GraduationCap, 
   Users, 
-  Building, 
-  ArrowRight
+  Building,
+  Search, 
+  Bookmark, 
+  Bell, 
+  Calendar, 
+  Handshake, 
+  ListChecks,
+  Megaphone,
+  UserCog
 } from "lucide-react";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import { cn } from "@/lib/utils";
-import type { CarouselApi } from "@/components/ui/carousel";
-import UserTypeCard from './UserTypeCard';
-import StepsProcess from './StepsProcess';
+import UserTypeCardWithImage from './UserTypeCardWithImage';
 
 const HowItWorksUserTypes = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-  
+  const [activeType, setActiveType] = useState("learners");
+
   const userTypes = [
     {
       id: "learners",
       icon: GraduationCap,
-      title: "For Learners",
-      description: "Discover thousands of courses and training programs that match your interests and career goals.",
+      title: "📚 For Learners",
+      description: "Discover, Save & Book!",
       color: "bg-blue-50 text-blue-600",
       route: "/discover",
-      buttonText: "Find Courses",
+      buttonText: "Find Your Course Now",
+      imageSrc: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1471&q=80",
       steps: [
-        { title: "Browse courses by category", description: "Explore our extensive catalog of courses" },
-        { title: "Compare training centers", description: "Read reviews and compare features" },
-        { title: "Book your preferred course", description: "Secure your spot with our easy booking system" }
+        { title: "Explore Courses – Browse thousands of training programs tailored to your goals." },
+        { title: "Smart Search & Compare – Filter by category, price, location, and ratings." },
+        { title: "Bookmark & Share – Save your favorite courses and share with friends." },
+        { title: "Follow Training Centers – Stay updated on new courses and promotions." },
+        { title: "Get Instant Alerts – Receive notifications on discounts and course updates." },
+        { title: "Enroll & Learn – Secure your spot and start your learning journey!" },
+        { title: "Join the Community – Connect, discuss, and share experiences with others." }
       ]
     },
     {
       id: "teachers",
       icon: Users,
-      title: "For Teachers",
-      description: "Share your expertise and connect with students around the world. Create your teaching profile today.",
+      title: "🎓 For Trainers",
+      description: "Teach, Earn & Grow!",
       color: "bg-emerald-50 text-emerald-600",
       route: "/teacher-job-post",
-      buttonText: "Start Teaching",
+      buttonText: "Register as a Trainer",
+      imageSrc: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
       steps: [
-        { title: "Create your teacher profile", description: "Showcase your skills and experience" },
-        { title: "Browse teaching opportunities", description: "Find positions that match your expertise" },
-        { title: "Apply and connect", description: "Connect with training centers looking for your skills" }
+        { title: "Create Your Profile – Showcase your expertise and skills." },
+        { title: "Manage Your Availability – Set schedules and offer flexible learning options." },
+        { title: "Expand Your Reach – Connect with students worldwide." },
+        { title: "Get Hired – Work with training centers and learners." },
+        { title: "Earn & Scale – Manage enrollments and boost your teaching career." },
+        { title: "Engage & Network – Answer questions and grow your professional network." }
       ]
     },
     {
       id: "centers",
       icon: Building,
-      title: "For Training Centers",
-      description: "Expand your reach and attract more students to your programs. List your courses on our platform.",
+      title: "🏫 For Training Centers",
+      description: "Boost Enrollment & Visibility!",
       color: "bg-amber-50 text-amber-600",
       route: "/for-training-centers",
-      buttonText: "Register Center",
+      buttonText: "Register Your Training Center",
+      imageSrc: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
       steps: [
-        { title: "Register your training center", description: "Create your center's profile" },
-        { title: "Add your courses and programs", description: "List all your offerings with details" },
-        { title: "Manage bookings and grow", description: "Track applications and expand your reach" }
+        { title: "List Your Training Programs – Attract learners with your courses." },
+        { title: "Promote Your Center – Gain visibility and reach a wider audience." },
+        { title: "Simplify Student Management – Handle enrollments efficiently." },
+        { title: "Hire Top Trainers – Recruit the best instructors for your courses." },
+        { title: "Compare & Select Experts – Choose the best trainers for your faculty." },
+        { title: "Build a Community – Engage with learners and trainers to strengthen your reputation." }
       ]
     },
   ];
-  
-  // Set up event listeners for the carousel
-  useEffect(() => {
-    if (!carouselApi) return;
-    
-    const onChange = () => {
-      setActiveIndex(carouselApi.selectedScrollSnap());
-    };
-    
-    carouselApi.on("select", onChange);
-    
-    // Initialize the index
-    setActiveIndex(carouselApi.selectedScrollSnap());
-    
-    return () => {
-      carouselApi.off("select", onChange);
-    };
-  }, [carouselApi]);
 
   return (
-    <>
-      {/* User Types Carousel */}
-      <div className="mb-20">
-        <Carousel
-          opts={{
-            align: "center",
-            loop: true,
-          }}
-          className="w-full"
-          setApi={setCarouselApi}
-        >
-          <CarouselContent>
-            {userTypes.map((type, index) => (
-              <CarouselItem key={type.id} className="md:basis-1/2 lg:basis-1/3 pl-4">
-                <UserTypeCard
-                  icon={type.icon}
-                  title={type.title}
-                  description={type.description}
-                  color={type.color}
-                  route={type.route}
-                  buttonText={type.buttonText}
-                  isActive={activeIndex === index}
-                  steps={type.steps}
-                />
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <div className="flex items-center justify-center mt-8">
-            <CarouselPrevious className="relative static transform-none mx-2" />
-            <div className="flex space-x-2">
-              {userTypes.map((_, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all duration-300",
-                    activeIndex === index ? "bg-primary w-8" : "bg-muted"
-                  )}
-                />
-              ))}
-            </div>
-            <CarouselNext className="relative static transform-none mx-2" />
-          </div>
-        </Carousel>
+    <div className="space-y-12">
+      {/* Selector Tabs */}
+      <div className="flex flex-wrap justify-center gap-4 mb-8">
+        {userTypes.map(type => (
+          <button
+            key={type.id}
+            onClick={() => setActiveType(type.id)}
+            className={`px-5 py-3 rounded-full text-sm font-medium transition-all ${
+              activeType === type.id 
+                ? "bg-primary text-white shadow-md" 
+                : "bg-muted hover:bg-muted/80 text-muted-foreground"
+            }`}
+          >
+            {type.title}
+          </button>
+        ))}
       </div>
-      
-      {/* Steps Process */}
-      <StepsProcess />
-    </>
+
+      {/* Cards */}
+      <div className="grid grid-cols-1 gap-8">
+        {userTypes.map((type) => (
+          <div key={type.id} style={{ display: activeType === type.id ? 'block' : 'none' }}>
+            <UserTypeCardWithImage
+              icon={type.icon}
+              title={type.title}
+              description={type.description}
+              color={type.color}
+              route={type.route}
+              buttonText={type.buttonText}
+              isActive={true}
+              steps={type.steps}
+              imageSrc={type.imageSrc}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 

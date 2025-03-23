@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { FilterState } from "./types";
 import ActiveFilters from "./ActiveFilters";
@@ -21,7 +20,7 @@ const FilterBar = ({
 }: FilterBarProps) => {
   const [localFilters, setLocalFilters] = useState<FilterState>({
     ...filters,
-    subcategories: filters.subcategories || []
+    subcategories: filters.subcategories || [],
   });
   const [activeFeatures, setActiveFeatures] = useState<string[]>(
     filters.features || []
@@ -123,20 +122,11 @@ const FilterBar = ({
           clearFilters={clearFilters}
         />
 
-        <FilterActions 
-          hasActiveFilters={hasActiveFilters()} 
+        <FilterActions
+          hasActiveFilters={hasActiveFilters()}
           onSaveSearch={() => {}}
         />
       </div>
-
-      <ResultsCount
-        totalResults={totalResults}
-        sort={localFilters.sort}
-        onSortChange={(value) => {
-          handleInputChange("sort", value);
-          onFilterChange({ ...localFilters, sort: value });
-        }}
-      />
     </div>
   );
 };
