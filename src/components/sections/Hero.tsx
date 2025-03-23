@@ -1,5 +1,5 @@
 
-import { useState, useEffect, memo } from "react";
+import { useState, useEffect, useCallback, memo } from "react";
 import { motion } from "framer-motion";
 import HeroTitle from "@/components/hero/HeroTitle";
 import HeroActions from "@/components/hero/HeroActions";
@@ -8,13 +8,14 @@ import ScrollIndicator from "@/components/hero/ScrollIndicator";
 import NeonGlowCursor from "@/components/hero/NeonGlowCursor";
 import SearchBox from "@/components/hero/SearchBox";
 
-const Hero = () => {
+const backgroundImages = [
+  "gradient-1",
+  "gradient-2",
+  "gradient-3"
+];
+
+const HeroInner = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const backgroundImages = [
-    "gradient-1",
-    "gradient-2",
-    "gradient-3"
-  ];
 
   // Change background image every 5 seconds
   useEffect(() => {
@@ -75,4 +76,6 @@ const Hero = () => {
   );
 };
 
-export default memo(Hero);
+const Hero = memo(HeroInner);
+
+export default Hero;
