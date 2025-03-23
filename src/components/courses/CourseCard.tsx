@@ -11,6 +11,8 @@ import { BookingModal } from "@/components/BookingModal";
 import { useCourseComparison } from "@/hooks/courses";
 import CompareButton from "./CompareButton";
 import ShareButton from "./ShareButton";
+import FavoriteButton from "./FavoriteButton";
+import { useCoursesWishlist } from "@/hooks/useCoursesWishlist";
 
 // Define the Course type with minimal required properties
 interface Course {
@@ -42,8 +44,11 @@ const CourseCard: React.FC<CourseCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
   const { addToComparison, removeFromComparison, isInComparison } = useCourseComparison();
+  const { isFavorite, toggleFavoriteItem } = useCoursesWishlist();
   const isCompared = isInComparison(course.id);
+  const isInFavorites = isFavorite(course.id);
 
   // Show skeleton if loading
   if (isLoading) {
@@ -71,6 +76,19 @@ const CourseCard: React.FC<CourseCardProps> = ({
       removeFromComparison(course.id);
     } else {
       addToComparison(course);
+    }
+  };
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsToggling(true);
+
+    try {
+      // Simulate network delay for demonstration
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      toggleFavoriteItem(course.id, course.name);
+    } finally {
+      setIsToggling(false);
     }
   };
 
@@ -106,6 +124,13 @@ const CourseCard: React.FC<CourseCardProps> = ({
               </div>
             </div>
             <div className="absolute top-3 right-3 z-10 flex space-x-2">
+              <FavoriteButton 
+                isFavorite={isInFavorites}
+                onToggle={handleToggleFavorite}
+                isToggling={isToggling}
+                showLabel={false}
+                className="bg-black/40 hover:bg-black/60 text-white border-none backdrop-blur-sm"
+              />
               <ShareButton
                 courseId={course.id}
                 courseName={course.name}
@@ -199,6 +224,13 @@ const CourseCard: React.FC<CourseCardProps> = ({
               </Badge>
             )}
             <div className="absolute top-3 right-3 flex space-x-2">
+              <FavoriteButton 
+                isFavorite={isInFavorites}
+                onToggle={handleToggleFavorite}
+                isToggling={isToggling}
+                showLabel={false}
+                className="bg-black/40 hover:bg-black/60 text-white border-none backdrop-blur-sm"
+              />
               <ShareButton
                 courseId={course.id}
                 courseName={course.name}
