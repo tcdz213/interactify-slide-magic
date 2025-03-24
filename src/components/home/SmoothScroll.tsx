@@ -1,7 +1,10 @@
 
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 const SmoothScroll = () => {
+  const location = useLocation();
+
   useEffect(() => {
     // Smooth scroll handling for anchor links
     const handleAnchorClick = (e: MouseEvent) => {
@@ -28,6 +31,24 @@ const SmoothScroll = () => {
       document.removeEventListener("click", handleAnchorClick);
     };
   }, []);
+
+  // Control scroll restoration on route changes
+  useEffect(() => {
+    // Always scroll to top on route changes for all pages
+    window.scrollTo({
+      top: 0,
+      behavior: "instant", // Use instant to avoid animation on page change
+    });
+
+    // Update history state with current path to track navigation
+    const prevPath = window.history.state?.prevPath;
+    if (prevPath !== location.pathname) {
+      window.history.replaceState(
+        { ...window.history.state, prevPath: location.pathname },
+        ""
+      );
+    }
+  }, [location]);
 
   return null;
 };

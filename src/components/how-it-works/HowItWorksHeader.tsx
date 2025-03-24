@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
@@ -18,7 +19,7 @@ const HowItWorksHeader = () => {
     }} viewport={{
       once: true
     }} className="inline-block mb-5">
-        <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mx-auto">
+        <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mx-auto dark:bg-primary/20 dark:text-primary/90">
           <Lightbulb className="h-8 w-8" />
         </div>
       </motion.div>
@@ -34,7 +35,7 @@ const HowItWorksHeader = () => {
       delay: 0.1
     }} viewport={{
       once: true
-    }} className="text-3xl md:text-4xl font-bold mb-4 text-slate-800">
+    }} className="text-3xl md:text-4xl font-bold mb-4 text-foreground">
         {t('howItWorks.title')}
       </motion.h2>
       
@@ -49,7 +50,7 @@ const HowItWorksHeader = () => {
       delay: 0.2
     }} viewport={{
       once: true
-    }} className="text-lg max-w-3xl mx-auto mb-8 text-slate-800">
+    }} className="text-lg max-w-3xl mx-auto mb-8 text-muted-foreground">
         {t('howItWorks.description')}
       </motion.p>
     </div>;

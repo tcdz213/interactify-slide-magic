@@ -51,9 +51,9 @@ const UserTypeCard = ({
           {steps.map((step, index) => (
             <StepListItem 
               key={index} 
-              number={index + 1} 
               title={step.title} 
               description={step.description} 
+              index={index} 
             />
           ))}
         </div>

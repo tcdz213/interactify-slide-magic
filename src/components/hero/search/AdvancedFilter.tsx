@@ -33,24 +33,24 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
       <PopoverTrigger asChild>
         <Button 
           variant="outline" 
-          className="h-12 rounded-lg px-4 flex justify-between items-center w-full md:w-auto gap-2"
+          className="h-12 rounded-lg px-4 flex justify-between items-center w-full md:w-auto gap-2 discover-filter-button"
           aria-label="Open filters"
         >
           <Filter className="h-4 w-4" aria-hidden="true" />
-          <span className="text-muted-foreground">{filtersLabel}</span>
+          <span className="text-muted-foreground dark:text-gray-400">{filtersLabel}</span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-4">
+      <PopoverContent className="w-80 p-4 filter-popover-content shadow-lg">
         <div className="space-y-4" role="group" aria-label="Search filters">
-          <h3 className="font-medium" id="filter-heading">Refine Results</h3>
+          <h3 className="font-medium dark:text-gray-200" id="filter-heading">Refine Results</h3>
           
           <div className="space-y-2">
-            <Label htmlFor="training-type" id="type-label" className="text-sm font-medium">Training Type</Label>
+            <Label htmlFor="training-type" id="type-label" className="text-sm font-medium dark:text-gray-300">Training Type</Label>
             <Select>
-              <SelectTrigger id="training-type" aria-labelledby="type-label">
+              <SelectTrigger id="training-type" aria-labelledby="type-label" className="filter-select-trigger">
                 <SelectValue placeholder="Select type" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="filter-select-content">
                 <SelectItem value="fitness">Fitness & Health</SelectItem>
                 <SelectItem value="professional">Professional Skills</SelectItem>
                 <SelectItem value="technical">Technical Training</SelectItem>
@@ -61,8 +61,8 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
           
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="price-slider" id="price-label" className="text-sm font-medium">Price Range</Label>
-              <span className="text-sm text-muted-foreground" aria-live="polite" aria-atomic="true">
+              <Label htmlFor="price-slider" id="price-label" className="text-sm font-medium dark:text-gray-300">Price Range</Label>
+              <span className="text-sm text-muted-foreground dark:text-gray-400" aria-live="polite" aria-atomic="true">
                 ${priceRange[0]} - $1000
               </span>
             </div>
@@ -73,16 +73,17 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
               step={50}
               onValueChange={setPriceRange}
               aria-labelledby="price-label"
+              className="dark:bg-gray-700"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="rating-select" id="rating-label" className="text-sm font-medium">Rating</Label>
+            <Label htmlFor="rating-select" id="rating-label" className="text-sm font-medium dark:text-gray-300">Rating</Label>
             <Select defaultValue="4">
-              <SelectTrigger id="rating-select" aria-labelledby="rating-label">
+              <SelectTrigger id="rating-select" aria-labelledby="rating-label" className="filter-select-trigger">
                 <SelectValue placeholder="Minimum rating" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="filter-select-content">
                 <SelectItem value="3">3+ Stars</SelectItem>
                 <SelectItem value="4">4+ Stars</SelectItem>
                 <SelectItem value="4.5">4.5+ Stars</SelectItem>
@@ -90,7 +91,7 @@ const AdvancedFilter: React.FC<AdvancedFilterProps> = ({
             </Select>
           </div>
           
-          <Button className="w-full" onClick={onApplyFilters}>Apply Filters</Button>
+          <Button className="w-full dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90" onClick={onApplyFilters}>Apply Filters</Button>
         </div>
       </PopoverContent>
     </Popover>

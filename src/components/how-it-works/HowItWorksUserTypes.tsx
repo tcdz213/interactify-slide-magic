@@ -24,7 +24,7 @@ const HowItWorksUserTypes = () => {
       icon: GraduationCap,
       title: "📚 For Learners",
       description: "Discover, Save & Book!",
-      color: "bg-blue-50 text-blue-600",
+      color: "bg-blue-50 text-blue-600 dark:bg-blue-950/50 dark:text-blue-400",
       route: "/discover",
       buttonText: "Find Your Course Now",
       imageSrc: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1471&q=80",
@@ -43,7 +43,7 @@ const HowItWorksUserTypes = () => {
       icon: Users,
       title: "🎓 For Trainers",
       description: "Teach, Earn & Grow!",
-      color: "bg-emerald-50 text-emerald-600",
+      color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400",
       route: "/teacher-job-post",
       buttonText: "Register as a Trainer",
       imageSrc: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
@@ -61,7 +61,7 @@ const HowItWorksUserTypes = () => {
       icon: Building,
       title: "🏫 For Training Centers",
       description: "Boost Enrollment & Visibility!",
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-amber-50 text-amber-600 dark:bg-amber-950/50 dark:text-amber-400",
       route: "/for-training-centers",
       buttonText: "Register Your Training Center",
       imageSrc: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1470&q=80",
@@ -86,8 +86,8 @@ const HowItWorksUserTypes = () => {
             onClick={() => setActiveType(type.id)}
             className={`px-5 py-3 rounded-full text-sm font-medium transition-all ${
               activeType === type.id 
-                ? "bg-primary text-white shadow-md" 
-                : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                ? "bg-primary text-primary-foreground shadow-md dark:shadow-primary/20" 
+                : "bg-muted hover:bg-muted/80 text-muted-foreground dark:bg-muted/50 dark:hover:bg-muted/70"
             }`}
           >
             {type.title}

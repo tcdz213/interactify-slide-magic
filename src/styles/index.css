@@ -1,0 +1,33 @@
+
+/* Base styles */
+@import './base.css';
+
+/* Theme variables */
+@import './theme-variables.css';
+
+/* Utility classes */
+@import './utilities.css';
+
+/* Animation styles */
+@import './animations.css';
+
+/* Dark mode utilities */
+@import './dark-mode.css';
+
+/* RTL support */
+@import './rtl-support.css';
+
+/* Accessibility styles */
+@import './accessibility.css';
+
+/* Ensure smooth scrolling globally */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Disable smooth scrolling when users have requested reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

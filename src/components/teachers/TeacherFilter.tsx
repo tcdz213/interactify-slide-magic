@@ -31,11 +31,13 @@ export function TeacherFilter({ onFilterChange }: TeacherFilterProps) {
   };
 
   return (
-    <FilterBar
-      filters={filters}
-      onFilterChange={handleFilterChange}
-      onSearch={handleSearch}
-      totalResults={50} // This would come from API in a real app
-    />
+    <div className="teacher-filter discover-filter rounded-xl p-1 dark:shadow-lg dark:shadow-black/10">
+      <FilterBar
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onSearch={handleSearch}
+        totalResults={50} // This would come from API in a real app
+      />
+    </div>
   );
 }

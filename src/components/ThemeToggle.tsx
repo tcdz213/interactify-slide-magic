@@ -1,12 +1,12 @@
 
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun, Monitor, Contrast } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Switch } from "@/components/ui/switch";
+import { Toggle } from "@/components/ui/toggle";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -19,59 +19,88 @@ import { Button } from "@/components/ui/button";
 const ThemeToggle = () => {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
+  const isHighContrast = resolvedTheme === "high-contrast";
 
   return (
     <div className="flex items-center gap-2">
-      {/* Simple Toggle Switch */}
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center gap-2">
-            <Sun className={cn("h-4 w-4 transition-colors duration-200", 
-              isDark ? "text-muted-foreground" : "text-primary")} />
-            <Switch
-              checked={isDark}
-              onCheckedChange={() => setTheme(isDark ? "light" : "dark")}
-              aria-label="Toggle theme"
-              className="data-[state=checked]:bg-primary"
-            />
-            <Moon className={cn("h-4 w-4 transition-colors duration-200", 
-              isDark ? "text-primary" : "text-muted-foreground")} />
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <p>{resolvedTheme === "light" ? "Switch to dark mode" : "Switch to light mode"}</p>
-        </TooltipContent>
-      </Tooltip>
-
-      {/* Advanced Theme Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="ml-1 h-8 w-8">
-            {theme === "light" ? (
+      {/* Theme Button Group */}
+      <div className="flex items-center gap-1 p-1 rounded-md bg-muted">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Toggle
+              variant="outline"
+              size="sm"
+              pressed={resolvedTheme === "light"}
+              onPressedChange={() => setTheme("light")}
+              aria-label="Light mode"
+              className="focus-ring data-[state=on]:bg-background data-[state=on]:text-foreground"
+            >
               <Sun className="h-4 w-4" />
-            ) : theme === "dark" ? (
+              <span className="sr-only">Light</span>
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>Light mode (Alt+Shift+L)</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Toggle
+              variant="outline"
+              size="sm"
+              pressed={resolvedTheme === "dark"}
+              onPressedChange={() => setTheme("dark")}
+              aria-label="Dark mode"
+              className="focus-ring data-[state=on]:bg-background data-[state=on]:text-foreground"
+            >
               <Moon className="h-4 w-4" />
-            ) : (
+              <span className="sr-only">Dark</span>
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>Dark mode (Alt+Shift+D)</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Toggle
+              variant="outline"
+              size="sm"
+              pressed={resolvedTheme === "high-contrast"}
+              onPressedChange={() => setTheme("high-contrast")}
+              aria-label="High contrast mode"
+              className="focus-ring data-[state=on]:bg-background data-[state=on]:text-foreground"
+            >
+              <Contrast className="h-4 w-4" />
+              <span className="sr-only">High Contrast</span>
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>High contrast mode (Alt+Shift+H)</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Toggle
+              variant="outline"
+              size="sm"
+              pressed={theme === "system"}
+              onPressedChange={() => setTheme("system")}
+              aria-label="System preference"
+              className="focus-ring data-[state=on]:bg-background data-[state=on]:text-foreground"
+            >
               <Monitor className="h-4 w-4" />
-            )}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setTheme("light")}>
-            <Sun className="mr-2 h-4 w-4" />
-            <span>Light</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("dark")}>
-            <Moon className="mr-2 h-4 w-4" />
-            <span>Dark</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setTheme("system")}>
-            <Monitor className="mr-2 h-4 w-4" />
-            <span>System</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+              <span className="sr-only">System</span>
+            </Toggle>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>System preference (Alt+Shift+S)</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
     </div>
   );
 };

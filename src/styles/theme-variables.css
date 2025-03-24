@@ -1,0 +1,116 @@
+
+@layer base {
+  :root {
+    /* ===== LIGHT THEME ===== */
+    /* Background and surface colors */
+    --background: 45 76% 95%; /* Based on cream #f4ebd0 */
+    --card: 0 0% 100%;
+    --popover: 0 0% 100%;
+    --muted: 42 41% 85%;
+    --accent: 35 52% 80%;
+    
+    /* Foreground and text colors */
+    --foreground: 156 37% 11%; /* Based on charcoal #122620 */
+    --card-foreground: 156 37% 11%;
+    --popover-foreground: 156 37% 11%;
+    --muted-foreground: 156 37% 20%;
+    --accent-foreground: 156 37% 11%;
+    
+    /* Interactive element colors */
+    --primary: 35 52% 44%; /* Darkened for better contrast: #93732f */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 42 71% 56%; /* Darkened for better contrast: #c3973f */
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Feedback and status colors */
+    --destructive: 0 84.2% 40.2%; /* Darkened red for better contrast */
+    --destructive-foreground: 210 40% 98%;
+    
+    /* Border and control colors */
+    --border: 35 52% 75%;
+    --input: 214.3 31.8% 85.4%;
+    --ring: 35 52% 44%;
+    
+    /* Component sizing and spacing */
+    --radius: 0.5rem;
+    
+    /* Focus and state styles */
+    --focus-ring: 35 52% 44%;
+    --focus-ring-width: 3px;
+    --focus-ring-offset: 2px;
+  }
+
+  .dark {
+    /* ===== DARK THEME ===== */
+    /* Background and surface colors */
+    --background: 156 37% 11%; /* Based on charcoal #122620 */
+    --card: 156 37% 15%;
+    --popover: 156 37% 15%;
+    --muted: 156 37% 20%;
+    --accent: 156 37% 25%;
+    
+    /* Foreground and text colors */
+    --foreground: 45 76% 95%; /* Based on cream #f4ebd0 */
+    --card-foreground: 45 76% 95%;
+    --popover-foreground: 45 76% 95%;
+    --muted-foreground: 45 76% 85%;
+    --accent-foreground: 45 76% 95%;
+    
+    /* Interactive element colors */
+    --primary: 35 52% 64%; /* Brightened for better contrast: #c9a353 */
+    --primary-foreground: 156 37% 11%;
+    --secondary: 42 71% 76%; /* Based on gold #d6ad60 */
+    --secondary-foreground: 156 37% 11%;
+    
+    /* Feedback and status colors */
+    --destructive: 0 72.8% 50.6%; /* Brightened red for better contrast */
+    --destructive-foreground: 45 76% 95%;
+    
+    /* Border and control colors */
+    --border: 156 37% 30%;
+    --input: 156 37% 30%;
+    --ring: 35 52% 64%;
+    
+    /* Focus and state styles */
+    --focus-ring: 35 80% 70%;
+    --focus-ring-width: 3px;
+    --focus-ring-offset: 2px;
+  }
+
+  .high-contrast {
+    /* ===== HIGH CONTRAST THEME ===== */
+    /* Background and surface colors */
+    --background: 0 0% 0%; /* Pure black */
+    --card: 0 0% 10%;
+    --popover: 0 0% 10%;
+    --muted: 0 0% 15%;
+    --accent: 0 0% 20%;
+    
+    /* Foreground and text colors */
+    --foreground: 60 100% 100%; /* Pure yellow - high visibility */
+    --card-foreground: 60 100% 100%;
+    --popover-foreground: 60 100% 100%;
+    --muted-foreground: 60 100% 90%;
+    --accent-foreground: 60 100% 100%;
+    
+    /* Interactive element colors */
+    --primary: 60 100% 70%; /* Bright yellow: #f2e200 */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 196 100% 70%; /* Bright blue */
+    --secondary-foreground: 0 0% 0%;
+    
+    /* Feedback and status colors */
+    --destructive: 0 100% 60%; /* Very bright red */
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Border and control colors */
+    --border: 60 100% 80%;
+    --input: 60 100% 80%;
+    --ring: 60 100% 80%;
+    
+    /* Focus and state styles - extra prominent */
+    --focus-ring: 196 100% 85%;
+    --focus-ring-width: 4px;
+    --focus-ring-offset: 2px;
+  }
+}

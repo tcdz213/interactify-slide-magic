@@ -1,0 +1,137 @@
+
+@layer utilities {
+  /* Dark mode specific utilities */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary via-secondary to-primary/80 bg-clip-text text-transparent;
+  }
+  
+  .dark .glass-effect {
+    @apply bg-gray-900/50 backdrop-blur-lg border border-white/10;
+  }
+  
+  .dark .glass-card {
+    @apply bg-gray-800/30 backdrop-blur-md border border-white/5 shadow-xl;
+  }
+
+  /* High contrast mode specific utilities */
+  .high-contrast .glass-effect {
+    @apply bg-black border-2 border-primary;
+  }
+  
+  .high-contrast .glass-card {
+    @apply bg-black border-2 border-primary shadow-xl;
+  }
+
+  /* Focus styles for all themes */
+  .focus-ring {
+    @apply outline-none ring-2 ring-primary ring-offset-2 transition-shadow;
+  }
+
+  .high-contrast .focus-ring {
+    @apply outline-2 outline-offset-4 outline-primary ring-0 ring-offset-0;
+  }
+
+  /* Enhanced focus utilities */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-primary ring-offset-1;
+  }
+
+  .high-contrast *:focus-visible {
+    @apply outline-4 outline-offset-4 outline-primary ring-0 ring-offset-0;
+  }
+
+  /* Filter component specific dark mode styles */
+  .dark .filter-bar {
+    @apply bg-gray-800/90 backdrop-blur-md border-gray-700;
+  }
+
+  .dark .filter-dropdown-content {
+    @apply bg-gray-800 border-gray-700 shadow-lg shadow-black/20;
+  }
+
+  .dark .filter-chip {
+    @apply bg-gray-700 text-gray-200 hover:bg-gray-600;
+  }
+
+  .dark .filter-input {
+    @apply bg-gray-800/70 border-gray-700 focus:border-primary/70;
+  }
+
+  .dark .filter-select-trigger {
+    @apply bg-gray-800/70 border-gray-700 text-gray-200;
+  }
+
+  .dark .filter-select-content {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .dark .filter-select-item {
+    @apply hover:bg-gray-700 focus:bg-gray-700;
+  }
+
+  .dark .filter-badge {
+    @apply bg-gray-700 text-gray-200 hover:bg-gray-600;
+  }
+
+  .dark .filter-sheet-content {
+    @apply bg-gray-800 border-gray-700;
+  }
+
+  .dark .filter-popover-content {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  /* Discover page specific dark mode styles */
+  .dark .discover-filter {
+    @apply bg-gray-800/80 backdrop-blur-md border-gray-700/70 shadow-lg shadow-black/10;
+  }
+  
+  .dark .discover-filter-input {
+    @apply bg-gray-800/60 border-gray-700/70 text-gray-200 placeholder:text-gray-400;
+  }
+  
+  .dark .discover-filter-button {
+    @apply bg-gray-800/70 border-gray-700 text-gray-200 hover:bg-gray-700/90;
+  }
+  
+  .dark .discover-filter-badge {
+    @apply bg-primary/20 text-primary-foreground;
+  }
+  
+  .dark .discover-tabs {
+    @apply bg-gray-800/50 border-gray-700;
+  }
+  
+  .dark .discover-tab {
+    @apply data-[state=active]:bg-gray-700/70 data-[state=active]:text-gray-200 hover:bg-gray-700/50;
+  }
+  
+  .dark .discover-active-filters {
+    @apply bg-gray-800/30 border-gray-700/50;
+  }
+  
+  /* Call to action section dark mode styles */
+  .dark .cta-section {
+    @apply bg-gray-900/70 backdrop-blur-lg border border-gray-700/50 shadow-xl shadow-black/20;
+  }
+  
+  .dark .cta-card {
+    @apply bg-gray-800/40 border-gray-700/60 shadow-lg shadow-black/10;
+  }
+  
+  .dark .cta-input {
+    @apply bg-gray-800/80 border-gray-700 text-gray-200 placeholder:text-gray-400 focus:border-primary/70;
+  }
+  
+  .dark .cta-button {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground shadow-md shadow-primary/20;
+  }
+  
+  .dark .cta-highlight {
+    @apply text-primary font-semibold;
+  }
+  
+  .dark .cta-divider {
+    @apply bg-gray-700/50;
+  }
+}

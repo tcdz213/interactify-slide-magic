@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { FilterState } from "./types";
 import ActiveFilters from "./ActiveFilters";
@@ -103,7 +104,7 @@ const FilterBar = ({
 
   return (
     <div className="w-full space-y-2 md:space-y-4">
-      <div className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-md p-3 md:p-4">
+      <div className="bg-white rounded-lg md:rounded-xl shadow-sm md:shadow-md p-3 md:p-4 border border-gray-100 filter-bar discover-filter">
         <FilterInputs
           filters={localFilters}
           onChange={handleInputChange}

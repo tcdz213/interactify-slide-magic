@@ -36,17 +36,23 @@ const MobileFilterSheet = ({
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" className="py-6 rounded-lg px-4 flex items-center gap-2">
+        <Button 
+          variant="outline" 
+          className="py-6 rounded-lg px-4 flex items-center gap-2 discover-filter-button"
+        >
           <Filter className="h-4 w-4" />
           <span>Filters</span>
           {hasActiveFilters() && (
-            <Badge variant="secondary" className="ml-2 px-1.5 h-5 min-w-5 flex items-center justify-center rounded-full">
+            <Badge 
+              variant="secondary" 
+              className="ml-2 px-1.5 h-5 min-w-5 flex items-center justify-center rounded-full discover-filter-badge"
+            >
               {getActiveFilterCount()}
             </Badge>
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className="overflow-y-auto filter-sheet-content">
         <SheetHeader>
           <SheetTitle>Filters</SheetTitle>
         </SheetHeader>

@@ -1,38 +1,107 @@
+
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { ArrowRight, Mail } from 'lucide-react';
+
 const CallToActionSection = () => {
-  return <motion.div className="mt-16 p-8 bg-gradient-to-r from-primary/10 to-secondary/10 rounded-xl text-center" initial={{
-    opacity: 0,
-    y: 20
-  }} whileInView={{
-    opacity: 1,
-    y: 0
-  }} viewport={{
-    once: true
-  }} transition={{
-    duration: 0.6
-  }}>
-      <h3 className="text-2xl md:text-3xl font-bold mb-4">Ready to Begin Your Learning Journey?</h3>
-      <p className="mb-6 max-w-2xl mx-auto font-normal text-base text-slate-800">
-        Find the perfect training center or course that matches your goals, interests, and schedule. Start your journey today!
-      </p>
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button asChild size="lg">
-          <Link to="/discover" className="group">
-            Find Centers 
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </Button>
-        <Button asChild size="lg" variant="outline">
-          <Link to="/courses" className="group">
-            Browse Courses
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </Button>
+  return (
+    <div className="mt-24 rounded-xl p-8 md:p-12 cta-section">
+      <div className="grid gap-8 md:grid-cols-2 md:gap-12 items-center">
+        <div className="space-y-4">
+          <h2 className="text-2xl md:text-3xl font-bold leading-tight">
+            Ready to Find Your <span className="cta-highlight">Perfect Training Center</span>?
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Join thousands of learners who have found their ideal training path through our platform.
+          </p>
+          
+          <div className="hidden md:block">
+            <Separator className="my-6 cta-divider" />
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  className="pl-10 py-6 cta-input" 
+                />
+              </div>
+              <Button size="lg" className="cta-button">
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="rounded-lg p-6 cta-card">
+          <h3 className="text-xl font-semibold mb-4">Quick Start Options</h3>
+          
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 text-primary p-2 rounded-full">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+              <div>
+                <h4 className="font-medium">Browse Training Centers</h4>
+                <p className="text-sm text-muted-foreground">
+                  Explore our curated list of top-rated centers
+                </p>
+              </div>
+            </div>
+            
+            <Separator className="cta-divider" />
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-secondary/10 text-secondary p-2 rounded-full">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+              <div>
+                <h4 className="font-medium">Compare Courses</h4>
+                <p className="text-sm text-muted-foreground">
+                  Side-by-side comparison of different programs
+                </p>
+              </div>
+            </div>
+            
+            <Separator className="cta-divider" />
+            
+            <div className="flex items-start gap-3">
+              <div className="bg-primary/10 text-primary p-2 rounded-full">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+              <div>
+                <h4 className="font-medium">Contact Centers Directly</h4>
+                <p className="text-sm text-muted-foreground">
+                  Get in touch with your preferred training providers
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6 md:hidden">
+            <div className="flex flex-col gap-3">
+              <div className="relative">
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  type="email" 
+                  placeholder="Enter your email" 
+                  className="pl-10 py-6 cta-input" 
+                />
+              </div>
+              <Button size="lg" className="cta-button">
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
-    </motion.div>;
+    </div>
+  );
 };
+
 export default CallToActionSection;

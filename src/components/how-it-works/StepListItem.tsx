@@ -1,23 +1,34 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
+import { CheckCircle2 } from 'lucide-react';
 
 interface StepListItemProps {
-  number: number;
-  title: string;
+  step?: string;
+  index?: number;
+  number?: number;
+  title?: string;
   description?: string;
 }
 
-const StepListItem: React.FC<StepListItemProps> = ({ number, title, description }) => {
+const StepListItem = ({ step, index, number, title, description }: StepListItemProps) => {
+  // Use the appropriate content based on which props are provided
+  const displayTitle = title || step;
+  const displayIndex = number !== undefined ? number : index;
+  
   return (
-    <div className="flex items-start gap-3 mb-3 group">
-      <div className="flex-shrink-0 flex items-center justify-center h-6 w-6 rounded-full bg-primary text-white text-xs font-bold group-hover:scale-110 transition-transform">
-        {number}
-      </div>
+    <motion.li 
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.1 * (displayIndex || 0), duration: 0.4 }}
+      className="flex items-start gap-3"
+    >
+      <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 shrink-0 dark:text-primary/90" />
       <div>
-        <p className="font-medium text-sm">{title}</p>
-        {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+        <span className="text-muted-foreground">{displayTitle}</span>
+        {description && <p className="text-sm text-muted-foreground/80 mt-1">{description}</p>}
       </div>
-    </div>
+    </motion.li>
   );
 };
 
