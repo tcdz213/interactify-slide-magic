@@ -27,7 +27,8 @@ const SectionTitle: React.FC<SectionTitleProps> = ({
         tabIndex={0} 
         id={id}
         initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.5 }}
         aria-label={title}
       >
@@ -38,7 +39,8 @@ const SectionTitle: React.FC<SectionTitleProps> = ({
           className="text-muted-foreground max-w-3xl mx-auto" 
           tabIndex={0}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, delay: 0.2 }}
           aria-label={description}
         >
