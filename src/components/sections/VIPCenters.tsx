@@ -1,4 +1,5 @@
 
+import { memo } from "react";
 import { centersData } from "@/components/centers/centersData";
 import { useVisibilityObserver } from "@/hooks/useVisibilityObserver";
 import VIPCentersHeader from "@/components/centers/VIPCentersHeader";
@@ -23,6 +24,7 @@ const VIPCenters = ({ className = "", showFullBackground = true }: VIPCentersPro
       ref={elementRef}
       id="vip-centers"
       className={`relative py-16 md:py-20 px-4 md:px-6 my-8 rounded-xl ${showFullBackground ? 'bg-gradient-to-b from-background/50 to-muted/30' : ''} ${className}`}
+      aria-labelledby="vip-centers-title"
     >
       {showFullBackground && <VIPCentersBackground />}
       <div className="container-custom max-w-7xl mx-auto relative z-10">
@@ -33,4 +35,4 @@ const VIPCenters = ({ className = "", showFullBackground = true }: VIPCentersPro
   );
 };
 
-export default VIPCenters;
+export default memo(VIPCenters);

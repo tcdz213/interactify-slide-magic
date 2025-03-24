@@ -1,48 +1,59 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { memo } from 'react';
+
+const CallToActionStep = ({ number, title, description }: { number: number, title: string, description: string }) => (
+  <div className="flex items-start">
+    <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mt-0.5 mr-3">
+      <span className="text-sm font-medium">{number}</span>
+    </div>
+    <div>
+      <h3 className="text-base font-medium text-slate-900">{title}</h3>
+      <p className="text-sm text-slate-800">{description}</p>
+    </div>
+  </div>
+);
+
 const CallToAction = () => {
-  const {
-    t
-  } = useTranslation();
-  return <section className="section-padding bg-muted/50">
+  const { t } = useTranslation();
+  
+  return (
+    <section 
+      className="section-padding bg-muted/50"
+      aria-labelledby="cta-title"
+    >
       <div className="container-custom">
         <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="grid md:grid-cols-2">
             <div className="p-8 md:p-10 lg:p-12 flex flex-col justify-center bg-transparent">
-              <h2 className="text-2xl md:text-3xl font-semibold mb-4 text-slate-800">{t('callToAction.title')}</h2>
+              <h2 
+                id="cta-title"
+                className="text-2xl md:text-3xl font-semibold mb-4 text-slate-800"
+              >
+                {t('callToAction.title')}
+              </h2>
               <p className="mb-6 text-slate-900">
                 {t('callToAction.description')}
               </p>
               <div className="space-y-4 bg-transparent">
-                <div className="flex items-start">
-                  <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mt-0.5 mr-3">
-                    <span className="text-sm font-medium">1</span>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-medium text-slate-900">{t('callToAction.steps.step1.title')}</h3>
-                    <p className="text-sm text-slate-800">{t('callToAction.steps.step1.description')}</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mt-0.5 mr-3">
-                    <span className="text-sm font-medium">2</span>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-medium text-slate-900">{t('callToAction.steps.step2.title')}</h3>
-                    <p className="text-sm text-slate-800">{t('callToAction.steps.step2.description')}</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center mt-0.5 mr-3">
-                    <span className="text-sm font-medium">3</span>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-medium text-slate-900">{t('callToAction.steps.step3.title')}</h3>
-                    <p className="text-sm text-slate-800">{t('callToAction.steps.step3.description')}</p>
-                  </div>
-                </div>
+                <CallToActionStep 
+                  number={1} 
+                  title={t('callToAction.steps.step1.title')} 
+                  description={t('callToAction.steps.step1.description')} 
+                />
+                <CallToActionStep 
+                  number={2} 
+                  title={t('callToAction.steps.step2.title')} 
+                  description={t('callToAction.steps.step2.description')} 
+                />
+                <CallToActionStep 
+                  number={3} 
+                  title={t('callToAction.steps.step3.title')} 
+                  description={t('callToAction.steps.step3.description')} 
+                />
               </div>
               <div className="mt-8 flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="rounded-lg group" asChild>
@@ -60,12 +71,19 @@ const CallToAction = () => {
               </div>
             </div>
             <div className="hidden md:block relative">
-              <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" alt="People learning together in a training center" className="w-full h-full object-cover" />
+              <img 
+                src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
+                alt="People learning together in a training center" 
+                className="w-full h-full object-cover"
+                loading="lazy"
+              />
               <div className="absolute inset-0 bg-primary/20"></div>
             </div>
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
-export default CallToAction;
+
+export default memo(CallToAction);

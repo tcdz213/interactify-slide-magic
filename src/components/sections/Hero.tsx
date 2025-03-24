@@ -1,12 +1,7 @@
 
 import { useState, useEffect, useCallback, memo } from "react";
 import { motion } from "framer-motion";
-import HeroTitle from "@/components/hero/HeroTitle";
-import HeroActions from "@/components/hero/HeroActions";
-import HeroBackground from "@/components/hero/HeroBackground";
-import ScrollIndicator from "@/components/hero/ScrollIndicator";
-import NeonGlowCursor from "@/components/hero/NeonGlowCursor";
-import SearchBox from "@/components/hero/SearchBox";
+import { HeroTitle, HeroActions, HeroBackground, ScrollIndicator, NeonGlowCursor, SearchBox } from "@/components/hero";
 
 const backgroundImages = [
   "gradient-1",
@@ -45,7 +40,11 @@ const HeroInner = () => {
   };
 
   return (
-    <section className="relative min-h-screen hero-gradient flex flex-col items-center justify-center pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden">
+    <section 
+      className="relative min-h-screen hero-gradient flex flex-col items-center justify-center pt-20 pb-16 md:pt-32 md:pb-24 overflow-hidden"
+      aria-labelledby="hero-title"
+      role="banner"
+    >
       <HeroBackground currentImage={backgroundImages[currentImageIndex]} />
       <NeonGlowCursor />
 
