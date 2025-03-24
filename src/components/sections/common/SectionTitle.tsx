@@ -7,6 +7,7 @@ interface SectionTitleProps {
   description?: string;
   className?: string;
   centered?: boolean;
+  id?: string; // Added the id prop which can be optional
 }
 
 const SectionTitle: React.FC<SectionTitleProps> = ({
@@ -14,10 +15,11 @@ const SectionTitle: React.FC<SectionTitleProps> = ({
   description,
   className = '',
   centered = true,
+  id,
 }) => {
   return (
     <div className={`${centered ? 'text-center' : ''} mb-8 ${className}`}>
-      <h2 className="text-3xl md:text-4xl font-semibold mb-4" tabIndex={0}>{title}</h2>
+      <h2 className="text-3xl md:text-4xl font-semibold mb-4" tabIndex={0} id={id}>{title}</h2>
       {description && (
         <p className="text-muted-foreground max-w-3xl mx-auto" tabIndex={0}>
           {description}
