@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ const NeonGlowCursor = ({ className }: NeonGlowCursorProps) => {
     if (typeof window === "undefined") return;
 
     // Set active after a small delay for initial animation
-    const timer = setTimeout(() => setIsActive(true), 500);
+    const timer = setTimeout(() => setIsActive(true), 800);
 
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
@@ -37,27 +38,27 @@ const NeonGlowCursor = ({ className }: NeonGlowCursorProps) => {
         className
       )}
       animate={{
-        x: mousePosition.x - 400,
-        y: mousePosition.y - 400,
-        transition: { type: "spring", damping: 30, stiffness: 200 },
+        x: mousePosition.x - 500, // Larger glow area
+        y: mousePosition.y - 500, // Larger glow area
+        transition: { type: "spring", damping: 40, stiffness: 150 }, // Softer movement
       }}
     >
       <div className="relative w-[0px] h-[0px]">
-        {/* Primary glow */}
-        <div className="absolute inset-0 rounded-full bg-primary/20 blur-[100px] will-change-transform" />
+        {/* Primary glow - softer and larger */}
+        <div className="absolute inset-0 w-[1000px] h-[1000px] rounded-full bg-primary/10 blur-[200px] will-change-transform" />
 
-        {/* Secondary glow */}
-        <div className="absolute inset-1/4 rounded-full bg-secondary/20 blur-[80px] will-change-transform" />
+        {/* Secondary glow - softer */}
+        <div className="absolute inset-1/4 w-[500px] h-[500px] rounded-full bg-secondary/10 blur-[150px] will-change-transform" />
 
-        {/* Accent glow */}
+        {/* Accent glow - softer pulsing */}
         <motion.div
-          className="absolute inset-2/5 rounded-full bg-luxury-gold/30 blur-[60px] will-change-transform"
+          className="absolute inset-2/5 w-[250px] h-[250px] rounded-full bg-primary/5 blur-[100px] will-change-transform"
           animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.6, 0.3],
+            scale: [1, 1.1, 1],
+            opacity: [0.2, 0.3, 0.2],
           }}
           transition={{
-            duration: 3,
+            duration: 4,
             ease: "easeInOut",
             repeat: Infinity,
           }}
