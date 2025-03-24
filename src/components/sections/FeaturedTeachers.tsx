@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import { teachersData } from "@/data/teachersData";
@@ -9,21 +9,34 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
-const TeacherCard = ({ teacher, index }: { teacher: any; index: number }) => {
+interface Teacher {
+  id: number;
+  name: string;
+  specialty: string;
+  rating: number;
+  reviews: number;
+  image: string;
+  years: number;
+  featured: boolean;
+}
+
+const TeacherCard = memo(({ teacher, index }: { teacher: Teacher; index: number }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
     >
-      <Card className="overflow-hidden h-full">
+      <Card className="overflow-hidden h-full shadow-sm hover:shadow-md transition-all duration-300">
         <CardContent className="p-0">
           <div className="relative">
             <div className="aspect-[3/2] overflow-hidden">
               <img
                 src={teacher.image}
-                alt={teacher.name}
+                alt={`Portrait of ${teacher.name}`}
                 className="w-full h-full object-cover transition-transform hover:scale-105 duration-300"
+                loading="lazy"
               />
             </div>
             <div className="absolute top-2 right-2">
@@ -41,7 +54,7 @@ const TeacherCard = ({ teacher, index }: { teacher: any; index: number }) => {
               <div>
                 <h3 className="font-semibold">{teacher.name}</h3>
                 <div className="flex items-center text-sm text-muted-foreground">
-                  <div className="flex items-center mr-2">
+                  <div className="flex items-center mr-2" aria-label={`Rating: ${teacher.rating} out of 5`}>
                     <Star className="h-3.5 w-3.5 text-yellow-500 fill-yellow-500 mr-1" />
                     <span>{teacher.rating}</span>
                   </div>
@@ -52,25 +65,44 @@ const TeacherCard = ({ teacher, index }: { teacher: any; index: number }) => {
             <div className="text-sm text-muted-foreground mb-4">
               {teacher.years} years of experience
             </div>
-            <Button variant="outline" className="w-full">View Profile</Button>
+            <Button 
+              variant="outline" 
+              className="w-full"
+              aria-label={`View ${teacher.name}'s profile`}
+            >
+              View Profile
+            </Button>
           </div>
         </CardContent>
       </Card>
     </motion.div>
   );
-};
+});
+
+TeacherCard.displayName = 'TeacherCard';
 
 const FeaturedTeachers = () => {
-  const [featuredTeachers, setFeaturedTeachers] = useState<any[]>([]);
+  const [featuredTeachers, setFeaturedTeachers] = useState<Teacher[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Filter teachers who are featured
-    const featured = teachersData.filter(teacher => teacher.featured);
-    setFeaturedTeachers(featured);
+    // Simulate API fetch with delay for better UX demonstration
+    const timer = setTimeout(() => {
+      // Filter teachers who are featured
+      const featured = teachersData.filter(teacher => teacher.featured);
+      setFeaturedTeachers(featured);
+      setIsLoading(false);
+    }, 500);
+
+    return () => clearTimeout(timer);
   }, []);
 
   return (
-    <section id="featured-teachers" aria-labelledby="featured-teachers-title" className="py-12 md:py-16">
+    <section 
+      id="featured-teachers" 
+      aria-labelledby="featured-teachers-title" 
+      className="py-12 md:py-16"
+    >
       <div className="container-custom mx-auto px-4">
         <SectionTitle
           title="Learn from the Best"
@@ -79,13 +111,37 @@ const FeaturedTeachers = () => {
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-10">
-          {featuredTeachers.map((teacher, index) => (
-            <TeacherCard key={teacher.id} teacher={teacher} index={index} />
-          ))}
+          {isLoading ? (
+            // Show skeleton loaders while data is loading
+            Array.from({ length: 4 }).map((_, index) => (
+              <div key={`skeleton-${index}`} className="animate-pulse">
+                <div className="bg-muted aspect-[3/2] rounded-t-xl"></div>
+                <div className="p-5 bg-card rounded-b-xl border border-t-0">
+                  <div className="flex items-center mb-3">
+                    <div className="w-10 h-10 rounded-full bg-muted mr-3"></div>
+                    <div>
+                      <div className="h-4 bg-muted rounded w-24 mb-2"></div>
+                      <div className="h-3 bg-muted rounded w-16"></div>
+                    </div>
+                  </div>
+                  <div className="h-3 bg-muted rounded w-full mb-4"></div>
+                  <div className="h-9 bg-muted rounded w-full"></div>
+                </div>
+              </div>
+            ))
+          ) : featuredTeachers.length > 0 ? (
+            featuredTeachers.map((teacher, index) => (
+              <TeacherCard key={teacher.id} teacher={teacher} index={index} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-10">
+              <p className="text-muted-foreground">No featured teachers available at the moment.</p>
+            </div>
+          )}
         </div>
       </div>
     </section>
   );
 };
 
-export default FeaturedTeachers;
+export default memo(FeaturedTeachers);
