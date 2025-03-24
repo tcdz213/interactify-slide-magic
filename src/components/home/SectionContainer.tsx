@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import { motion, Variants } from "framer-motion";
 
@@ -16,17 +17,18 @@ const sectionVariants: Variants = {
   visible: { opacity: 1, y: 0 }
 };
 
-const SectionContainer: React.FC<SectionContainerProps> = ({
+const SectionContainer = forwardRef<HTMLDivElement, SectionContainerProps>(({
   children,
   className,
   id,
   as: Component = "section",
   animate = true,
   delay = 0
-}) => {
+}, ref) => {
   const content = (
     <Component
       id={id}
+      ref={ref}
       className={cn(
         "section-padding w-full",
         className
@@ -53,6 +55,8 @@ const SectionContainer: React.FC<SectionContainerProps> = ({
       {content}
     </motion.div>
   );
-};
+});
+
+SectionContainer.displayName = "SectionContainer";
 
 export default SectionContainer;
