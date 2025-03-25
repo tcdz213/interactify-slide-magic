@@ -1,5 +1,9 @@
-
-export { default as HomeLayout } from './HomeLayout';
-export { default as SmoothScroll } from './SmoothScroll';
-export { default as SectionContainer } from './SectionContainer';
-export { default as CurrencyDisplay } from './CurrencyDisplay';
+export { default as HomeLayout } from "./HomeLayout";
+export { default as SmoothScroll } from "./SmoothScroll";
+export { default as SectionContainer } from "./SectionContainer";
+export { default as HeroTitle } from "../hero/HeroTitle";
+export { default as HeroBackground } from "../hero/HeroBackground";
+export { default as NeonGlowCursor } from "../hero/NeonGlowCursor";
+export { default as HeroActions } from "../hero/HeroActions";
+export { default as ScrollIndicator } from "../hero/ScrollIndicator";
+export { default as SearchBox } from "../hero/SearchBox";
