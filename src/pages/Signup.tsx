@@ -1,45 +1,57 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { 
-  ArrowRight, 
-  Mail, 
-  User, 
-  Lock, 
-  Eye, 
+import {
+  ArrowRight,
+  Mail,
+  User,
+  Lock,
+  Eye,
   EyeOff,
-  BookOpen
+  BookOpen,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { toast } from "sonner";
-import { useTranslation } from 'react-i18next';
-import { useAppDispatch, useAppSelector } from '@/redux/hooks';
-import { registerUser } from '@/redux/slices/authSlice';
+import { useTranslation } from "react-i18next";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { registerUser } from "@/redux/slices/authSlice";
 
-const signupFormSchema = z.object({
-  fullName: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
-  confirmPassword: z.string(),
-  userType: z.enum(["learner", "center", "teacher"], { 
-    required_error: "Please select a user type" 
-  }),
-  termsAccepted: z.boolean()
-    .refine(val => val === true, {
+const signupFormSchema = z
+  .object({
+    fullName: z
+      .string()
+      .min(2, { message: "Name must be at least 2 characters" }),
+    email: z.string().email({ message: "Please enter a valid email address" }),
+    password: z
+      .string()
+      .min(6, { message: "Password must be at least 6 characters" }),
+    confirmPassword: z.string(),
+    userType: z.enum(["learner", "center", "teacher"], {
+      required_error: "Please select a user type",
+    }),
+    termsAccepted: z.boolean().refine((val) => val === true, {
       message: "You must accept the terms and conditions",
     }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 type SignupFormValues = z.infer<typeof signupFormSchema>;
 
@@ -49,7 +61,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const dispatch = useAppDispatch();
-  const { loading, error } = useAppSelector(state => state.auth);
+  const { loading, error } = useAppSelector((state) => state.auth);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupFormSchema),
@@ -65,20 +77,23 @@ const Signup = () => {
 
   const onSubmit = async (data: SignupFormValues) => {
     try {
-      const resultAction = await dispatch(registerUser({
-        fullName: data.fullName,
-        email: data.email,
-        password: data.password,
-        userType: data.userType,
-      }));
-      
+      // Dispatch the registerUser action
+      const resultAction = await dispatch(
+        registerUser({
+          fullName: data.fullName,
+          email: data.email,
+          password: data.password,
+          userType: data.userType,
+        })
+      );
+
       if (registerUser.fulfilled.match(resultAction)) {
         toast.success("Account created successfully!");
         setTimeout(() => {
-          navigate('/login');
+          navigate("/login");
         }, 1500);
       } else {
-        toast.error(resultAction.payload as string || "Registration failed");
+        toast.error((resultAction.payload as string) || "Registration failed");
       }
     } catch (err) {
       toast.error("An unexpected error occurred");
@@ -93,20 +108,25 @@ const Signup = () => {
           <div className="max-w-md mx-auto">
             <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg border border-border/30">
               <div className="text-center mb-8">
-                <h1 className="text-3xl font-semibold mb-2">{t('header.signup')}</h1>
+                <h1 className="text-3xl font-semibold mb-2">
+                  {t("header.signup")}
+                </h1>
                 <p className="text-muted-foreground">
                   Create an account to get started
                 </p>
               </div>
-              
+
               {error && (
                 <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-md text-sm">
                   {error}
                 </div>
               )}
-              
+
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-5"
+                >
                   <FormField
                     control={form.control}
                     name="fullName"
@@ -127,7 +147,7 @@ const Signup = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="email"
@@ -148,7 +168,7 @@ const Signup = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="password"
@@ -165,20 +185,24 @@ const Signup = () => {
                             />
                           </FormControl>
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                          <button 
+                          <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
                             className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
                             tabIndex={-1}
                           >
-                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            {showPassword ? (
+                              <EyeOff size={20} />
+                            ) : (
+                              <Eye size={20} />
+                            )}
                           </button>
                         </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="confirmPassword"
@@ -195,20 +219,26 @@ const Signup = () => {
                             />
                           </FormControl>
                           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                          <button 
+                          <button
                             type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            onClick={() =>
+                              setShowConfirmPassword(!showConfirmPassword)
+                            }
                             className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground"
                             tabIndex={-1}
                           >
-                            {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                            {showConfirmPassword ? (
+                              <EyeOff size={20} />
+                            ) : (
+                              <Eye size={20} />
+                            )}
                           </button>
                         </div>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="userType"
@@ -223,31 +253,48 @@ const Signup = () => {
                           >
                             <div className="flex items-center space-x-2 rounded-lg border border-border p-4 cursor-pointer hover:bg-muted/50 transition-colors">
                               <RadioGroupItem value="learner" id="learner" />
-                              <Label htmlFor="learner" className="flex items-center cursor-pointer">
+                              <Label
+                                htmlFor="learner"
+                                className="flex items-center cursor-pointer"
+                              >
                                 <BookOpen className="h-5 w-5 mr-2 text-primary" />
                                 <div>
                                   <span className="font-medium">Learner</span>
-                                  <p className="text-sm text-muted-foreground">I want to find and book training centers</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    I want to find and book training centers
+                                  </p>
                                 </div>
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2 rounded-lg border border-border p-4 cursor-pointer hover:bg-muted/50 transition-colors">
                               <RadioGroupItem value="center" id="center" />
-                              <Label htmlFor="center" className="flex items-center cursor-pointer">
+                              <Label
+                                htmlFor="center"
+                                className="flex items-center cursor-pointer"
+                              >
                                 <User className="h-5 w-5 mr-2 text-primary" />
                                 <div>
-                                  <span className="font-medium">Training Center</span>
-                                  <p className="text-sm text-muted-foreground">I want to list my training center</p>
+                                  <span className="font-medium">
+                                    Training Center
+                                  </span>
+                                  <p className="text-sm text-muted-foreground">
+                                    I want to list my training center
+                                  </p>
                                 </div>
                               </Label>
                             </div>
                             <div className="flex items-center space-x-2 rounded-lg border border-border p-4 cursor-pointer hover:bg-muted/50 transition-colors">
                               <RadioGroupItem value="teacher" id="teacher" />
-                              <Label htmlFor="teacher" className="flex items-center cursor-pointer">
+                              <Label
+                                htmlFor="teacher"
+                                className="flex items-center cursor-pointer"
+                              >
                                 <User className="h-5 w-5 mr-2 text-primary" />
                                 <div>
                                   <span className="font-medium">Teacher</span>
-                                  <p className="text-sm text-muted-foreground">I want to offer my teaching services</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    I want to offer my teaching services
+                                  </p>
                                 </div>
                               </Label>
                             </div>
@@ -257,7 +304,7 @@ const Signup = () => {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={form.control}
                     name="termsAccepted"
@@ -273,21 +320,57 @@ const Signup = () => {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel htmlFor="terms" className="text-sm font-normal">
-                            I agree to the <a href="#" className="text-primary hover:underline">Terms of Service</a> and <a href="#" className="text-primary hover:underline">Privacy Policy</a>
+                          <FormLabel
+                            htmlFor="terms"
+                            className="text-sm font-normal"
+                          >
+                            I agree to the{" "}
+                            <a
+                              href="#"
+                              className="text-primary hover:underline"
+                            >
+                              Terms of Service
+                            </a>{" "}
+                            and{" "}
+                            <a
+                              href="#"
+                              className="text-primary hover:underline"
+                            >
+                              Privacy Policy
+                            </a>
                           </FormLabel>
                           <FormMessage />
                         </div>
                       </FormItem>
                     )}
                   />
-                  
-                  <Button type="submit" className="w-full rounded-lg group" disabled={loading}>
+
+                  <Button
+                    type="submit"
+                    className="w-full rounded-lg group"
+                    disabled={loading}
+                  >
                     {loading ? (
                       <span className="flex items-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Creating Account...
                       </span>
@@ -298,9 +381,15 @@ const Signup = () => {
                       </>
                     )}
                   </Button>
-                  
+
                   <div className="mt-6 text-center text-sm text-muted-foreground">
-                    Already have an account? <Link to="/login" className="text-primary font-medium hover:underline">Log in</Link>
+                    Already have an account?{" "}
+                    <Link
+                      to="/login"
+                      className="text-primary font-medium hover:underline"
+                    >
+                      Log in
+                    </Link>
                   </div>
                 </form>
               </Form>

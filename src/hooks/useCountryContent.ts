@@ -33,6 +33,11 @@ export function useConditionalContent(
   countryOverrides: Record<string, string> = {}
 ): string {
   const { currentCountry } = useCountry();
+  const { i18n } = useTranslation();
   
-  return countryOverrides[currentCountry.code] || defaultContent;
+  // First check if there's a translation for this in the current language
+  const translatedDefault = i18n.t(defaultContent, { defaultValue: defaultContent });
+  
+  // Then check for country-specific overrides
+  return countryOverrides[currentCountry.code] || translatedDefault;
 }

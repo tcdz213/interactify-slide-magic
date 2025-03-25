@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,6 +29,8 @@ import RoleProtectedRoute from "./components/RoleProtectedRoute";
 import { ROLES } from "./utils/roles";
 import { Chatbot } from "./components/chatbot";
 import Community from "./pages/Community";
+import ComponentLibrary from "./pages/ComponentLibrary";
+import Profile from "./pages/Profile";
 
 // Import providers
 import { CountryProvider } from "./contexts/CountryContext";
@@ -72,6 +73,24 @@ const AppContent = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/component-library" element={<ComponentLibrary />} />
+      <Route 
+        path="/profile" 
+        element={
+          <RoleProtectedRoute
+            allowedRoles={[
+              ROLES.PLATFORM_ADMIN,
+              ROLES.CENTER_OWNER,
+              ROLES.TEACHER,
+              ROLES.LEARNER
+            ]}
+            fallbackPath="/login"
+            redirectToLogin={true}
+          >
+            <Profile />
+          </RoleProtectedRoute>
+        } 
+      />
       <Route 
         path="/admin" 
         element={

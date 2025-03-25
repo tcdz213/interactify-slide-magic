@@ -1,3 +1,4 @@
+
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,12 +71,10 @@ const FeaturedCenters = () => {
       <div className="container-custom">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-semibold mb-4">
-            Featured Training Centers
+            {t('featuredCenters.title', 'Featured Training Centers')}
           </h2>
           <p className="text-muted-foreground max-w-3xl mx-auto">
-            Discover top-rated training centers that have been carefully
-            selected based on quality, student satisfaction, and exceptional
-            learning experiences.
+            {t('featuredCenters.description', 'Discover top-rated training centers that have been carefully selected based on quality, student satisfaction, and exceptional learning experiences.')}
           </p>
         </div>
 
@@ -93,7 +92,7 @@ const FeaturedCenters = () => {
               href={`/discover?category=${encodeURIComponent(tag)}`}
               className="text-sm px-3 py-1 rounded-full bg-background border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors"
             >
-              {tag}
+              {t(`categories.tags.${tag.toLowerCase().replace(/\s+/g, '_')}`, tag)}
             </a>
           ))}
         </div>
@@ -113,7 +112,7 @@ const FeaturedCenters = () => {
                 />
                 {center.featured && (
                   <Badge className="absolute top-3 left-3 bg-primary text-white">
-                    Featured
+                    {t('featuredCenters.featured', 'Featured')}
                   </Badge>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
@@ -122,7 +121,7 @@ const FeaturedCenters = () => {
                     variant="outline"
                     className="bg-black/40 text-white border-none backdrop-blur-sm"
                   >
-                    {center.category}
+                    {t(`categories.${center.category.toLowerCase().replace(/\s+/g, '_')}`, center.category)}
                   </Badge>
                   <div className="flex items-center bg-black/40 text-white text-sm px-2 py-1 rounded-md backdrop-blur-sm">
                     <Star className="h-3 w-3 fill-yellow-400 text-yellow-400 mr-1" />
@@ -140,7 +139,7 @@ const FeaturedCenters = () => {
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center text-sm text-muted-foreground">
                     <Users className="h-3.5 w-3.5 mr-1" />
-                    <span>{center.reviews} reviews</span>
+                    <span>{center.reviews} {t('featuredCenters.reviews', 'reviews')}</span>
                   </div>
                   <div className="text-primary font-medium">{center.price}</div>
                 </div>
@@ -149,7 +148,7 @@ const FeaturedCenters = () => {
                   className="w-full group"
                   onClick={() => handleViewDetails(center.id)}
                 >
-                  <span>View Details</span>
+                  <span>{t('featuredCenters.viewDetails', 'View Details')}</span>
                   <ArrowRight className="h-4 w-4 ml-2 transition-transform group-hover:translate-x-1" />
                 </Button>
               </CardContent>
@@ -164,7 +163,7 @@ const FeaturedCenters = () => {
             className="rounded-full px-8"
             onClick={() => navigate("/discover")}
           >
-            View All Centers
+            {t('featuredCenters.viewAll', 'View All Centers')}
           </Button>
         </div>
       </div>

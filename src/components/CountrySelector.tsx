@@ -20,7 +20,7 @@ const CountrySelector = () => {
     return (
       <Button variant="ghost" size="sm" className="h-8 px-2 gap-1 text-muted-foreground">
         <MapPin className="h-4 w-4" />
-        <span className="text-xs">Loading...</span>
+        <span className="text-xs">{t('common.loading')}</span>
       </Button>
     );
   }

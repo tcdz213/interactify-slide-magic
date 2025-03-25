@@ -1,9 +1,7 @@
-
 import React from "react";
 import { FilterBar, FilterState, ResultsCount } from "@/components/filters";
 import { DiscoverHeader as CentersDiscoverHeader } from "@/components/centers";
 import { BrowseCategoryButton } from "@/components/centers";
-import VIPCenters from "@/components/sections/VIPCenters";
 
 interface DiscoverHeaderProps {
   filters: FilterState;
@@ -35,10 +33,6 @@ const DiscoverHeader = ({
       <div className="flex justify-between items-center mb-8">
         <CentersDiscoverHeader />
         <BrowseCategoryButton />
-      </div>
-
-      <div className="mb-8">
-        <VIPCenters showFullBackground={false} className="py-8 md:py-12 my-0" />
       </div>
 
       <div className="mb-8">

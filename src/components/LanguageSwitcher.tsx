@@ -1,5 +1,5 @@
+
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
 import { Languages } from "lucide-react";
 import {
   DropdownMenu,
@@ -44,27 +44,12 @@ const LanguageSwitcher = () => {
 
   return (
     <DropdownMenu>
-      <div className="relative">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 p-2 rounded-md cursor-pointer">
-              <Languages className="h-4 w-4" />
-              <span className="whitespace-nowrap">{currentLanguage.name}</span>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" side="top" className="mt-2">
-            {languages.map((lang) => (
-              <DropdownMenuItem
-                key={lang.code}
-                onClick={() => changeLanguage(lang.code)}
-              >
-                {lang.name}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 p-2 rounded-md cursor-pointer">
+          <Languages className="h-4 w-4" />
+          <span className="whitespace-nowrap">{currentLanguage.name}</span>
+        </button>
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {languages.map((lang) => (
           <DropdownMenuItem

@@ -1,10 +1,9 @@
 import { useState, useEffect, memo } from "react";
 import HeroTitle from "./hero/HeroTitle";
-import HeroActions from "./hero/HeroActions";
 import HeroBackground from "./hero/HeroBackground";
-import ScrollIndicator from "./hero/ScrollIndicator";
 import NeonGlowCursor from "./hero/NeonGlowCursor";
 import SearchBox from "./hero/SearchBox";
+import ScrollIndicator from "./hero/ScrollIndicator";
 
 const Hero = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -29,10 +28,8 @@ const Hero = () => {
       <div className="container-custom relative z-10 flex flex-col items-center">
         <HeroTitle className="mb-8 md:mb-12" />
         <SearchBox className="mb-12 w-full" />
-        <HeroActions className="mt-8" />
+        <ScrollIndicator targetId="featured-section" />
       </div>
-
-      <ScrollIndicator targetId="featured" className="z-10" />
     </section>
   );
 };

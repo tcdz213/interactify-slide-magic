@@ -2,21 +2,26 @@
 import React, { useState, useEffect } from "react";
 import { Briefcase, UserCircle, Users } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Header from "@/components/Header";
-import Sponsors from "@/components/Sponsors";
-import Footer from "@/components/Footer";
+import { Button } from "@/components/ui/button";
+import HeaderSection from "@/components/HeaderSection";
+import SponsorsSection from "@/components/SponsorsSection";
+import FooterSection from "@/components/FooterSection";
 import { TeacherJobListingsTab } from "@/components/teachers/TeacherJobListingsTab";
 import { BrowseTeachersTab } from "@/components/teachers/BrowseTeachersTab";
 import { TeacherProfileTab } from "@/components/teachers/TeacherProfileTab";
 import { mockTeacherJobs } from "@/components/teachers/mockTeacherJobs";
+import PlatformFeatures from "@/components/marketing/PlatformFeatures";
+import { useTranslation } from "react-i18next";
 
 const TeacherJobListings = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("job-listings");
   const [searchQuery, setSearchQuery] = useState("");
   const [locationFilter, setLocationFilter] = useState("all");
   const [specializationFilter, setSpecializationFilter] = useState("all");
   const [experienceFilter, setExperienceFilter] = useState("all");
   const [filteredJobs, setFilteredJobs] = useState(mockTeacherJobs);
+  const [showFeatures, setShowFeatures] = useState(false);
 
   useEffect(() => {
     const filtered = mockTeacherJobs.filter((job) => {
@@ -54,11 +59,20 @@ const TeacherJobListings = () => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
+      <HeaderSection />
       <main className="flex-grow pt-24 pb-16">
         <div className="container max-w-6xl mx-auto px-4">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-4">Teaching Portal</h1>
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold mb-4">{t("teacherPortal.title", "Teaching Portal")}</h1>
+              <Button 
+                variant="ghost" 
+                className="text-primary"
+                onClick={() => setShowFeatures(!showFeatures)}
+              >
+                {showFeatures ? t("common.hideFeatures", "Hide Features") : t("common.showFeatures", "Show Platform Features")}
+              </Button>
+            </div>
             <Tabs
               defaultValue="job-listings"
               value={activeTab}
@@ -72,26 +86,32 @@ const TeacherJobListings = () => {
                     className="flex items-center gap-2"
                   >
                     <Briefcase className="h-4 w-4" />
-                    Job Listings
+                    {t("teacherPortal.tabs.jobs", "Job Listings")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="browse-teachers"
                     className="flex items-center gap-2"
                   >
                     <Users className="h-4 w-4" />
-                    Browse Teachers
+                    {t("teacherPortal.tabs.browse", "Browse Teachers")}
                   </TabsTrigger>
                   <TabsTrigger
                     value="profile"
                     className="flex items-center gap-2"
                   >
                     <UserCircle className="h-4 w-4" />
-                    My Profile
+                    {t("teacherPortal.tabs.profile", "My Profile")}
                   </TabsTrigger>
                 </TabsList>
               </div>
             </Tabs>
           </div>
+          
+          {showFeatures && (
+            <div className="mb-12 animate-fade-in">
+              <PlatformFeatures />
+            </div>
+          )}
 
           {activeTab === "job-listings" && (
             <TeacherJobListingsTab
@@ -105,8 +125,8 @@ const TeacherJobListings = () => {
           {activeTab === "profile" && <TeacherProfileTab />}
         </div>
       </main>
-      <Sponsors />
-      <Footer />
+      <SponsorsSection />
+      <FooterSection />
     </div>
   );
 };

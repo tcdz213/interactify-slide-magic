@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Calendar } from "lucide-react";
 import { format } from "date-fns";
@@ -116,8 +117,12 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
       
       // Show success toast
       toast({
-        title: "Booking Successful!",
-        description: `Your session for ${values.course} on ${format(values.date, "MMMM d, yyyy")} at ${values.time} has been booked.`,
+        title: t('booking.successTitle', 'Booking Successful!'),
+        description: t('booking.successDescription', {
+          course: values.course,
+          date: format(values.date, "MMMM d, yyyy"),
+          time: values.time
+        }),
       });
       
       // Reset form and close modal
@@ -136,9 +141,9 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
           name="nationalId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>National ID</FormLabel>
+              <FormLabel>{t('booking.nationalId', 'National ID')}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your national ID number" {...field} />
+                <Input placeholder={t('booking.nationalIdPlaceholder', 'Enter your national ID number')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -154,9 +159,9 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
           name="taxId"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tax ID (Steuer-ID)</FormLabel>
+              <FormLabel>{t('booking.taxId', 'Tax ID (Steuer-ID)')}</FormLabel>
               <FormControl>
-                <Input placeholder="Enter your tax ID" {...field} />
+                <Input placeholder={t('booking.taxIdPlaceholder', 'Enter your tax ID')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -172,9 +177,9 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Book a Session in {currentCountry.name}</DialogTitle>
+          <DialogTitle>{t('booking.title', {country: currentCountry.name})}</DialogTitle>
           <DialogDescription>
-            Fill out the form below to book a session with {centerName}.
+            {t('booking.description', {centerName: centerName})}
           </DialogDescription>
         </DialogHeader>
         
@@ -185,9 +190,9 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t('booking.name', 'Name')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="Your full name" {...field} />
+                    <Input placeholder={t('booking.namePlaceholder', 'Your full name')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -200,9 +205,9 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>{t('booking.email', 'Email')}</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="your.email@example.com" {...field} />
+                      <Input type="email" placeholder={t('booking.emailPlaceholder', 'your.email@example.com')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -214,9 +219,9 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone</FormLabel>
+                    <FormLabel>{t('booking.phone', 'Phone')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your phone number" {...field} />
+                      <Input placeholder={t('booking.phonePlaceholder', 'Your phone number')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -232,11 +237,11 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
               name="course"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Course/Session</FormLabel>
+                  <FormLabel>{t('booking.course', 'Course/Session')}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select a course" />
+                        <SelectValue placeholder={t('booking.coursePlaceholder', 'Select a course')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -258,7 +263,7 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
                 name="date"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel>Date</FormLabel>
+                    <FormLabel>{t('booking.date', 'Date')}</FormLabel>
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
@@ -271,7 +276,7 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
                             {field.value ? (
                               format(field.value, "PPP")
                             ) : (
-                              <span>Pick a date</span>
+                              <span>{t('booking.datePlaceholder', 'Pick a date')}</span>
                             )}
                             <Calendar className="ml-auto h-4 w-4 opacity-50" />
                           </Button>
@@ -299,11 +304,11 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
                 name="time"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Time</FormLabel>
+                    <FormLabel>{t('booking.time', 'Time')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a time" />
+                          <SelectValue placeholder={t('booking.timePlaceholder', 'Select a time')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
@@ -322,10 +327,10 @@ export function BookingModal({ isOpen, onClose, centerName, courses, center }: B
             
             <DialogFooter>
               <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </Button>
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Booking..." : "Book Session"}
+                {isSubmitting ? t('booking.booking', 'Booking...') : t('booking.bookSession', 'Book Session')}
               </Button>
             </DialogFooter>
           </form>

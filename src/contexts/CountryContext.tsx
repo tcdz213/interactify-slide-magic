@@ -34,43 +34,73 @@ const CountryContext = createContext<CountryContextType>({
 
 export const useCountry = () => useContext(CountryContext);
 
+// Function to detect user's country from IP address
+const detectUserCountry = async (): Promise<Country> => {
+  try {
+    // Using ipinfo.io API to get user's IP and country information
+    const response = await fetch('https://ipinfo.io/json?token=8dad427e6e8e1f');
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch IP info: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    console.log('IP Info data:', data);
+    
+    // Find the country in our list or use default
+    const detectedCountry = countries.find(country => country.code === data.country) || defaultCountry;
+    
+    console.log('Detected country:', detectedCountry);
+    return detectedCountry;
+  } catch (error) {
+    console.error('Error detecting country:', error);
+    return defaultCountry;
+  }
+};
+
 export const CountryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentCountry, setCurrentCountry] = useState<Country>(defaultCountry);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Initialize country on component mount
   useEffect(() => {
-    const savedCountry = localStorage.getItem('selectedCountry');
-    
-    if (savedCountry) {
-      try {
-        setCurrentCountry(JSON.parse(savedCountry));
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error parsing saved country:', error);
-        detectCountry();
-      }
-    } else {
-      detectCountry();
-    }
-  }, []);
-
-  const detectCountry = async () => {
-    try {
-      const response = await fetch('https://ipinfo.io/json?token=8dad427e6e8e1f');
-      const data = await response.json();
+    const initializeCountry = async () => {
+      setIsLoading(true);
+      const savedCountry = localStorage.getItem('selectedCountry');
       
-      // Find the country in our list or use default
-      const detectedCountry = countries.find(country => country.code === data.country) || defaultCountry;
-      setCurrentCountry(detectedCountry);
-      localStorage.setItem('selectedCountry', JSON.stringify(detectedCountry));
-    } catch (error) {
-      console.error('Error detecting country:', error);
-      // If detection fails, use default country
-      setCurrentCountry(defaultCountry);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      // Use saved country if available
+      if (savedCountry) {
+        try {
+          const parsedCountry = JSON.parse(savedCountry);
+          // Validate if the parsed data has the right shape
+          if (parsedCountry && parsedCountry.code && parsedCountry.name) {
+            setCurrentCountry(parsedCountry);
+            setIsLoading(false);
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing saved country:', error);
+          // Continue to country detection if parsing fails
+        }
+      }
+      
+      // Detect country if no saved preference
+      try {
+        const detectedCountry = await detectUserCountry();
+        setCurrentCountry(detectedCountry);
+        localStorage.setItem('selectedCountry', JSON.stringify(detectedCountry));
+      } catch (error) {
+        console.error('Error in country detection:', error);
+        // Fallback to default country
+        setCurrentCountry(defaultCountry);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeCountry();
+  }, []);
 
   const setCountry = (country: Country) => {
     setCurrentCountry(country);

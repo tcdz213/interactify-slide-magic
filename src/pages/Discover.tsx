@@ -1,11 +1,18 @@
 
-import Header from "@/components/Header";
-import Sponsors from "@/components/Sponsors";
-import Footer from "@/components/Footer";
-import { DiscoverHeader, DiscoverTabs } from "@/components/discover";
-import { useDiscoverFilters } from "@/hooks/discover/useDiscoverFilters";
+import { useState, useEffect } from 'react';
+import Layout from '@/components/Layout';
+import { DiscoverHeader, DiscoverTabs } from '@/components/discover';
+import { FilterBar } from '@/components/filters';
+import { useDiscoverFilters } from '@/hooks/discover/useDiscoverFilters';
+import { useCountry } from '@/contexts/CountryContext';
+import { useIpCountryDetection } from '@/hooks/useIpCountryDetection';
+import SponsorsSection from '@/components/SponsorsSection';
+import FooterSection from '@/components/FooterSection';
+import HeaderSection from '@/components/HeaderSection';
+import { useTranslation } from 'react-i18next';
 
 const Discover = () => {
+  const { t } = useTranslation();
   const {
     viewMode,
     setViewMode,
@@ -25,9 +32,12 @@ const Discover = () => {
     clearCourseComparison,
   } = useDiscoverFilters();
 
+  // Initialize the IP-based country detection
+  useIpCountryDetection();
+
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <HeaderSection />
       <main className="flex-grow pt-24 pb-16">
         <div className="container-custom">
           <DiscoverHeader
@@ -67,8 +77,8 @@ const Discover = () => {
           />
         </div>
       </main>
-      <Sponsors />
-      <Footer />
+      <SponsorsSection />
+      <FooterSection />
     </div>
   );
 };

@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { fetchCurrentUser } from '@/redux/slices/authSlice';
+import { authService } from '@/api/auth';
 
 export const useSessionManagement = () => {
   const dispatch = useAppDispatch();
@@ -9,13 +10,18 @@ export const useSessionManagement = () => {
 
   // Check authentication status on initial load
   useEffect(() => {
-    if (isSessionPersisted && !user && !loading) {
-      dispatch(fetchCurrentUser());
-    }
-  }, [dispatch, isSessionPersisted, user, loading]);
+    const checkAuth = async () => {
+      // Only fetch user data if we have a valid token but no user data
+      if (authService.isAuthenticated() && (!user || Object.keys(user).length === 0)) {
+        await dispatch(fetchCurrentUser());
+      }
+    };
+    
+    checkAuth();
+  }, [dispatch, user]);
 
   return {
-    isAuthenticated: !!user,
+    isAuthenticated: authService.isAuthenticated() && !!user,
     user,
     isLoading: loading,
     error

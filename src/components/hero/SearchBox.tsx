@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import SearchInput from './search/SearchInput';
 import LocationFilter from './search/LocationFilter';
 import AdvancedFilter from './search/AdvancedFilter';
@@ -35,19 +34,13 @@ const SearchBox = ({ className, onSearch }: SearchBoxProps) => {
   };
   
   return (
-    <motion.div 
-      className={`max-w-4xl mx-auto ${className}`} 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8, delay: 0.5 }}
+    <div 
+      className={`max-w-4xl mx-auto animate-zoom-in ${className}`} 
+      style={{ animationDelay: '0.3s' }}
       role="search"
       aria-label="Training center search"
     >
-      <motion.div 
-        className="bg-card/80 backdrop-blur-md rounded-2xl shadow-xl p-3 md:p-4 border border-border/30 hover:shadow-2xl transition-shadow duration-300"
-        whileHover={{ y: -2 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
-      >
+      <div className="bg-card/90 backdrop-blur-sm rounded-xl shadow-lg p-3 md:p-4 border border-border/50 hover:shadow-xl transition-shadow duration-300">
         <div className="flex flex-col md:flex-row gap-3">
           <SearchInput 
             value={searchValue}
@@ -64,7 +57,7 @@ const SearchBox = ({ className, onSearch }: SearchBoxProps) => {
             />
             
             <Button 
-              className="h-12 rounded-lg px-6 transition-all duration-300 hover:shadow-md bg-gradient-to-r from-primary to-primary/90"
+              className="h-12 rounded-lg px-6 transition-all duration-300 hover:shadow-md"
               onClick={handleSearch}
               aria-label="Search"
             >
@@ -72,10 +65,10 @@ const SearchBox = ({ className, onSearch }: SearchBoxProps) => {
             </Button>
           </div>
         </div>
-      </motion.div>
+      </div>
       
       <PopularTags label={t('hero.popular')} tags={popularTags} />
-    </motion.div>
+    </div>
   );
 };
 

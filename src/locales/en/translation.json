@@ -1,3 +1,4 @@
+
 {
   "header": {
     "home": "Home",
@@ -77,7 +78,64 @@
     "trending": "Trending",
     "new": "New",
     "viewSubcategories": "View Subcategories",
-    "comingSoon": "Coming soon..."
+    "comingSoon": "Coming soon...",
+    "tags": {
+      "fitness": "Fitness",
+      "business": "Business",
+      "it_software": "IT & Software",
+      "language": "Language",
+      "arts": "Arts",
+      "professional_skills": "Professional Skills"
+    }
+  },
+  "featuredCenters": {
+    "title": "Featured Training Centers",
+    "description": "Discover top-rated training centers that have been carefully selected based on quality, student satisfaction, and exceptional learning experiences.",
+    "featured": "Featured",
+    "reviews": "reviews",
+    "viewDetails": "View Details",
+    "viewAll": "View All Centers"
+  },
+  "booking": {
+    "title": "Book a Session in {{country}}",
+    "description": "Fill out the form below to book a session with {{centerName}}.",
+    "name": "Name",
+    "namePlaceholder": "Your full name",
+    "email": "Email",
+    "emailPlaceholder": "your.email@example.com",
+    "phone": "Phone",
+    "phonePlaceholder": "Your phone number",
+    "nationalId": "National ID",
+    "nationalIdPlaceholder": "Enter your national ID number",
+    "taxId": "Tax ID (Steuer-ID)",
+    "taxIdPlaceholder": "Enter your tax ID",
+    "course": "Course/Session",
+    "coursePlaceholder": "Select a course",
+    "date": "Date",
+    "datePlaceholder": "Pick a date",
+    "time": "Time",
+    "timePlaceholder": "Select a time",
+    "booking": "Booking...",
+    "bookSession": "Book Session",
+    "successTitle": "Booking Successful!",
+    "successDescription": "Your session for {{course}} on {{date}} at {{time}} has been booked."
+  },
+  "common": {
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "view": "View",
+    "more": "More",
+    "less": "Less",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
   },
   "about": {
     "title": "About Us",

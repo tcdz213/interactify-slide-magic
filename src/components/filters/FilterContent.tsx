@@ -63,7 +63,7 @@ const FilterContent = ({
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        <h3 className="text-sm font-medium dark:text-gray-200">Category</h3>
+        <h3 className="text-sm font-medium">Category</h3>
         <CategorySelect 
           value={filters.category} 
           onChange={handleCategoryChange} 
@@ -72,7 +72,7 @@ const FilterContent = ({
 
       {filters.category && filters.category !== 'all' && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium dark:text-gray-200">Subcategories</h3>
+          <h3 className="text-sm font-medium">Subcategories</h3>
           <MultiSubcategorySelect
             values={selectedSubcategories}
             categoryId={filters.category}
@@ -82,7 +82,7 @@ const FilterContent = ({
       )}
 
       <div className="space-y-3">
-        <h3 className="text-sm font-medium dark:text-gray-200">Location</h3>
+        <h3 className="text-sm font-medium">Location</h3>
         <LocationSelect 
           value={filters.location} 
           onChange={handleLocationChange}
@@ -107,13 +107,13 @@ const FilterContent = ({
       <div className="flex gap-3 pt-4">
         <Button 
           variant="outline" 
-          className="flex-1 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700 dark:text-gray-200"
+          className="flex-1"
           onClick={clearFilters}
         >
           Clear All
         </Button>
         <Button 
-          className="flex-1 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
+          className="flex-1"
           onClick={applyFilters}
         >
           Apply Filters

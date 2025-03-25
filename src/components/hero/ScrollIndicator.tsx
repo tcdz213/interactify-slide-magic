@@ -1,58 +1,41 @@
 
-import React, { memo } from 'react';
-import { motion } from 'framer-motion';
+import React from 'react';
+import { ArrowDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ScrollIndicatorProps {
-  targetId: string;
   className?: string;
+  targetId?: string;
 }
 
-const ScrollIndicator = ({ targetId, className = '' }: ScrollIndicatorProps) => {
-  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    const element = document.getElementById(targetId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+const ScrollIndicator = ({ className, targetId = "how-it-works" }: ScrollIndicatorProps) => {
+  const handleScroll = () => {
+    const target = document.getElementById(targetId);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
-    <motion.div 
-      className={`absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:block ${className}`}
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 1.2, duration: 0.6 }}
+    <div 
+      className={cn(
+        "flex flex-col items-center animate-bounce cursor-pointer mt-12",
+        className
+      )}
+      onClick={handleScroll}
+      aria-label="Scroll down"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          handleScroll();
+        }
+      }}
     >
-      <motion.a 
-        href={`#${targetId}`} 
-        aria-label="Scroll down to content"
-        className="hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-full"
-        onClick={handleClick}
-        role="button"
-        animate={{ y: [0, 10, 0] }}
-        transition={{ 
-          repeat: Infinity, 
-          duration: 2.5,
-          ease: "easeInOut"
-        }}
-      >
-        <div className="w-10 h-16 border border-primary/40 rounded-full flex justify-center pt-3 backdrop-blur-sm bg-background/30">
-          <motion.div 
-            className="w-1.5 h-3 bg-primary rounded-full will-change-opacity"
-            animate={{ 
-              opacity: [0.4, 1, 0.4],
-              y: [0, 12, 0]
-            }}
-            transition={{ 
-              repeat: Infinity, 
-              duration: 2,
-              ease: "easeInOut"
-            }}
-          />
-        </div>
-      </motion.a>
-    </motion.div>
+      <span className="text-sm text-muted-foreground mb-2">Scroll Down</span>
+      <ArrowDown className="w-5 h-5 text-muted-foreground" />
+    </div>
   );
 };
 
-export default memo(ScrollIndicator);
+export default ScrollIndicator;
