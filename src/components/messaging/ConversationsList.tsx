@@ -1,70 +1,161 @@
-import { useState, useEffect, useCallback } from "react"
+import { memo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
-import { messagingApi } from "@/services/messagingApi"
 import { Conversation } from "@/types/messaging"
-import { AnimatedLoading } from "@/components/AnimatedLoading"
-import { formatDistanceToNow } from "date-fns"
 import { cn } from "@/lib/utils"
-import { useMessagingWebSocket } from "@/hooks/use-messaging-websocket"
 import { ConversationsListSkeleton } from "./ConversationSkeleton"
 import { Button } from "@/components/ui/button"
-import { RefreshCw } from "lucide-react"
+import { RefreshCw, Trash2 } from "lucide-react"
+import { useConversations } from "@/hooks/use-conversations"
+import { formatConversationTime, getInitials } from "@/utils/messageFormatting"
+import { useKeyboardNavigation } from "@/hooks/use-keyboard-navigation"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useState } from "react"
 
 interface ConversationsListProps {
   onSelectConversation: (conversation: Conversation) => void
   selectedConversationId?: string
 }
 
+// Memoized conversation item for performance
+const ConversationItem = memo(({ 
+  conversation, 
+  isSelected, 
+  onSelect,
+  onDelete 
+}: { 
+  conversation: Conversation
+  isSelected: boolean
+  onSelect: () => void
+  onDelete: () => void
+}) => {
+  return (
+    <Card
+      className={cn(
+        "p-4 cursor-pointer transition-colors active:scale-[0.98] min-h-[44px]",
+        "active:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        isSelected && "bg-accent"
+      )}
+      onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      aria-label={`Conversation with ${conversation.business_name}${conversation.unread_count > 0 ? `, ${conversation.unread_count} unread messages` : ''}`}
+      aria-current={isSelected ? 'true' : undefined}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onSelect()
+        } else if (e.key === 'Delete' && e.shiftKey) {
+          e.preventDefault()
+          onDelete()
+        }
+      }}
+    >
+      <div className="flex items-start gap-3">
+        <Avatar className="h-12 w-12" aria-hidden="true">
+          <AvatarImage
+            src={conversation.business_avatar}
+            alt=""
+          />
+          <AvatarFallback>
+            {getInitials(conversation.business_name)}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-semibold text-foreground truncate">
+              {conversation.business_name}
+            </h4>
+            {conversation.unread_count > 0 && (
+              <Badge 
+                variant="default" 
+                className="ml-auto flex-shrink-0"
+                aria-label={`${conversation.unread_count} unread messages`}
+              >
+                {conversation.unread_count}
+              </Badge>
+            )}
+          </div>
+
+          {conversation.last_message && (
+            <p className="text-sm text-muted-foreground truncate mt-1">
+              {conversation.last_message}
+            </p>
+          )}
+
+          {conversation.last_message_at && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {formatConversationTime(conversation.last_message_at)}
+            </p>
+          )}
+        </div>
+
+        <Button
+          variant="ghost"
+          size="icon"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 h-8 w-8"
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
+          aria-label={`Delete conversation with ${conversation.business_name}`}
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </div>
+    </Card>
+  )
+})
+
+ConversationItem.displayName = 'ConversationItem'
+
 export const ConversationsList = ({
   onSelectConversation,
   selectedConversationId
 }: ConversationsListProps) => {
-  const [conversations, setConversations] = useState<Conversation[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [error, setError] = useState(false)
+  const { conversations, isLoading, isRefreshing, error, refresh, deleteConversation } = useConversations()
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
+  const [selectedIndex, setSelectedIndex] = useState(0)
 
-  // WebSocket for real-time updates - NO MORE POLLING!
-  useMessagingWebSocket({
-    onConversationUpdate: useCallback((updatedConversation: Conversation) => {
-      setConversations(prev => 
-        prev.map(conv => 
-          conv.id === updatedConversation.id ? updatedConversation : conv
-        )
-      )
-    }, [])
+  // Keyboard navigation
+  useKeyboardNavigation({
+    onArrowDown: () => {
+      setSelectedIndex(prev => Math.min(prev + 1, conversations.length - 1))
+    },
+    onArrowUp: () => {
+      setSelectedIndex(prev => Math.max(prev - 1, 0))
+    },
+    onEnter: () => {
+      if (conversations[selectedIndex]) {
+        onSelectConversation(conversations[selectedIndex])
+      }
+    },
+    enabled: conversations.length > 0
   })
 
-  // Load conversations once on mount
-  const loadConversations = async (isRefresh = false) => {
-    if (isRefresh) {
-      setIsRefreshing(true)
-    } else {
-      setIsLoading(true)
-    }
+  const handleDelete = async () => {
+    if (!conversationToDelete) return
     
     try {
-      const data = await messagingApi.getConversations()
-      setConversations(data)
-      setError(false)
+      await deleteConversation(conversationToDelete)
+      setDeleteDialogOpen(false)
+      setConversationToDelete(null)
     } catch (err) {
-      console.error('Failed to load conversations:', err)
-      setError(true)
-    } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
+      console.error('Failed to delete conversation:', err)
     }
   }
-
-  const handleRefresh = () => {
-    loadConversations(true)
-  }
-
-  useEffect(() => {
-    loadConversations()
-  }, [])
 
   if (isLoading && conversations.length === 0) {
     return <ConversationsListSkeleton />
@@ -72,10 +163,10 @@ export const ConversationsList = ({
 
   if (error && conversations.length === 0) {
     return (
-      <div className="text-center py-8 space-y-4">
+      <div className="text-center py-8 space-y-4" role="alert" aria-live="polite">
         <p className="text-destructive">Unable to load conversations</p>
         <p className="text-sm text-muted-foreground">Please check your connection</p>
-        <Button onClick={handleRefresh} variant="outline" size="sm">
+        <Button onClick={refresh} variant="outline" size="sm" aria-label="Retry loading conversations">
           <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
           Try Again
         </Button>
@@ -85,7 +176,7 @@ export const ConversationsList = ({
 
   if (conversations.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground space-y-2">
+      <div className="text-center py-8 text-muted-foreground space-y-2" role="status">
         <p>No conversations yet.</p>
         <p className="text-sm">Start messaging businesses to see your conversations here.</p>
       </div>
@@ -93,74 +184,46 @@ export const ConversationsList = ({
   }
 
   return (
-    <div className="space-y-3">
-      {isRefreshing && (
-        <div className="flex items-center justify-center py-2">
-          <RefreshCw className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-          <span className="ml-2 text-sm text-muted-foreground">Refreshing...</span>
-        </div>
-      )}
-      <div className="space-y-2">
-      {conversations.map((conversation) => (
-        <Card
-          key={conversation.id}
-          className={cn(
-            "p-4 cursor-pointer transition-colors active:scale-[0.98] min-h-[44px]",
-            "active:bg-accent/80",
-            selectedConversationId === conversation.id && "bg-accent"
-          )}
-          onClick={() => onSelectConversation(conversation)}
-          role="button"
-          tabIndex={0}
-          aria-label={`Conversation with ${conversation.business_name}`}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault()
-              onSelectConversation(conversation)
-            }
-          }}
-        >
-          <div className="flex items-start gap-3">
-            <Avatar className="h-12 w-12">
-              <AvatarImage
-                src={conversation.business_avatar}
-                alt={conversation.business_name}
-              />
-              <AvatarFallback>
-                {conversation.business_name[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <h4 className="font-semibold text-foreground truncate">
-                  {conversation.business_name}
-                </h4>
-                {conversation.unread_count > 0 && (
-                  <Badge variant="default" className="ml-auto flex-shrink-0">
-                    {conversation.unread_count}
-                  </Badge>
-                )}
-              </div>
-
-              {conversation.last_message && (
-                <p className="text-sm text-muted-foreground truncate mt-1">
-                  {conversation.last_message}
-                </p>
-              )}
-
-              {conversation.last_message_at && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {formatDistanceToNow(new Date(conversation.last_message_at), {
-                    addSuffix: true
-                  })}
-                </p>
-              )}
-            </div>
+    <>
+      <div className="space-y-3" role="list" aria-label="Conversations">
+        {isRefreshing && (
+          <div className="flex items-center justify-center py-2" role="status" aria-live="polite">
+            <RefreshCw className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+            <span className="ml-2 text-sm text-muted-foreground">Refreshing conversations...</span>
           </div>
-        </Card>
-      ))}
+        )}
+        <div className="space-y-2 group">
+          {conversations.map((conversation, index) => (
+            <ConversationItem
+              key={conversation.id}
+              conversation={conversation}
+              isSelected={selectedConversationId === conversation.id || selectedIndex === index}
+              onSelect={() => onSelectConversation(conversation)}
+              onDelete={() => {
+                setConversationToDelete(conversation.id)
+                setDeleteDialogOpen(true)
+              }}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this conversation and all its messages. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }

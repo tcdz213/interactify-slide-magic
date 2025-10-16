@@ -1,152 +1,63 @@
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useRef, useEffect, useState, memo } from "react"
 import { MessageBubble } from "./MessageBubble"
 import { MessageInput } from "./MessageInput"
-import { messagingApi } from "@/services/messagingApi"
-import { Message } from "@/types/messaging"
-import { AnimatedLoading } from "@/components/AnimatedLoading"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { useMessagingWebSocket } from "@/hooks/use-messaging-websocket"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { WifiOff, Wifi, AlertCircle } from "lucide-react"
+import { WifiOff, AlertCircle, ArrowDown } from "lucide-react"
 import { MessageThreadSkeleton } from "./MessageSkeleton"
 import { TypingIndicator } from "./TypingIndicator"
 import { Button } from "@/components/ui/button"
+import { useMessages } from "@/hooks/use-messages"
+import { cn } from "@/lib/utils"
 
 interface MessageThreadProps {
   conversationId: string
   currentUserId: string
 }
 
+// Memoized message bubble for performance
+const MemoizedMessageBubble = memo(MessageBubble)
+
 export const MessageThread = ({ conversationId, currentUserId }: MessageThreadProps) => {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSending, setIsSending] = useState(false)
-  const [failedMessages, setFailedMessages] = useState<Set<string>>(new Set())
-  const [isTyping, setIsTyping] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const [userScrolled, setUserScrolled] = useState(false)
 
-  // WebSocket connection for real-time updates
-  const { isConnected, connectionError, sendTypingIndicator } = useMessagingWebSocket({
-    conversationId,
-    onNewMessage: useCallback((message: Message) => {
-      if (message.conversation_id === conversationId) {
-        setMessages(prev => {
-          // Avoid duplicates
-          if (prev.some(m => m.id === message.id)) return prev
-          return [...prev, message]
-        })
-        
-        // Mark as read if it's from another user
-        if (message.sender_id !== currentUserId) {
-          messagingApi.markAsRead(conversationId)
-        }
-      }
-    }, [conversationId, currentUserId]),
-    onMessageUpdate: useCallback((message: Message) => {
-      if (message.conversation_id === conversationId) {
-        setMessages(prev => prev.map(m => m.id === message.id ? message : m))
-      }
-    }, [conversationId]),
-    onTyping: useCallback((userId: string, typing: boolean) => {
-      if (userId !== currentUserId) {
-        setIsTyping(typing)
-      }
-    }, [currentUserId])
-  })
+  // Use custom hook for all message state management
+  const {
+    messages,
+    isLoading,
+    isSending,
+    failedMessages,
+    isTyping,
+    isConnected,
+    connectionError,
+    sendMessage,
+    retryMessage,
+    deleteFailedMessage,
+    sendTypingIndicator
+  } = useMessages({ conversationId, currentUserId })
 
-  // Load initial messages
-  const loadMessages = async () => {
-    setIsLoading(true)
-    try {
-      const data = await messagingApi.getMessages(conversationId)
-      setMessages(data)
-      await messagingApi.markAsRead(conversationId)
-    } catch (error) {
-      console.error('Failed to load messages:', error)
-    } finally {
-      setIsLoading(false)
+  // Smart scrolling - only auto-scroll if user is at bottom
+  useEffect(() => {
+    if (!userScrolled && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
+  }, [messages, userScrolled])
+
+  // Handle scroll events to detect if user scrolled up
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const element = e.currentTarget
+    const isAtBottom = element.scrollHeight - element.scrollTop - element.clientHeight < 100
+    
+    setUserScrolled(!isAtBottom)
+    setShowScrollButton(!isAtBottom && messages.length > 0)
   }
 
-  useEffect(() => {
-    loadMessages()
-  }, [conversationId])
-
-  // Auto-scroll to bottom when new messages arrive
-  useEffect(() => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const handleSendMessage = async (content: string) => {
-    if (isSending) return
-    
-    setIsSending(true)
-    const tempId = `temp-${Date.now()}`
-    
-    try {
-      // Optimistic update - add message immediately
-      const optimisticMessage: Message = {
-        id: tempId,
-        conversation_id: conversationId,
-        sender_id: currentUserId,
-        sender_name: 'You',
-        content,
-        read: false,
-        created_at: new Date().toISOString()
-      }
-      
-      setMessages(prev => [...prev, optimisticMessage])
-
-      // Send to server
-      const sentMessage = await messagingApi.sendMessage({
-        conversation_id: conversationId,
-        content
-      })
-
-      // Replace optimistic message with real one
-      setMessages(prev => prev.map(m => 
-        m.id === tempId ? sentMessage : m
-      ))
-      
-      // Remove from failed messages if it was there
-      setFailedMessages(prev => {
-        const next = new Set(prev)
-        next.delete(tempId)
-        return next
-      })
-    } catch (error) {
-      // Mark message as failed
-      setFailedMessages(prev => new Set(prev).add(tempId))
-      console.error('Failed to send message:', error)
-    } finally {
-      setIsSending(false)
-    }
-  }
-
-  const handleRetryMessage = async (messageId: string) => {
-    const failedMsg = messages.find(m => m.id === messageId)
-    if (!failedMsg) return
-
-    // Remove failed message
-    setMessages(prev => prev.filter(m => m.id !== messageId))
-    setFailedMessages(prev => {
-      const next = new Set(prev)
-      next.delete(messageId)
-      return next
-    })
-
-    // Retry sending
-    await handleSendMessage(failedMsg.content)
-  }
-
-  const handleDeleteFailedMessage = (messageId: string) => {
-    setMessages(prev => prev.filter(m => m.id !== messageId))
-    setFailedMessages(prev => {
-      const next = new Set(prev)
-      next.delete(messageId)
-      return next
-    })
+    setUserScrolled(false)
   }
 
   const handleTyping = () => {
@@ -162,70 +73,95 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" role="log" aria-live="polite" aria-label="Message thread">
       {/* Connection status indicator */}
       {!isConnected && connectionError && (
-        <Alert variant="destructive" className="m-2">
-          <WifiOff className="h-4 w-4" />
+        <Alert variant="destructive" className="m-2" role="alert">
+          <WifiOff className="h-4 w-4" aria-hidden="true" />
           <AlertDescription>
             {connectionError} - Messages will not update in real-time
           </AlertDescription>
         </Alert>
       )}
 
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
-          {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              No messages yet. Start the conversation!
-            </div>
-          ) : (
-            messages.map((message) => {
-              const isFailed = failedMessages.has(message.id)
-              return (
-                <div key={message.id}>
-                  <MessageBubble
-                    message={message}
-                    isCurrentUser={message.sender_id === currentUserId}
-                  />
-                  {isFailed && (
-                    <div className="flex justify-end gap-2 mt-1">
-                      <Alert variant="destructive" className="w-auto py-2 px-3">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="flex items-center gap-2">
-                          <span className="text-xs">Failed to send</span>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 px-2 text-xs"
-                            onClick={() => handleRetryMessage(message.id)}
-                          >
-                            Retry
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-6 px-2 text-xs"
-                            onClick={() => handleDeleteFailedMessage(message.id)}
-                          >
-                            Delete
-                          </Button>
-                        </AlertDescription>
-                      </Alert>
-                    </div>
-                  )}
-                </div>
-              )
-            })
-          )}
-          {isTyping && <TypingIndicator />}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+      <div className="relative flex-1 overflow-hidden">
+        <ScrollArea className="h-full p-4" ref={scrollRef} onScroll={handleScroll}>
+          <div className="space-y-4">
+            {messages.length === 0 ? (
+              <div className="text-center text-muted-foreground py-8" role="status">
+                No messages yet. Start the conversation!
+              </div>
+            ) : (
+              messages.map((message) => {
+                const isFailed = failedMessages.has(message.id)
+                return (
+                  <div key={message.id}>
+                    <MemoizedMessageBubble
+                      message={message}
+                      isCurrentUser={message.sender_id === currentUserId}
+                    />
+                    {isFailed && (
+                      <div className="flex justify-end gap-2 mt-1">
+                        <Alert variant="destructive" className="w-auto py-2 px-3" role="alert">
+                          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                          <AlertDescription className="flex items-center gap-2">
+                            <span className="text-xs">Failed to send</span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => retryMessage(message.id)}
+                              aria-label="Retry sending message"
+                            >
+                              Retry
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 px-2 text-xs"
+                              onClick={() => deleteFailedMessage(message.id)}
+                              aria-label="Delete failed message"
+                            >
+                              Delete
+                            </Button>
+                          </AlertDescription>
+                        </Alert>
+                      </div>
+                    )}
+                  </div>
+                )
+              })
+            )}
+            {isTyping && (
+              <div aria-live="polite" aria-atomic="true">
+                <span className="sr-only">Someone is typing</span>
+                <TypingIndicator />
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
+
+        {/* Scroll to bottom button */}
+        {showScrollButton && (
+          <Button
+            variant="secondary"
+            size="icon"
+            className={cn(
+              "absolute bottom-4 right-4 rounded-full shadow-lg",
+              "transition-all duration-200 active:scale-95"
+            )}
+            onClick={scrollToBottom}
+            aria-label="Scroll to bottom"
+          >
+            <ArrowDown className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        )}
+      </div>
 
       <div className="border-t p-4">
         <MessageInput 
-          onSend={handleSendMessage} 
+          onSend={sendMessage} 
           onTyping={handleTyping}
           disabled={isSending}
         />
