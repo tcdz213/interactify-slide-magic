@@ -1,108 +1,63 @@
-
-import { Moon, Sun, Monitor, Contrast } from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Toggle } from "@/components/ui/toggle";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/dropdown-menu"
+import { Icon } from "@/components/ui/icon"
+import { useTheme } from "@/hooks/use-theme"
+import { useLanguage } from "@/hooks/use-language"
 
-const ThemeToggle = () => {
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
-  const isHighContrast = resolvedTheme === "high-contrast";
+export function ThemeToggle() {
+  const { setTheme } = useTheme()
+  const { t } = useLanguage()
 
   return (
-    <div className="flex items-center gap-2">
-      {/* Theme Button Group */}
-      <div className="flex items-center gap-1 p-1 rounded-md bg-muted">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Toggle
-              variant="outline"
-              size="sm"
-              pressed={resolvedTheme === "light"}
-              onPressedChange={() => setTheme("light")}
-              aria-label="Light mode"
-              className="focus-ring data-[state=on]:bg-background data-[state=on]:text-foreground"
-            >
-              <Sun className="h-4 w-4" />
-              <span className="sr-only">Light</span>
-            </Toggle>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>Light mode (Alt+Shift+L)</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Toggle
-              variant="outline"
-              size="sm"
-              pressed={resolvedTheme === "dark"}
-              onPressedChange={() => setTheme("dark")}
-              aria-label="Dark mode"
-              className="focus-ring data-[state=on]:bg-background data-[state=on]:text-foreground"
-            >
-              <Moon className="h-4 w-4" />
-              <span className="sr-only">Dark</span>
-            </Toggle>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>Dark mode (Alt+Shift+D)</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Toggle
-              variant="outline"
-              size="sm"
-              pressed={resolvedTheme === "high-contrast"}
-              onPressedChange={() => setTheme("high-contrast")}
-              aria-label="High contrast mode"
-              className="focus-ring data-[state=on]:bg-background data-[state=on]:text-foreground"
-            >
-              <Contrast className="h-4 w-4" />
-              <span className="sr-only">High Contrast</span>
-            </Toggle>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>High contrast mode (Alt+Shift+H)</p>
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Toggle
-              variant="outline"
-              size="sm"
-              pressed={theme === "system"}
-              onPressedChange={() => setTheme("system")}
-              aria-label="System preference"
-              className="focus-ring data-[state=on]:bg-background data-[state=on]:text-foreground"
-            >
-              <Monitor className="h-4 w-4" />
-              <span className="sr-only">System</span>
-            </Toggle>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>System preference (Alt+Shift+S)</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
-    </div>
-  );
-};
-
-export default ThemeToggle;
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative transition-transform min-h-[2.5rem] min-w-[2.5rem]"
+          aria-label={t("theme")}
+          aria-haspopup="menu"
+        >
+          <Icon
+            name="sun"
+            className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+            aria-hidden="true"
+          />
+          <Icon
+            name="moon"
+            className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+            aria-hidden="true"
+          />
+          <span className="sr-only">{t("theme")}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[120px]" role="menu">
+        <DropdownMenuItem 
+          onClick={() => setTheme("light")} 
+          onKeyDown={(e) => e.key === "Enter" && setTheme("light")}
+          className="cursor-pointer"
+          role="menuitem"
+          aria-label="Switch to light theme"
+        >
+          <Icon name="sun" className="mr-2 h-4 w-4" aria-hidden="true" />
+          <span>{t("light")}</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem 
+          onClick={() => setTheme("dark")} 
+          onKeyDown={(e) => e.key === "Enter" && setTheme("dark")}
+          className="cursor-pointer"
+          role="menuitem"
+          aria-label="Switch to dark theme"
+        >
+          <Icon name="moon" className="mr-2 h-4 w-4" aria-hidden="true" />
+          <span>{t("dark")}</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}

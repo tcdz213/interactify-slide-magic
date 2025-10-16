@@ -1,179 +1,98 @@
+import { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "./redux/hooks";
-import { fetchCurrentUser } from "./redux/slices/authSlice";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "@/hooks/use-theme";
+import { LanguageProvider } from "@/hooks/use-language";
+import { AuthProvider } from "@/hooks/use-auth";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
+import BottomNavigation from "@/components/BottomNavigation";
+import { SEOFooterTicker } from "@/components/SEOFooterTicker";
+import { AnimatedLoading } from "@/components/AnimatedLoading";
+import { SplashScreen } from "@/components/SplashScreen";
+import { usePageTransition } from "@/hooks/use-page-transition";
+import { useAppLoading } from "@/hooks/use-app-loading";
+import Index from "@/pages/Index";
 
-import Index from "./pages/Index";
-import Discover from "./pages/Discover";
-import CenterDetails from "./pages/CenterDetails";
-import CourseDetails from "./pages/CourseDetails";
-import ForTrainingCenters from "./pages/ForTrainingCenters";
-import GetStarted from "./pages/GetStarted";
-import Categories from "./pages/Categories";
-import About from "./pages/About";
-import Admin from "./pages/Admin";
-import Reports from "./pages/Reports";
-import CenterOwnerDashboard from "./pages/CenterOwnerDashboard";
-import TeacherJobPost from "./pages/TeacherJobPost";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import VerifyEmail from "./pages/VerifyEmail";
-import NotFound from "./pages/NotFound";
-import RoleProtectedRoute from "./components/RoleProtectedRoute";
-import { ROLES } from "./utils/roles";
-import { Chatbot } from "./components/chatbot";
-import Community from "./pages/Community";
-import ComponentLibrary from "./pages/ComponentLibrary";
-import Profile from "./pages/Profile";
-
-// Import providers
-import { CountryProvider } from "./contexts/CountryContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
-import { UserRoleProvider } from "./contexts/UserRoleContext";
-import TeacherProfileManagement from "./pages/TeacherProfileManagement";
-import TeacherJobListings from "./pages/TeacherJobListings";
-import LearnerProfilePage from "./pages/LearnerProfile";
-
-// AppContent component to handle auth state persistence
-const AppContent = () => {
-  const dispatch = useAppDispatch();
-  const { isSessionPersisted, user } = useAppSelector(state => state.auth);
-  const location = useLocation();
-  
-  // On initial load or route change, check auth state
-  useEffect(() => {
-    if (isSessionPersisted && !user) {
-      dispatch(fetchCurrentUser());
-    }
-  }, [dispatch, isSessionPersisted, user]);
-  
-  return (
-    <Routes>
-      <Route path="/" element={<Index />} />
-      <Route path="/discover" element={<Discover />} />
-      <Route path="/center/:id" element={<CenterDetails />} />
-      <Route path="/course/:id" element={<CourseDetails />} />
-      <Route path="/for-training-centers" element={<ForTrainingCenters />} />
-      <Route path="/get-started" element={<GetStarted />} />
-      <Route path="/categories" element={<Categories />} />
-      <Route path="/about" element={<About />} />
-      <Route path="/teacher-job-post" element={<TeacherJobPost />} />
-      <Route path="/teacher-job-listings" element={<TeacherJobListings />} />
-      <Route path="/teacher-profile" element={<TeacherProfileManagement />} />
-      <Route path="/community" element={<Community />} />
-      <Route path="/community/user/:userId" element={<Community />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/verify-email" element={<VerifyEmail />} />
-      <Route path="/component-library" element={<ComponentLibrary />} />
-      <Route 
-        path="/profile" 
-        element={
-          <RoleProtectedRoute
-            allowedRoles={[
-              ROLES.PLATFORM_ADMIN,
-              ROLES.CENTER_OWNER,
-              ROLES.TEACHER,
-              ROLES.LEARNER
-            ]}
-            fallbackPath="/login"
-            redirectToLogin={true}
-          >
-            <Profile />
-          </RoleProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/admin" 
-        element={
-          <RoleProtectedRoute
-            allowedRoles={[
-              ROLES.PLATFORM_ADMIN,
-              ROLES.CENTER_OWNER,
-              ROLES.CONTENT_MODERATOR,
-              ROLES.ADVERTISER,
-              ROLES.SUPPORT_AGENT,
-              ROLES.TECHNICAL_OWNER
-            ]}
-            fallbackPath="/"
-            redirectToLogin={true}
-          >
-            <Admin />
-          </RoleProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/reports" 
-        element={
-          <RoleProtectedRoute
-            allowedRoles={[
-              ROLES.PLATFORM_ADMIN,
-              ROLES.CENTER_OWNER,
-              ROLES.TECHNICAL_OWNER
-            ]}
-            fallbackPath="/"
-            redirectToLogin={true}
-          >
-            <Reports />
-          </RoleProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/center-owner-dashboard" 
-        element={
-          <RoleProtectedRoute
-            allowedRoles={[ROLES.CENTER_OWNER, ROLES.PLATFORM_ADMIN]}
-            fallbackPath="/"
-            redirectToLogin={true}
-          >
-            <CenterOwnerDashboard />
-          </RoleProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/learner-profile" 
-        element={
-          <RoleProtectedRoute
-            allowedRoles={[ROLES.LEARNER, ROLES.PLATFORM_ADMIN]}
-            fallbackPath="/"
-            redirectToLogin={true}
-          >
-            <LearnerProfilePage />
-          </RoleProtectedRoute>
-        } 
-      />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
+// Lazy load pages for better performance
+const Home = lazy(() => import("@/pages/Home"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const CardDetail = lazy(() => import("@/pages/CardDetail"));
+const CreateCard = lazy(() => import("@/pages/CreateCard"));
+const EditCard = lazy(() => import("@/pages/EditCard"));
+const Profile = lazy(() => import("@/pages/Profile"));
+const Favorites = lazy(() => import("@/pages/Favorites"));
+const Messages = lazy(() => import("@/pages/Messages"));
+const Packages = lazy(() => import("@/pages/Packages"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const AppContent = () => {
+  const isAppLoading = useAppLoading(800);
+  const isTransitioning = usePageTransition(200);
+  
   return (
-    <CountryProvider>
-      <ThemeProvider>
-        <UserRoleProvider>
-          <QueryClientProvider client={queryClient}>
-            <TooltipProvider>
-              <AppContent />
-              <Chatbot />
-              <Toaster />
-              <Sonner />
-            </TooltipProvider>
-          </QueryClientProvider>
-        </UserRoleProvider>
-      </ThemeProvider>
-    </CountryProvider>
+    <>
+      <SplashScreen isVisible={isAppLoading || isTransitioning} />
+      <OfflineIndicator />
+      <div className="min-h-screen bg-background overflow-hidden flex flex-col">
+        <main className="flex-1 overflow-y-auto pb-20 scrollbar-hide">
+          <div className={`transition-opacity duration-200 ${isTransitioning ? 'opacity-0' : 'opacity-100'}`}>
+            <ErrorBoundary>
+              <Suspense fallback={
+                <div className="flex justify-center items-center min-h-screen">
+                  <AnimatedLoading size={80} />
+                </div>
+              }>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/home" element={<Home />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/admin" element={<AdminDashboard />} />
+                  <Route path="/card/:id" element={<CardDetail />} />
+                  <Route path="/create" element={<CreateCard />} />
+                  <Route path="/edit/:id" element={<EditCard />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/packages" element={<Packages />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </ErrorBoundary>
+          </div>
+        </main>
+        <SEOFooterTicker />
+        <BottomNavigation />
+      </div>
+    </>
   );
 };
+
+const App = () => (
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="dark" storageKey="spotycard-theme">
+        <LanguageProvider defaultLanguage="en" storageKey="spotycard-language">
+          <AuthProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <AppContent />
+              </BrowserRouter>
+            </TooltipProvider>
+          </AuthProvider>
+        </LanguageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
+);
 
 export default App;

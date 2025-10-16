@@ -1,55 +1,32 @@
-
-import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Home } from "lucide-react";
-import Sponsors from "@/components/Sponsors";
+import { useEffect } from "react";
+import { SEOHead } from "@/components/SEOHead";
 
 const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error(
-      "404 Error: User attempted to access non-existent route:",
-      location.pathname
-    );
+    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex-grow flex items-center justify-center bg-background px-4">
-        <div className="text-center max-w-md mx-auto">
-          <div className="mb-6 relative">
-            <div className="text-9xl font-bold text-primary/10">404</div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-4xl font-semibold text-primary">Not Found</div>
-            </div>
-          </div>
-          
-          <p className="text-lg text-muted-foreground mb-8">
-            The page you're looking for doesn't exist or has been moved.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button 
-              variant="outline" 
-              className="gap-2"
-              onClick={() => window.history.back()}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Go Back
-            </Button>
-            <Button className="gap-2" asChild>
-              <a href="/">
-                <Home className="h-4 w-4" />
-                Return Home
-              </a>
-            </Button>
-          </div>
-        </div>
+    <>
+      <SEOHead
+        title="404 - Page Not Found | SpotyCard"
+        description="The page you're looking for doesn't exist. Return to SpotyCard to create your digital business card and get spotted anywhere."
+        url={window.location.href}
+        type="website"
+      />
+      <div className="flex min-h-screen items-center justify-center bg-gray-100">
+      <div className="text-center">
+        <h1 className="mb-4 text-4xl font-bold">404</h1>
+        <p className="mb-4 text-xl text-gray-600">Oops! Page not found</p>
+        <a href="/" className="text-blue-500 underline hover:text-blue-700">
+          Return to Home
+        </a>
       </div>
-      <Sponsors />
-    </div>
+      </div>
+    </>
   );
 };
 
