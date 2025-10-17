@@ -64,7 +64,7 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
   }
 
   return (
-    <div className="flex flex-col h-full bg-background" role="log" aria-live="polite" aria-label="Message thread">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900" role="log" aria-live="polite" aria-label="Message thread">
       <div className="relative flex-1 overflow-hidden">
         <ScrollArea className="h-full px-4 pt-4 pb-2" ref={scrollRef} onScroll={handleScroll}>
           <div className="space-y-2 max-w-3xl mx-auto">
@@ -142,7 +142,7 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
         )}
       </div>
 
-      <div className="border-t bg-background/95 backdrop-blur-sm px-4 py-3">
+      <div className="border-t bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 py-3">
         <div className="max-w-3xl mx-auto">
           <MessageInput 
             onSend={sendMessage}

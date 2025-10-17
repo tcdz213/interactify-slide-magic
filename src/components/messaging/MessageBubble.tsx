@@ -28,25 +28,25 @@ export const MessageBubble = memo(({ message, isCurrentUser }: MessageBubbleProp
       )}
 
       <div className={cn(
-        "flex flex-col gap-0.5 max-w-[75%]",
+        "flex flex-col gap-1 max-w-[75%]",
         isCurrentUser && "items-end"
       )}>
         <div
           className={cn(
-            "rounded-[20px] px-4 py-2.5 transition-all duration-200",
-            "shadow-sm",
+            "rounded-[22px] px-4 py-3 transition-all duration-200",
+            "shadow-[0_1px_2px_rgba(0,0,0,0.1)]",
             isCurrentUser
-              ? "bg-primary text-primary-foreground rounded-br-sm"
-              : "bg-muted text-foreground rounded-bl-sm"
+              ? "bg-gradient-primary text-white rounded-br-md"
+              : "bg-gray-100 dark:bg-gray-800 text-foreground rounded-bl-md"
           )}
         >
-          <p className="text-[15px] leading-[1.4] whitespace-pre-wrap break-words">
+          <p className="text-[15px] leading-[1.47] whitespace-pre-wrap break-words">
             {message.content}
           </p>
         </div>
         <time 
           className={cn(
-            "text-[11px] text-muted-foreground/70 px-3 mt-0.5",
+            "text-[11px] text-muted-foreground/60 px-2",
             isCurrentUser && "text-right"
           )}
           dateTime={message.created_at}
