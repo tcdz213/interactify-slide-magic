@@ -2,6 +2,7 @@ import { useRef, useEffect, useState, memo } from "react"
 import { MessageBubble } from "./MessageBubble"
 import { MessageInput } from "./MessageInput"
 import { MessagingHeader } from "./MessagingHeader"
+import { QuickShortcuts } from "./QuickShortcuts"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, ArrowDown, MessageSquare } from "lucide-react"
@@ -84,13 +85,19 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900" role="log" aria-live="polite" aria-label="Message thread">
       {/* Header */}
       {conversation && (
-        <MessagingHeader
-          businessId={conversation.business_id}
-          businessName={conversation.business_name}
-          businessAvatar={conversation.business_avatar}
-          isOnline={false}
-          isVerified={false}
-        />
+        <>
+          <MessagingHeader
+            businessId={conversation.business_id}
+            businessName={conversation.business_name}
+            businessAvatar={conversation.business_avatar}
+            isOnline={false}
+            isVerified={false}
+          />
+          <QuickShortcuts
+            businessId={conversation.business_id}
+            businessName={conversation.business_name}
+          />
+        </>
       )}
 
       <div className="relative flex-1 overflow-hidden">
