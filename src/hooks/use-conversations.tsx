@@ -1,23 +1,11 @@
 import { useState, useEffect, useCallback } from "react"
 import { messagingApi, Conversation } from "@/services/messagingApi"
-import { useMessagingWebSocket } from "./use-messaging-websocket"
 
 export const useConversations = () => {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<Error | null>(null)
-
-  // WebSocket for real-time updates
-  useMessagingWebSocket({
-    onConversationUpdate: useCallback((updatedConversation: Conversation) => {
-      setConversations(prev => 
-        prev.map(conv => 
-          conv.id === updatedConversation.id ? updatedConversation : conv
-        )
-      )
-    }, [])
-  })
 
   const loadConversations = useCallback(async (isRefresh = false) => {
     if (isRefresh) {

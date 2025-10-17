@@ -3,9 +3,8 @@ import { MessageBubble } from "./MessageBubble"
 import { MessageInput } from "./MessageInput"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { WifiOff, AlertCircle, ArrowDown } from "lucide-react"
+import { AlertCircle, ArrowDown, MessageSquare } from "lucide-react"
 import { MessageThreadSkeleton } from "./MessageSkeleton"
-import { TypingIndicator } from "./TypingIndicator"
 import { Button } from "@/components/ui/button"
 import { useMessages } from "@/hooks/use-messages"
 import { cn } from "@/lib/utils"
@@ -30,13 +29,9 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
     isLoading,
     isSending,
     failedMessages,
-    isTyping,
-    isConnected,
-    connectionError,
     sendMessage,
     retryMessage,
-    deleteFailedMessage,
-    sendTypingIndicator
+    deleteFailedMessage
   } = useMessages({ conversationId, currentUserId })
 
   // Smart scrolling - only auto-scroll if user is at bottom
@@ -60,10 +55,6 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
     setUserScrolled(false)
   }
 
-  const handleTyping = () => {
-    sendTypingIndicator(true)
-  }
-
   if (isLoading) {
     return (
       <div className="flex flex-col h-full">
@@ -73,23 +64,15 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
   }
 
   return (
-    <div className="flex flex-col h-full" role="log" aria-live="polite" aria-label="Message thread">
-      {/* Connection status indicator */}
-      {!isConnected && connectionError && (
-        <Alert variant="destructive" className="m-2" role="alert">
-          <WifiOff className="h-4 w-4" aria-hidden="true" />
-          <AlertDescription>
-            {connectionError} - Messages will not update in real-time
-          </AlertDescription>
-        </Alert>
-      )}
-
+    <div className="flex flex-col h-full bg-background" role="log" aria-live="polite" aria-label="Message thread">
       <div className="relative flex-1 overflow-hidden">
-        <ScrollArea className="h-full p-4" ref={scrollRef} onScroll={handleScroll}>
-          <div className="space-y-4">
+        <ScrollArea className="h-full px-4 pt-4 pb-2" ref={scrollRef} onScroll={handleScroll}>
+          <div className="space-y-2 max-w-3xl mx-auto">
             {messages.length === 0 ? (
-              <div className="text-center text-muted-foreground py-8" role="status">
-                No messages yet. Start the conversation!
+              <div className="text-center text-muted-foreground/60 py-12" role="status">
+                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" aria-hidden="true" />
+                <p className="text-sm">No messages yet</p>
+                <p className="text-xs mt-1">Send a message to start the conversation</p>
               </div>
             ) : (
               messages.map((message) => {
@@ -101,15 +84,18 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
                       isCurrentUser={message.sender_id === currentUserId}
                     />
                     {isFailed && (
-                      <div className="flex justify-end gap-2 mt-1">
-                        <Alert variant="destructive" className="w-auto py-2 px-3" role="alert">
-                          <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                          <AlertDescription className="flex items-center gap-2">
-                            <span className="text-xs">Failed to send</span>
+                      <div className={cn(
+                        "flex gap-2 mt-1 mb-2",
+                        message.sender_id === currentUserId ? "justify-end" : "justify-start"
+                      )}>
+                        <Alert variant="destructive" className="w-auto py-1.5 px-3 text-xs" role="alert">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-3 w-3" aria-hidden="true" />
+                            <span>Failed to send</span>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 px-2 text-xs"
+                              className="h-5 px-2 text-xs hover:bg-destructive/20"
                               onClick={() => retryMessage(message.id)}
                               aria-label="Retry sending message"
                             >
@@ -118,13 +104,13 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-6 px-2 text-xs"
+                              className="h-5 px-2 text-xs hover:bg-destructive/20"
                               onClick={() => deleteFailedMessage(message.id)}
                               aria-label="Delete failed message"
                             >
                               Delete
                             </Button>
-                          </AlertDescription>
+                          </div>
                         </Alert>
                       </div>
                     )}
@@ -132,24 +118,21 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
                 )
               })
             )}
-            {isTyping && (
-              <div aria-live="polite" aria-atomic="true">
-                <span className="sr-only">Someone is typing</span>
-                <TypingIndicator />
-              </div>
-            )}
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
 
-        {/* Scroll to bottom button */}
+        {/* Scroll to bottom button - Instagram style */}
         {showScrollButton && (
           <Button
             variant="secondary"
             size="icon"
             className={cn(
-              "absolute bottom-4 right-4 rounded-full shadow-lg",
-              "transition-all duration-200 active:scale-95"
+              "absolute bottom-6 right-6 h-10 w-10 rounded-full",
+              "shadow-lg hover:shadow-xl",
+              "transition-all duration-300 animate-fade-in",
+              "bg-card border border-border",
+              "hover:scale-105 active:scale-95"
             )}
             onClick={scrollToBottom}
             aria-label="Scroll to bottom"
@@ -159,12 +142,13 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
         )}
       </div>
 
-      <div className="border-t p-4">
-        <MessageInput 
-          onSend={sendMessage} 
-          onTyping={handleTyping}
-          disabled={isSending}
-        />
+      <div className="border-t bg-background/95 backdrop-blur-sm px-4 py-3">
+        <div className="max-w-3xl mx-auto">
+          <MessageInput 
+            onSend={sendMessage}
+            disabled={isSending}
+          />
+        </div>
       </div>
     </div>
   )

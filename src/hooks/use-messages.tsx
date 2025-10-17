@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
 import { messagingApi, Message } from "@/services/messagingApi"
-import { useMessagingWebSocket } from "./use-messaging-websocket"
 
 interface UseMessagesProps {
   conversationId: string
@@ -12,34 +11,6 @@ export const useMessages = ({ conversationId, currentUserId }: UseMessagesProps)
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const [failedMessages, setFailedMessages] = useState<Set<string>>(new Set())
-  const [isTyping, setIsTyping] = useState(false)
-
-  // WebSocket connection for real-time updates
-  const { isConnected, connectionError, sendTypingIndicator } = useMessagingWebSocket({
-    conversationId,
-    onNewMessage: useCallback((message: Message) => {
-      if (message.conversation_id === conversationId) {
-        setMessages(prev => {
-          if (prev.some(m => m.id === message.id)) return prev
-          return [...prev, message]
-        })
-        
-        if (message.sender_id !== currentUserId) {
-          messagingApi.markAsRead(conversationId)
-        }
-      }
-    }, [conversationId, currentUserId]),
-    onMessageUpdate: useCallback((message: Message) => {
-      if (message.conversation_id === conversationId) {
-        setMessages(prev => prev.map(m => m.id === message.id ? message : m))
-      }
-    }, [conversationId]),
-    onTyping: useCallback((userId: string, typing: boolean) => {
-      if (userId !== currentUserId) {
-        setIsTyping(typing)
-      }
-    }, [currentUserId])
-  })
 
   const loadMessages = useCallback(async () => {
     setIsLoading(true)
@@ -127,12 +98,8 @@ export const useMessages = ({ conversationId, currentUserId }: UseMessagesProps)
     isLoading,
     isSending,
     failedMessages,
-    isTyping,
-    isConnected,
-    connectionError,
     sendMessage,
     retryMessage,
-    deleteFailedMessage,
-    sendTypingIndicator
+    deleteFailedMessage
   }
 }

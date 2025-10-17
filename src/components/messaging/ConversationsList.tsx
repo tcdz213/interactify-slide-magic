@@ -40,11 +40,13 @@ const ConversationItem = memo(({
   onDelete: () => void
 }) => {
   return (
-    <Card
+    <div
       className={cn(
-        "p-4 cursor-pointer transition-colors active:scale-[0.98] min-h-[44px]",
-        "active:bg-accent/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-        isSelected && "bg-accent"
+        "group px-4 py-3 cursor-pointer transition-all duration-200",
+        "hover:bg-muted/50 active:bg-muted/80",
+        "border-b border-border/50 last:border-0",
+        "min-h-[72px]",
+        isSelected && "bg-muted/70"
       )}
       onClick={onSelect}
       role="button"
@@ -61,50 +63,59 @@ const ConversationItem = memo(({
         }
       }}
     >
-      <div className="flex items-start gap-3">
-        <Avatar className="h-12 w-12" aria-hidden="true">
+      <div className="flex items-center gap-3">
+        <Avatar className="h-14 w-14 border-2 border-muted" aria-hidden="true">
           <AvatarImage
             src={conversation.business_avatar}
             alt=""
           />
-          <AvatarFallback>
+          <AvatarFallback className="text-sm font-semibold">
             {getInitials(conversation.business_name)}
           </AvatarFallback>
         </Avatar>
 
         <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <h4 className="font-semibold text-foreground truncate">
+          <div className="flex items-baseline justify-between gap-2 mb-1">
+            <h4 className={cn(
+              "text-[15px] truncate",
+              conversation.unread_count > 0 ? "font-semibold text-foreground" : "font-medium text-foreground/90"
+            )}>
               {conversation.business_name}
             </h4>
-            {conversation.unread_count > 0 && (
-              <Badge 
-                variant="default" 
-                className="ml-auto flex-shrink-0"
-                aria-label={`${conversation.unread_count} unread messages`}
-              >
-                {conversation.unread_count}
-              </Badge>
+            {conversation.last_message_at && (
+              <span className={cn(
+                "text-[12px] flex-shrink-0",
+                conversation.unread_count > 0 ? "text-primary font-medium" : "text-muted-foreground/70"
+              )}>
+                {formatConversationTime(conversation.last_message_at)}
+              </span>
             )}
           </div>
 
-          {conversation.last_message && (
-            <p className="text-sm text-muted-foreground truncate mt-1">
-              {conversation.last_message}
-            </p>
-          )}
-
-          {conversation.last_message_at && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {formatConversationTime(conversation.last_message_at)}
-            </p>
-          )}
+          <div className="flex items-center justify-between gap-2">
+            {conversation.last_message && (
+              <p className={cn(
+                "text-[13px] truncate",
+                conversation.unread_count > 0 ? "text-foreground font-medium" : "text-muted-foreground/70"
+              )}>
+                {conversation.last_message}
+              </p>
+            )}
+            {conversation.unread_count > 0 && (
+              <div 
+                className="h-5 min-w-[20px] px-1.5 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-[11px] font-semibold flex-shrink-0"
+                aria-label={`${conversation.unread_count} unread messages`}
+              >
+                {conversation.unread_count}
+              </div>
+            )}
+          </div>
         </div>
 
         <Button
           variant="ghost"
           size="icon"
-          className="opacity-0 group-hover:opacity-100 focus:opacity-100 h-8 w-8"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 h-8 w-8 flex-shrink-0"
           onClick={(e) => {
             e.stopPropagation()
             onDelete()
@@ -114,7 +125,7 @@ const ConversationItem = memo(({
           <Trash2 className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
-    </Card>
+    </div>
   )
 })
 
@@ -185,14 +196,14 @@ export const ConversationsList = ({
 
   return (
     <>
-      <div className="space-y-3" role="list" aria-label="Conversations">
+      <div className="space-y-0" role="list" aria-label="Conversations">
         {isRefreshing && (
-          <div className="flex items-center justify-center py-2" role="status" aria-live="polite">
+          <div className="flex items-center justify-center py-3 border-b border-border/50" role="status" aria-live="polite">
             <RefreshCw className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-            <span className="ml-2 text-sm text-muted-foreground">Refreshing conversations...</span>
+            <span className="ml-2 text-sm text-muted-foreground">Refreshing...</span>
           </div>
         )}
-        <div className="space-y-2 group">
+        <div>
           {conversations.map((conversation, index) => (
             <ConversationItem
               key={conversation.id}

@@ -1,11 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Phone, Share2, MessageCircle } from "@/components/ui/icon";
+import { Phone, Share2 } from "@/components/ui/icon";
+import { MessageSquare } from "lucide-react";
 import { AnimatedHeart } from "@/components/AnimatedHeart";
 import { useLanguage } from "@/hooks/use-language";
-import { useNavigate } from "react-router-dom";
-import { messagingApi } from "@/services/messagingApi";
-import { toast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { useConversationManager } from "@/hooks/use-conversation-manager";
 interface QuickActionsProps {
   primaryPhone: string;
   cardTitle: string;
@@ -27,23 +25,11 @@ export const QuickActions = ({
   businessId
 }: QuickActionsProps) => {
   const { t } = useLanguage();
-  const navigate = useNavigate();
-  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  const { startOrContinueConversation, isLoading } = useConversationManager();
+
   const handleMessage = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsCreatingConversation(true);
-    try {
-      const conversation = await messagingApi.createConversation({ business_id: businessId });
-      navigate(`/messages?conversation=${conversation.id}`);
-    } catch (error) {
-      toast({
-        title: t('error'),
-        description: t('failed_to_start_conversation'),
-        variant: "destructive"
-      });
-    } finally {
-      setIsCreatingConversation(false);
-    }
+    await startOrContinueConversation(businessId);
   };
 
   const handleShare = (e: React.MouseEvent) => {
@@ -73,10 +59,10 @@ export const QuickActions = ({
         size="sm" 
         className={`${buttonHeight} flex-1 gap-1.5 bg-accent hover:bg-accent/90 text-accent-foreground shadow-sm`} 
         onClick={handleMessage}
-        disabled={isCreatingConversation}
+        disabled={isLoading}
         aria-label={`${t('message')} ${cardTitle}`}
       >
-        <MessageCircle className={`${iconSize}`} aria-hidden="true" />
+        <MessageSquare className={`${iconSize}`} aria-hidden="true" />
       </Button>
       
       <Button variant="outline" size="sm" className={`${buttonHeight} flex-1 gap-1.5`} onClick={e => {

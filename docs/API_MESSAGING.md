@@ -1,47 +1,39 @@
 # Messaging API Documentation
 
 ## Overview
-
-The Messaging API enables real-time communication between users and businesses. It supports WebSocket connections for live updates and REST endpoints for message management.
-
-**Base URL:** `http://localhost:3000/api/v1`
-
-**Authentication:** All endpoints require a valid JWT token in the `Authorization` header.
+This document describes the messaging and conversations API endpoints for the platform. These APIs allow users to communicate with business owners through direct messages.
 
 ---
 
-## Table of Contents
-
-1. [Authentication](#authentication)
-2. [Conversations](#conversations)
-3. [Messages](#messages)
-4. [WebSocket Events](#websocket-events)
-5. [Error Responses](#error-responses)
-6. [Rate Limiting](#rate-limiting)
-
----
+## Base URL
+```
+https://api.yourdomain.com/api
+```
 
 ## Authentication
-
-All API requests must include an `Authorization` header with a valid JWT token:
-
-```http
-Authorization: Bearer <your_jwt_token>
+All endpoints require authentication via Bearer token in the Authorization header:
+```
+Authorization: Bearer <your_access_token>
 ```
 
 ---
 
-## Conversations
+## Endpoints
 
-### Get All Conversations
-
+### 1. Get All Conversations
 Retrieve all conversations for the authenticated user.
 
-**Endpoint:** `GET /conversations`
+**Scenario:** User opens the Messages page and wants to see all their conversations.
 
-**Headers:**
+**Method:** `GET`
+
+**URL:** `/conversations`
+
+**Request:**
 ```http
-Authorization: Bearer <token>
+GET /conversations HTTP/1.1
+Host: api.yourdomain.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Response:** `200 OK`
@@ -49,24 +41,38 @@ Authorization: Bearer <token>
 {
   "conversations": [
     {
-      "id": "uuid",
-      "business_id": "string",
-      "business_name": "string",
-      "business_avatar": "string | null",
-      "user_id": "string",
-      "user_name": "string",
-      "user_avatar": "string | null",
-      "last_message": "string | null",
-      "last_message_at": "ISO 8601 timestamp | null",
+      "id": "conv_123abc",
+      "business_id": "biz_456def",
+      "business_name": "Tech Training Center",
+      "business_avatar": "https://example.com/avatar.jpg",
+      "user_id": "user_789ghi",
+      "user_name": "John Doe",
+      "user_avatar": "https://example.com/user-avatar.jpg",
+      "last_message": "Hi, is this course still available?",
+      "last_message_at": "2025-10-16T14:30:00Z",
+      "unread_count": 2,
+      "created_at": "2025-10-15T10:00:00Z",
+      "updated_at": "2025-10-16T14:30:00Z"
+    },
+    {
+      "id": "conv_456xyz",
+      "business_id": "biz_789abc",
+      "business_name": "Language Academy",
+      "business_avatar": null,
+      "user_id": "user_789ghi",
+      "user_name": "John Doe",
+      "user_avatar": "https://example.com/user-avatar.jpg",
+      "last_message": "Thank you for your interest!",
+      "last_message_at": "2025-10-14T09:15:00Z",
       "unread_count": 0,
-      "created_at": "ISO 8601 timestamp",
-      "updated_at": "ISO 8601 timestamp | null"
+      "created_at": "2025-10-14T08:00:00Z",
+      "updated_at": "2025-10-14T09:15:00Z"
     }
   ],
   "pagination": {
     "current_page": 1,
     "total_pages": 1,
-    "total_items": 1,
+    "total_items": 2,
     "limit": 50,
     "has_next": false,
     "has_prev": false
@@ -74,159 +80,141 @@ Authorization: Bearer <token>
 }
 ```
 
-**Example:**
-```bash
-curl -X GET http://localhost:3000/api/v1/conversations \
-  -H "Authorization: Bearer eyJhbGc..."
-```
-
 ---
 
-### Get Single Conversation
-
+### 2. Get Single Conversation
 Retrieve details of a specific conversation.
 
-**Endpoint:** `GET /conversations/:conversationId`
+**Scenario:** System needs to load a conversation when user clicks from a notification.
 
-**Parameters:**
-- `conversationId` (path) - UUID of the conversation
+**Method:** `GET`
 
-**Headers:**
+**URL:** `/conversations/{conversation_id}`
+
+**Request:**
 ```http
-Authorization: Bearer <token>
+GET /conversations/conv_123abc HTTP/1.1
+Host: api.yourdomain.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Response:** `200 OK`
 ```json
 {
   "conversation": {
-    "id": "uuid",
-    "business_id": "string",
-    "business_name": "string",
-    "business_avatar": "string | null",
-    "user_id": "string",
-    "user_name": "string",
-    "user_avatar": "string | null",
-    "last_message": "string | null",
-    "last_message_at": "ISO 8601 timestamp | null",
-    "unread_count": 0,
-    "created_at": "ISO 8601 timestamp",
-    "updated_at": "ISO 8601 timestamp | null"
+    "id": "conv_123abc",
+    "business_id": "biz_456def",
+    "business_name": "Tech Training Center",
+    "business_avatar": "https://example.com/avatar.jpg",
+    "user_id": "user_789ghi",
+    "user_name": "John Doe",
+    "user_avatar": "https://example.com/user-avatar.jpg",
+    "last_message": "Hi, is this course still available?",
+    "last_message_at": "2025-10-16T14:30:00Z",
+    "unread_count": 2,
+    "created_at": "2025-10-15T10:00:00Z",
+    "updated_at": "2025-10-16T14:30:00Z"
   }
 }
 ```
 
-**Error Responses:**
-- `404 Not Found` - Conversation not found
-- `403 Forbidden` - User not authorized to access this conversation
-
----
-
-### Create Conversation
-
-Start a new conversation with a business.
-
-**Endpoint:** `POST /conversations`
-
-**Headers:**
-```http
-Authorization: Bearer <token>
-Content-Type: application/json
-```
-
-**Request Body:**
+**Error Response:** `404 Not Found`
 ```json
 {
-  "business_id": "string (required)",
-  "initial_message": "string (optional, max 2000 characters)"
+  "success": false,
+  "message": "Conversation not found"
 }
 ```
 
-**Validation:**
-- `business_id`: Required, non-empty string
-- `initial_message`: Optional, max 2000 characters, no script tags
+---
+
+### 3. Create New Conversation
+Create a new conversation with a business.
+
+**Scenario:** User clicks the message icon on a listing card for the first time.
+
+**Method:** `POST`
+
+**URL:** `/conversations`
+
+**Request:**
+```http
+POST /conversations HTTP/1.1
+Host: api.yourdomain.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+Content-Type: application/json
+
+{
+  "business_id": "biz_456def",
+  "initial_message": "Hi, is this course still available?"
+}
+```
+
+**Request Body Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| business_id | string | Yes | ID of the business to message |
+| initial_message | string | No | Optional first message (max 2000 chars) |
 
 **Response:** `201 Created`
 ```json
 {
   "conversation": {
-    "id": "uuid",
-    "business_id": "string",
-    "business_name": "string",
-    "business_avatar": "string | null",
-    "user_id": "string",
-    "user_name": "string",
-    "user_avatar": "string | null",
-    "last_message": "string | null",
-    "last_message_at": "ISO 8601 timestamp | null",
+    "id": "conv_123abc",
+    "business_id": "biz_456def",
+    "business_name": "Tech Training Center",
+    "business_avatar": "https://example.com/avatar.jpg",
+    "user_id": "user_789ghi",
+    "user_name": "John Doe",
+    "user_avatar": "https://example.com/user-avatar.jpg",
+    "last_message": "Hi, is this course still available?",
+    "last_message_at": "2025-10-16T14:30:00Z",
     "unread_count": 0,
-    "created_at": "ISO 8601 timestamp",
-    "updated_at": "ISO 8601 timestamp | null"
+    "created_at": "2025-10-16T14:30:00Z",
+    "updated_at": "2025-10-16T14:30:00Z"
   }
 }
 ```
 
-**Example:**
-```bash
-curl -X POST http://localhost:3000/api/v1/conversations \
-  -H "Authorization: Bearer eyJhbGc..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "business_id": "123",
-    "initial_message": "Hi, I would like to inquire about your services."
-  }'
+**Error Response:** `400 Bad Request`
+```json
+{
+  "success": false,
+  "message": "Business ID is required"
+}
 ```
 
-**Error Responses:**
-- `400 Bad Request` - Invalid input (missing business_id, message too long, etc.)
-- `404 Not Found` - Business not found
-
----
-
-### Delete Conversation
-
-Permanently delete a conversation and all its messages.
-
-**Endpoint:** `DELETE /conversations/:conversationId`
-
-**Parameters:**
-- `conversationId` (path) - UUID of the conversation
-
-**Headers:**
-```http
-Authorization: Bearer <token>
-```
-
-**Response:** `204 No Content`
-
-**Error Responses:**
-- `404 Not Found` - Conversation not found
-- `403 Forbidden` - User not authorized to delete this conversation
-
-**Example:**
-```bash
-curl -X DELETE http://localhost:3000/api/v1/conversations/abc-123-def \
-  -H "Authorization: Bearer eyJhbGc..."
+**Error Response:** `409 Conflict`
+```json
+{
+  "success": false,
+  "message": "Conversation already exists with this business",
+  "conversation_id": "conv_123abc"
+}
 ```
 
 ---
 
-## Messages
+### 4. Get Messages in Conversation
+Retrieve all messages in a specific conversation.
 
-### Get Messages in Conversation
+**Scenario:** User opens a conversation to view message history.
 
-Retrieve messages from a specific conversation with pagination.
+**Method:** `GET`
 
-**Endpoint:** `GET /conversations/:conversationId/messages`
+**URL:** `/conversations/{conversation_id}/messages`
 
-**Parameters:**
-- `conversationId` (path) - UUID of the conversation
-- `page` (query) - Page number (default: 1)
-- `limit` (query) - Items per page (default: 50, max: 100)
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| page | integer | 1 | Page number |
+| limit | integer | 50 | Messages per page (max 100) |
 
-**Headers:**
+**Request:**
 ```http
-Authorization: Bearer <token>
+GET /conversations/conv_123abc/messages?page=1&limit=50 HTTP/1.1
+Host: api.yourdomain.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
 **Response:** `200 OK`
@@ -234,523 +222,319 @@ Authorization: Bearer <token>
 {
   "messages": [
     {
-      "id": "string",
-      "conversation_id": "uuid",
-      "sender_id": "string",
-      "sender_name": "string",
-      "sender_avatar": "string | null",
-      "content": "string",
+      "id": "msg_001",
+      "conversation_id": "conv_123abc",
+      "sender_id": "user_789ghi",
+      "sender_name": "John Doe",
+      "sender_avatar": "https://example.com/user-avatar.jpg",
+      "content": "Hi, is this course still available?",
+      "read": true,
+      "created_at": "2025-10-16T14:30:00Z",
+      "updated_at": null
+    },
+    {
+      "id": "msg_002",
+      "conversation_id": "conv_123abc",
+      "sender_id": "biz_456def",
+      "sender_name": "Tech Training Center",
+      "sender_avatar": "https://example.com/avatar.jpg",
+      "content": "Yes! The course starts next Monday. Would you like to register?",
       "read": false,
-      "created_at": "ISO 8601 timestamp",
-      "updated_at": "ISO 8601 timestamp | null"
+      "created_at": "2025-10-16T14:35:00Z",
+      "updated_at": null
     }
   ],
   "pagination": {
     "current_page": 1,
-    "total_pages": 5,
-    "total_items": 243,
+    "total_pages": 1,
+    "total_items": 2,
     "limit": 50,
-    "has_next": true,
+    "has_next": false,
     "has_prev": false
   }
 }
 ```
 
-**Example:**
-```bash
-curl -X GET "http://localhost:3000/api/v1/conversations/abc-123/messages?page=1&limit=50" \
-  -H "Authorization: Bearer eyJhbGc..."
-```
-
-**Error Responses:**
-- `404 Not Found` - Conversation not found
-- `403 Forbidden` - User not authorized to access this conversation
-
 ---
 
-### Send Message
-
+### 5. Send Message
 Send a new message in a conversation.
 
-**Endpoint:** `POST /messages`
+**Scenario:** User types and sends a message in an active conversation.
 
-**Headers:**
+**Method:** `POST`
+
+**URL:** `/messages`
+
+**Request:**
 ```http
-Authorization: Bearer <token>
+POST /messages HTTP/1.1
+Host: api.yourdomain.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 Content-Type: application/json
-```
 
-**Request Body:**
-```json
 {
-  "conversation_id": "uuid (required)",
-  "content": "string (required, min 1, max 2000 characters)"
+  "conversation_id": "conv_123abc",
+  "content": "Yes, I would like to register. What are the fees?"
 }
 ```
 
-**Validation:**
-- `conversation_id`: Required, valid UUID
-- `content`: Required, 1-2000 characters, no script tags or event handlers
-- **Rate Limit:** Maximum 60 messages per minute per user (client-side enforced)
+**Request Body Parameters:**
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| conversation_id | string (UUID) | Yes | ID of the conversation |
+| content | string | Yes | Message content (1-2000 chars) |
 
 **Response:** `201 Created`
 ```json
 {
   "message": {
-    "id": "string",
-    "conversation_id": "uuid",
-    "sender_id": "string",
-    "sender_name": "string",
-    "sender_avatar": "string | null",
-    "content": "string",
+    "id": "msg_003",
+    "conversation_id": "conv_123abc",
+    "sender_id": "user_789ghi",
+    "sender_name": "John Doe",
+    "sender_avatar": "https://example.com/user-avatar.jpg",
+    "content": "Yes, I would like to register. What are the fees?",
     "read": false,
-    "created_at": "ISO 8601 timestamp",
-    "updated_at": "ISO 8601 timestamp | null"
+    "created_at": "2025-10-16T14:40:00Z",
+    "updated_at": null
   }
 }
 ```
 
-**Example:**
-```bash
-curl -X POST http://localhost:3000/api/v1/messages \
-  -H "Authorization: Bearer eyJhbGc..." \
-  -H "Content-Type: application/json" \
-  -d '{
-    "conversation_id": "abc-123-def",
-    "content": "Thank you for the information!"
-  }'
+**Error Response:** `400 Bad Request`
+```json
+{
+  "success": false,
+  "message": "Message cannot be empty"
+}
 ```
 
-**Error Responses:**
-- `400 Bad Request` - Invalid input (empty message, too long, invalid conversation_id)
-- `403 Forbidden` - User not part of conversation
-- `404 Not Found` - Conversation not found
-- `429 Too Many Requests` - Rate limit exceeded
+**Error Response:** `429 Too Many Requests`
+```json
+{
+  "success": false,
+  "message": "Too many messages. Please wait a moment."
+}
+```
 
 ---
 
-### Mark Messages as Read
-
+### 6. Mark Messages as Read
 Mark all unread messages in a conversation as read.
 
-**Endpoint:** `PUT /conversations/:conversationId/read`
+**Scenario:** User opens a conversation, system automatically marks messages as read.
 
-**Parameters:**
-- `conversationId` (path) - UUID of the conversation
+**Method:** `PUT`
 
-**Headers:**
+**URL:** `/conversations/{conversation_id}/read`
+
+**Request:**
 ```http
-Authorization: Bearer <token>
+PUT /conversations/conv_123abc/read HTTP/1.1
+Host: api.yourdomain.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-**Response:** `204 No Content`
-
-**Example:**
-```bash
-curl -X PUT http://localhost:3000/api/v1/conversations/abc-123/read \
-  -H "Authorization: Bearer eyJhbGc..."
-```
-
-**Error Responses:**
-- `404 Not Found` - Conversation not found
-- `403 Forbidden` - User not authorized to access this conversation
-
----
-
-## WebSocket Events
-
-The messaging system uses WebSocket connections for real-time updates. Connect to the Supabase Realtime channel `messaging-realtime`.
-
-### Connection
-
-```javascript
-import { supabase } from "@/integrations/supabase/client"
-
-const channel = supabase.channel('messaging-realtime')
-```
-
-### Event Types
-
-#### 1. New Message (INSERT)
-
-Fired when a new message is inserted.
-
-```javascript
-channel.on(
-  'postgres_changes',
-  {
-    event: 'INSERT',
-    schema: 'public',
-    table: 'messages',
-    filter: `conversation_id=eq.${conversationId}` // optional filter
-  },
-  (payload) => {
-    const message = payload.new
-    // Handle new message
-  }
-)
-```
-
-**Payload:**
+**Response:** `200 OK`
 ```json
 {
-  "new": {
-    "id": "string",
-    "conversation_id": "uuid",
-    "sender_id": "string",
-    "sender_name": "string",
-    "sender_avatar": "string | null",
-    "content": "string",
-    "read": false,
-    "created_at": "ISO 8601 timestamp"
-  },
-  "old": null,
-  "eventType": "INSERT"
+  "success": true,
+  "message": "Messages marked as read",
+  "marked_count": 2
 }
-```
-
-#### 2. Message Update (UPDATE)
-
-Fired when a message is updated (e.g., marked as read).
-
-```javascript
-channel.on(
-  'postgres_changes',
-  {
-    event: 'UPDATE',
-    schema: 'public',
-    table: 'messages'
-  },
-  (payload) => {
-    const updatedMessage = payload.new
-    // Handle message update
-  }
-)
-```
-
-**Payload:**
-```json
-{
-  "new": { /* updated message */ },
-  "old": { /* previous message */ },
-  "eventType": "UPDATE"
-}
-```
-
-#### 3. Conversation Update (UPDATE)
-
-Fired when conversation metadata changes (e.g., last_message, unread_count).
-
-```javascript
-channel.on(
-  'postgres_changes',
-  {
-    event: 'UPDATE',
-    schema: 'public',
-    table: 'conversations'
-  },
-  (payload) => {
-    const updatedConversation = payload.new
-    // Handle conversation update
-  }
-)
-```
-
-#### 4. Typing Indicator (Broadcast)
-
-Real-time typing indicators using broadcast events.
-
-**Send typing indicator:**
-```javascript
-channel.send({
-  type: 'broadcast',
-  event: 'typing',
-  payload: {
-    conversation_id: 'uuid',
-    user_id: 'string',
-    is_typing: true
-  }
-})
-```
-
-**Receive typing indicator:**
-```javascript
-channel.on('broadcast', { event: 'typing' }, (payload) => {
-  const { conversation_id, user_id, is_typing } = payload.payload
-  // Update UI to show typing indicator
-})
-```
-
-### Subscribe to Channel
-
-```javascript
-channel.subscribe((status) => {
-  if (status === 'SUBSCRIBED') {
-    console.log('Connected to real-time messaging')
-  } else if (status === 'CHANNEL_ERROR') {
-    console.error('Failed to connect')
-  } else if (status === 'TIMED_OUT') {
-    console.error('Connection timed out')
-  } else if (status === 'CLOSED') {
-    console.log('Connection closed')
-  }
-})
-```
-
-### Cleanup
-
-```javascript
-// Remove channel when done
-supabase.removeChannel(channel)
 ```
 
 ---
 
-## Error Responses
+### 7. Delete Conversation
+Delete a conversation and all its messages.
 
-All error responses follow this format:
+**Scenario:** User wants to remove a conversation from their list.
 
+**Method:** `DELETE`
+
+**URL:** `/conversations/{conversation_id}`
+
+**Request:**
+```http
+DELETE /conversations/conv_123abc HTTP/1.1
+Host: api.yourdomain.com
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response:** `200 OK`
 ```json
 {
-  "message": "Error description",
-  "success": false
+  "success": true,
+  "message": "Conversation deleted successfully"
 }
 ```
 
-### HTTP Status Codes
+**Error Response:** `404 Not Found`
+```json
+{
+  "success": false,
+  "message": "Conversation not found"
+}
+```
+
+---
+
+## Common User Scenarios
+
+### Scenario 1: Starting a Conversation from Listing Card
+
+**Flow:**
+1. User clicks message icon on business listing
+2. Frontend checks if conversation exists:
+   - Call `GET /conversations` and filter by `business_id`
+3. If conversation exists:
+   - Navigate to `/messages?conversation={conversation_id}`
+   - Load messages with `GET /conversations/{conversation_id}/messages`
+4. If conversation doesn't exist:
+   - Create new conversation with `POST /conversations`
+   - Navigate to new conversation
+
+**Example Code:**
+```javascript
+// Check for existing conversation
+const conversations = await fetch('/conversations')
+const existing = conversations.find(c => c.business_id === businessId)
+
+if (existing) {
+  // Open existing conversation
+  navigate(`/messages?conversation=${existing.id}`)
+} else {
+  // Create new conversation
+  const response = await fetch('/conversations', {
+    method: 'POST',
+    body: JSON.stringify({
+      business_id: businessId,
+      initial_message: "Hi, is this listing still available?"
+    })
+  })
+  const { conversation } = await response.json()
+  navigate(`/messages?conversation=${conversation.id}`)
+}
+```
+
+---
+
+### Scenario 2: Opening from Messages Page
+
+**Flow:**
+1. User navigates to `/messages`
+2. System loads all conversations with `GET /conversations`
+3. User selects a conversation
+4. System loads messages with `GET /conversations/{conversation_id}/messages`
+5. System marks messages as read with `PUT /conversations/{conversation_id}/read`
+
+---
+
+### Scenario 3: Opening from Notification
+
+**Flow:**
+1. User clicks notification for new message
+2. Notification contains `conversation_id`
+3. System fetches conversation details with `GET /conversations/{conversation_id}`
+4. Navigate to conversation view
+5. Load and display messages
+
+---
+
+## Rate Limits
+
+| Endpoint | Rate Limit |
+|----------|------------|
+| GET /conversations | 100 requests/minute |
+| POST /conversations | 10 requests/minute |
+| GET /messages | 100 requests/minute |
+| POST /messages | 60 messages/minute |
+| PUT /read | 100 requests/minute |
+| DELETE /conversations | 10 requests/minute |
+
+---
+
+## Error Codes
 
 | Code | Description |
 |------|-------------|
-| 200 | OK - Request successful |
-| 201 | Created - Resource created successfully |
-| 204 | No Content - Request successful, no response body |
-| 400 | Bad Request - Invalid input or validation error |
-| 401 | Unauthorized - Missing or invalid authentication |
-| 403 | Forbidden - User not authorized for this action |
-| 404 | Not Found - Resource not found |
+| 400 | Bad Request - Invalid parameters |
+| 401 | Unauthorized - Missing or invalid token |
+| 403 | Forbidden - No access to this resource |
+| 404 | Not Found - Resource doesn't exist |
+| 409 | Conflict - Resource already exists |
 | 429 | Too Many Requests - Rate limit exceeded |
-| 500 | Internal Server Error - Server error |
-
-### Common Error Examples
-
-**Invalid Message Content:**
-```json
-{
-  "message": "Message must be less than 2000 characters",
-  "success": false
-}
-```
-
-**Rate Limit Exceeded:**
-```json
-{
-  "message": "Too many messages. Please wait a moment.",
-  "success": false
-}
-```
-
-**Conversation Not Found:**
-```json
-{
-  "message": "Failed to fetch conversation",
-  "success": false
-}
-```
+| 500 | Internal Server Error |
 
 ---
 
-## Rate Limiting
+## Data Validation
 
-### Client-Side Rate Limiting
+### Message Content
+- **Minimum length:** 1 character (after trimming)
+- **Maximum length:** 2000 characters
+- **Forbidden:** Script tags, JavaScript protocols, event handlers
+- **Sanitization:** Automatically removes malicious content
 
-Messages are rate-limited at **60 messages per minute** per user. This is enforced client-side using localStorage:
-
-```javascript
-// Rate limit tracking
-const rateLimitKey = 'msg_rate_limit'
-const rateLimitData = localStorage.getItem(rateLimitKey)
-
-if (rateLimitData) {
-  const { count, timestamp } = JSON.parse(rateLimitData)
-  if (Date.now() - timestamp < 60000 && count >= 60) {
-    throw new Error('Too many messages. Please wait a moment.')
-  }
-}
-```
-
-### Typing Indicator Auto-Clear
-
-Typing indicators automatically clear after **3 seconds** of inactivity to prevent stale states.
+### Conversation
+- **business_id:** Required, must be valid business ID
+- **initial_message:** Optional, follows message content rules
 
 ---
 
-## Security
+## Security Features
 
-### Input Sanitization
-
-All message content is sanitized to prevent XSS attacks:
-
-```javascript
-// Removed content:
-- Script tags: <script>...</script>
-- JavaScript protocol: javascript:
-- Event handlers: onclick=, onload=, etc.
-```
-
-### Validation Schema
-
-Using Zod for validation:
-
-```typescript
-const messageContentSchema = z
-  .string()
-  .trim()
-  .min(1, { message: "Message cannot be empty" })
-  .max(2000, { message: "Message must be less than 2000 characters" })
-  .refine(
-    (content) => {
-      const scriptPattern = /<script[^>]*>.*?<\/script>/gi
-      return !scriptPattern.test(content)
-    },
-    { message: "Invalid message content" }
-  )
-```
+1. **Authentication Required:** All endpoints require valid JWT token
+2. **Authorization Checks:** Users can only access their own conversations
+3. **Input Sanitization:** All message content is sanitized server-side
+4. **Rate Limiting:** Prevents spam and abuse
+5. **XSS Protection:** Content is escaped before display
+6. **CORS:** Configured for authorized domains only
 
 ---
 
-## Best Practices
+## Testing Examples
 
-### 1. Handle WebSocket Reconnections
+### Using cURL
 
-```javascript
-useEffect(() => {
-  const channel = supabase.channel('messaging-realtime')
-  
-  channel.subscribe((status) => {
-    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-      // Implement exponential backoff retry
-      setTimeout(() => channel.subscribe(), 1000)
-    }
-  })
-
-  return () => supabase.removeChannel(channel)
-}, [])
+**Get Conversations:**
+```bash
+curl -X GET \
+  https://api.yourdomain.com/api/conversations \
+  -H 'Authorization: Bearer YOUR_TOKEN'
 ```
 
-### 2. Optimistic UI Updates
-
-```javascript
-// Add message immediately
-setMessages(prev => [...prev, optimisticMessage])
-
-try {
-  // Send to server
-  const sentMessage = await messagingApi.sendMessage(data)
-  
-  // Replace with real message
-  setMessages(prev => prev.map(m => 
-    m.id === tempId ? sentMessage : m
-  ))
-} catch (error) {
-  // Mark as failed
-  setFailedMessages(prev => new Set(prev).add(tempId))
-}
+**Create Conversation:**
+```bash
+curl -X POST \
+  https://api.yourdomain.com/api/conversations \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "business_id": "biz_456def",
+    "initial_message": "Hello!"
+  }'
 ```
 
-### 3. Pagination for Large Conversations
-
-```javascript
-// Load older messages
-const loadMore = async (page) => {
-  const olderMessages = await messagingApi.getMessages(
-    conversationId, 
-    page,
-    50
-  )
-  setMessages(prev => [...olderMessages, ...prev])
-}
+**Send Message:**
+```bash
+curl -X POST \
+  https://api.yourdomain.com/api/messages \
+  -H 'Authorization: Bearer YOUR_TOKEN' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "conversation_id": "conv_123abc",
+    "content": "Is this still available?"
+  }'
 ```
-
-### 4. Mark Messages as Read on View
-
-```javascript
-useEffect(() => {
-  if (messages.length > 0) {
-    messagingApi.markAsRead(conversationId)
-  }
-}, [messages, conversationId])
-```
-
----
-
-## Code Examples
-
-### Complete Messaging Hook
-
-```typescript
-import { useMessages } from "@/hooks/use-messages"
-
-function MessageThread({ conversationId, currentUserId }) {
-  const {
-    messages,
-    isLoading,
-    isSending,
-    failedMessages,
-    isTyping,
-    isConnected,
-    connectionError,
-    sendMessage,
-    retryMessage,
-    deleteFailedMessage,
-    sendTypingIndicator
-  } = useMessages({ conversationId, currentUserId })
-
-  // Use the hook values...
-}
-```
-
-### Sending a Message
-
-```typescript
-const handleSend = async (content: string) => {
-  try {
-    await sendMessage(content)
-  } catch (error) {
-    console.error('Failed to send:', error)
-  }
-}
-```
-
----
-
-## Changelog
-
-### Version 1.0.0 (Current)
-
-**Features:**
-- ✅ WebSocket real-time messaging
-- ✅ Conversation management
-- ✅ Message pagination
-- ✅ Typing indicators
-- ✅ Read receipts
-- ✅ Optimistic UI updates
-- ✅ Rate limiting
-- ✅ Input validation & sanitization
-- ✅ Error recovery
-
-**Coming Soon:**
-- 📎 File attachments
-- ⚡ Message reactions
-- ✏️ Message editing
-- 🗑️ Message deletion
-- 📱 Push notifications
-- 🔍 Message search
 
 ---
 
 ## Support
 
-For issues or questions:
-- GitHub Issues: [Link to repository]
-- Email: support@example.com
-- Documentation: [Link to docs]
+For API support or questions, contact: api-support@yourdomain.com
+
+**Last Updated:** October 16, 2025
+**API Version:** 1.0
