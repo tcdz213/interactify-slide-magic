@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, memo } from "react"
 import { MessageBubble } from "./MessageBubble"
 import { MessageInput } from "./MessageInput"
+import { MessagingHeader } from "./MessagingHeader"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, ArrowDown, MessageSquare } from "lucide-react"
@@ -8,6 +9,8 @@ import { MessageThreadSkeleton } from "./MessageSkeleton"
 import { Button } from "@/components/ui/button"
 import { useMessages } from "@/hooks/use-messages"
 import { cn } from "@/lib/utils"
+import { messagingApi } from "@/services/messagingApi"
+import { Conversation } from "@/types/messaging"
 
 interface MessageThreadProps {
   conversationId: string
@@ -22,6 +25,7 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [userScrolled, setUserScrolled] = useState(false)
+  const [conversation, setConversation] = useState<Conversation | null>(null)
 
   // Use custom hook for all message state management
   const {
@@ -33,6 +37,19 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
     retryMessage,
     deleteFailedMessage
   } = useMessages({ conversationId, currentUserId })
+
+  // Load conversation details for header
+  useEffect(() => {
+    const loadConversation = async () => {
+      try {
+        const conv = await messagingApi.getConversation(conversationId)
+        setConversation(conv)
+      } catch (error) {
+        console.error('Failed to load conversation:', error)
+      }
+    }
+    loadConversation()
+  }, [conversationId])
 
   // Smart scrolling - only auto-scroll if user is at bottom
   useEffect(() => {
@@ -65,6 +82,17 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
 
   return (
     <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900" role="log" aria-live="polite" aria-label="Message thread">
+      {/* Header */}
+      {conversation && (
+        <MessagingHeader
+          businessId={conversation.business_id}
+          businessName={conversation.business_name}
+          businessAvatar={conversation.business_avatar}
+          isOnline={false}
+          isVerified={false}
+        />
+      )}
+
       <div className="relative flex-1 overflow-hidden">
         <ScrollArea className="h-full px-4 pt-4 pb-2" ref={scrollRef} onScroll={handleScroll}>
           <div className="space-y-2 max-w-3xl mx-auto">
