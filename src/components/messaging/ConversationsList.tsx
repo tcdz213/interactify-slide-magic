@@ -6,7 +6,13 @@ import { Conversation } from "@/types/messaging"
 import { cn } from "@/lib/utils"
 import { ConversationsListSkeleton } from "./ConversationSkeleton"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, Trash2, MessageSquare } from "lucide-react"
+import { RefreshCw, Trash2, MessageSquare, MoreVertical, CheckCheck, BellOff } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useConversations } from "@/hooks/use-conversations"
 import { formatConversationTime, getInitials, getConversationPartner } from "@/utils/messageFormatting"
 import { useKeyboardNavigation } from "@/hooks/use-keyboard-navigation"
@@ -54,11 +60,11 @@ const ConversationItem = memo(({
     >
       <Card
         className={cn(
-          "p-4 cursor-pointer transition-all duration-200 active:scale-[0.98] min-h-[44px]",
+          "p-4 cursor-pointer transition-all duration-200 active:scale-[0.98] min-h-[44px] group",
           "hover:bg-accent/50 hover:shadow-sm active:bg-accent/80",
           "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           "border-border/50 bg-card/80 backdrop-blur-sm",
-          isSelected && "bg-primary/5 border-primary/30 shadow-sm"
+          isSelected && "bg-primary/10 border-primary/50 shadow-md ring-2 ring-primary/20"
         )}
         onClick={onSelect}
         role="button"
@@ -115,18 +121,51 @@ const ConversationItem = memo(({
           )}
         </div>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="opacity-0 group-hover:opacity-100 focus:opacity-100 h-8 w-8"
-          onClick={(e) => {
-            e.stopPropagation()
-            onDelete()
-          }}
-          aria-label={`Delete conversation with ${partner.name}`}
-        >
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="opacity-0 group-hover:opacity-100 focus:opacity-100 h-8 w-8 transition-opacity"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={`Actions for conversation with ${partner.name}`}
+            >
+              <MoreVertical className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                // Mark as read action
+                console.log('Mark as read')
+              }}
+            >
+              <CheckCheck className="h-4 w-4 mr-2" />
+              Mark as Read
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                // Mute action
+                console.log('Mute conversation')
+              }}
+            >
+              <BellOff className="h-4 w-4 mr-2" />
+              Mute
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete()
+              }}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </Card>
     </motion.div>
