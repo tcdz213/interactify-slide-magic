@@ -8,7 +8,7 @@ import { ConversationsListSkeleton } from "./ConversationSkeleton"
 import { Button } from "@/components/ui/button"
 import { RefreshCw, Trash2, MessageSquare } from "lucide-react"
 import { useConversations } from "@/hooks/use-conversations"
-import { formatConversationTime, getInitials } from "@/utils/messageFormatting"
+import { formatConversationTime, getInitials, getConversationPartner } from "@/utils/messageFormatting"
 import { useKeyboardNavigation } from "@/hooks/use-keyboard-navigation"
 import { motion } from "framer-motion"
 import {
@@ -44,8 +44,6 @@ const ConversationItem = memo(({
   onDelete: () => void
   currentUserId?: string
 }) => {
-  // Import the utility at the component level
-  const { getConversationPartner } = require("@/utils/messageFormatting")
   const partner = getConversationPartner(conversation, currentUserId || '')
   return (
     <motion.div
