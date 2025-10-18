@@ -59,6 +59,36 @@ export const getInitials = (name: string): string => {
 }
 
 /**
+ * Get conversation partner info based on current user's role
+ */
+export const getConversationPartner = (conversation: any, currentUserId: string) => {
+  // If current user is the regular user in this conversation, show business info
+  if (currentUserId === conversation.user_id) {
+    return {
+      name: conversation.business_name,
+      avatar: conversation.business_avatar,
+      isVerified: conversation.is_verified
+    }
+  }
+  
+  // If current user is the business owner, show user info
+  if (currentUserId === conversation.business_owner_id) {
+    return {
+      name: conversation.user_name,
+      avatar: conversation.user_avatar,
+      isVerified: false
+    }
+  }
+  
+  // Fallback to business info
+  return {
+    name: conversation.business_name,
+    avatar: conversation.business_avatar,
+    isVerified: conversation.is_verified
+  }
+}
+
+/**
  * Check if a message contains mentions
  */
 export const containsMention = (content: string, userId: string): boolean => {

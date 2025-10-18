@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react"
-import { useSearchParams } from "react-router-dom"
+import { useSearchParams, useNavigate } from "react-router-dom"
 import { ConversationsList } from "@/components/messaging/ConversationsList"
 import { MessageThread } from "@/components/messaging/MessageThread"
+import { MessagingHeader } from "@/components/messaging/MessagingHeader"
 import { Conversation } from "@/services/messagingApi"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { MessageSquare, ArrowLeft } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { MessageSquare, ArrowLeft, Search } from "lucide-react"
 import Navbar from "@/components/Navbar"
 import BottomNavigation from "@/components/BottomNavigation"
 import { useIsMobile } from "@/hooks/use-mobile"
@@ -18,16 +20,41 @@ import { AnimatedLoading } from "@/components/AnimatedLoading"
 import { useConversations } from "@/hooks/use-conversations"
 import { getTotalUnreadCount, updatePageTitle } from "@/utils/notificationHelpers"
 import { messagingApi } from "@/services/messagingApi"
+import { toast } from "@/hooks/use-toast"
+import { motion, AnimatePresence } from "framer-motion"
+import { getConversationPartner } from "@/utils/messageFormatting"
 
 const Messages = () => {
   const { user } = useAuth()
   const { isAuthenticated, isLoading } = useProtectedRoute('/profile')
   const { language } = useLanguage()
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
   const currentUserId = user?.id || localStorage.getItem('userId') || 'current-user-id'
   const isMobile = useIsMobile()
   const { conversations } = useConversations()
+
+  // Filter conversations based on search query
+  const filteredConversations = conversations.filter(conv => {
+    const partner = getConversationPartner(conv, currentUserId)
+    return partner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      conv.last_message?.toLowerCase().includes(searchQuery.toLowerCase())
+  })
+
+  const handleCall = () => {
+    toast({
+      title: "Call feature",
+      description: "Phone call functionality coming soon!",
+    })
+  }
+
+  const handleViewProfile = () => {
+    if (selectedConversation?.business_id) {
+      navigate(`/card/${selectedConversation.business_id}`)
+    }
+  }
 
   // Update page title with unread count
   useEffect(() => {
@@ -99,105 +126,195 @@ const Messages = () => {
         url={window.location.href}
         type="website"
       />
-      <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Desktop: Show header */}
-        {!isMobile && (
-          <header className="mb-6">
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-              <MessageSquare className="h-8 w-8" aria-hidden="true" />
-              Messages
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Connect with businesses and manage your conversations
-            </p>
-          </header>
-        )}
-
+      {/* Full-screen messaging layout */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Mobile: Single column with conditional view */}
         {isMobile ? (
-          <main className="h-[calc(100vh-140px)]">
+          <AnimatePresence mode="wait">
             {!selectedConversation ? (
               /* Conversations List - Mobile */
-              <div className="h-full flex flex-col overflow-hidden bg-card rounded-xl shadow-sm border border-border">
-                <header className="px-4 py-3 border-b border-border/50 bg-background/95 backdrop-blur-sm">
-                  <h2 className="text-lg font-semibold">Messages</h2>
+              <motion.div
+                key="conversations"
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -20, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex-1 flex flex-col bg-background pb-20"
+              >
+                {/* Header */}
+                <header className="p-4 border-b bg-card/50 backdrop-blur-sm">
+                  <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 mb-3">
+                    <MessageSquare className="h-6 w-6" aria-hidden="true" />
+                    Messages
+                  </h1>
+                  
+                  {/* Search Bar */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="text"
+                      placeholder="Search conversations..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-muted/50 border-none focus-visible:ring-1"
+                    />
+                  </div>
                 </header>
-                <div className="flex-1 overflow-auto">
+
+                {/* Conversations List */}
+                <div className="flex-1 overflow-auto p-4">
                   <ConversationsList
+                    conversations={filteredConversations}
                     onSelectConversation={handleSelectConversation}
                     selectedConversationId={selectedConversation?.id}
+                    currentUserId={currentUserId}
                   />
                 </div>
-              </div>
+              </motion.div>
             ) : (
               /* Message Thread - Mobile */
-              <div className="h-full flex flex-col overflow-hidden bg-card rounded-xl shadow-sm border border-border">
-                <header className="border-b border-border/50 px-3 py-2.5 flex items-center gap-3 bg-background/95 backdrop-blur-sm">
+              <motion.div
+                key="thread"
+                initial={{ x: 20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: 20, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex-1 flex flex-col bg-background pb-20"
+              >
+                <div className="border-b flex items-center gap-2 px-2 py-2 bg-card/50 backdrop-blur-sm">
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={handleBackToList}
-                    className="h-9 w-9 rounded-full hover:bg-muted active:scale-95"
+                    className="h-10 w-10 active:scale-95 transition-all hover:bg-accent/80"
                     aria-label="Back to conversations"
                   >
                     <ArrowLeft className="h-5 w-5" aria-hidden="true" />
                   </Button>
-                  <div className="flex-1 min-w-0">
-                    <h2 className="text-[15px] font-semibold text-foreground truncate">
-                      {selectedConversation.business_name}
-                    </h2>
+                  <div className="flex-1">
+                    {(() => {
+                      const partner = getConversationPartner(selectedConversation, currentUserId)
+                      return (
+                        <MessagingHeader
+                          businessName={partner.name}
+                          businessAvatar={partner.avatar}
+                          isVerified={partner.isVerified}
+                          isOnline={false}
+                          onCall={handleCall}
+                          onViewProfile={handleViewProfile}
+                        />
+                      )
+                    })()}
                   </div>
-                </header>
+                </div>
                 <MessageThread
                   conversationId={selectedConversation.id}
                   currentUserId={currentUserId}
                 />
-              </div>
+              </motion.div>
             )}
-          </main>
+          </AnimatePresence>
         ) : (
-          /* Desktop: Two-column layout */
-          <main className="grid lg:grid-cols-[380px_1fr] gap-4 h-[calc(100vh-200px)]">
-            {/* Conversations List */}
-            <div className="flex flex-col overflow-hidden bg-card rounded-xl shadow-sm border border-border" role="complementary" aria-label="Conversations sidebar">
-              <div className="px-4 py-3 border-b border-border/50">
-                <h2 className="text-lg font-semibold">Messages</h2>
-              </div>
-              <div className="flex-1 overflow-auto">
+          /* Desktop: Two-column full-screen layout */
+          <div className="flex-1 flex overflow-hidden">
+            {/* Left Panel - Conversations */}
+            <motion.div
+              initial={{ x: -20, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              className="w-full md:w-96 lg:w-[420px] border-r bg-card/30 backdrop-blur-sm flex flex-col"
+            >
+              {/* Header with Search */}
+              <header className="p-4 border-b space-y-3">
+                <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+                  <MessageSquare className="h-6 w-6" aria-hidden="true" />
+                  Messages
+                </h1>
+                
+                {/* Search Bar */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search conversations..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 bg-muted/50 border-none focus-visible:ring-1"
+                  />
+                </div>
+              </header>
+
+              {/* Conversations List */}
+              <div className="flex-1 overflow-auto p-4">
                 <ConversationsList
+                  conversations={filteredConversations}
                   onSelectConversation={handleSelectConversation}
                   selectedConversationId={selectedConversation?.id}
+                  currentUserId={currentUserId}
                 />
               </div>
-            </div>
+            </motion.div>
 
-            {/* Message Thread */}
-            <div className="flex flex-col overflow-hidden bg-card rounded-xl shadow-sm border border-border" role="main">
-              {selectedConversation ? (
-                <>
-                  <header className="border-b border-border/50 px-5 py-3.5 bg-background/95 backdrop-blur-sm">
-                    <h2 className="text-[15px] font-semibold text-foreground">
-                      {selectedConversation.business_name}
-                    </h2>
-                  </header>
-                  <MessageThread
-                    conversationId={selectedConversation.id}
-                    currentUserId={currentUserId}
-                  />
-                </>
-              ) : (
-                <div className="flex items-center justify-center h-full text-muted-foreground/60" role="status">
-                  <div className="text-center">
-                    <MessageSquare className="h-16 w-16 mx-auto mb-4 opacity-20" aria-hidden="true" />
-                    <p className="text-sm">Select a conversation to start messaging</p>
-                  </div>
-                </div>
-              )}
+            {/* Right Panel - Chat View */}
+            <div className="flex-1 flex flex-col bg-muted/20 overflow-hidden">
+              <AnimatePresence mode="wait">
+                {selectedConversation ? (
+                  <motion.div
+                    key={selectedConversation.id}
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex-1 flex flex-col overflow-hidden"
+                  >
+                    {(() => {
+                      const partner = getConversationPartner(selectedConversation, currentUserId)
+                      return (
+                        <MessagingHeader
+                          businessName={partner.name}
+                          businessAvatar={partner.avatar}
+                          isVerified={partner.isVerified}
+                          isOnline={false}
+                          onCall={handleCall}
+                          onViewProfile={handleViewProfile}
+                        />
+                      )
+                    })()}
+                    <MessageThread
+                      conversationId={selectedConversation.id}
+                      currentUserId={currentUserId}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex-1 flex items-center justify-center text-muted-foreground"
+                    role="status"
+                  >
+                    <div className="text-center space-y-3 max-w-sm px-4">
+                      <div className="relative">
+                        <MessageSquare className="h-20 w-20 mx-auto opacity-20" aria-hidden="true" />
+                        <motion.div
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className="absolute inset-0 flex items-center justify-center"
+                        >
+                          <div className="h-16 w-16 rounded-full bg-primary/5" />
+                        </motion.div>
+                      </div>
+                      <h3 className="text-lg font-semibold text-foreground">Your Messages</h3>
+                      <p className="text-sm">Select a conversation to start chatting</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
-          </main>
+          </div>
         )}
       </div>
 

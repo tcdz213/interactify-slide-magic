@@ -18,6 +18,17 @@ import {
 // Re-export types for backwards compatibility
 export type { Message, Conversation, CreateConversationData, SendMessageData }
 
+// Helper to map MongoDB _id to id (keep both for API compatibility)
+const mapConversation = (conv: any): Conversation => ({
+  ...conv,
+  id: conv._id || conv.id
+})
+
+const mapMessage = (msg: any): Message => ({
+  ...msg,
+  id: msg._id || msg.id
+})
+
 class MessagingApiService {
   /**
    * Get all conversations for current user
@@ -35,7 +46,7 @@ class MessagingApiService {
       }
 
       const data: ConversationsResponse = await response.json()
-      return data.conversations || []
+      return (data.conversations || []).map(mapConversation)
     } catch (error) {
       errorHandler.logError('messagingApi.getConversations', error)
       return []
@@ -57,7 +68,7 @@ class MessagingApiService {
       }
 
       const data: ConversationResponse = await response.json()
-      return data.conversation
+      return mapConversation(data.conversation)
     } catch (error) {
       errorHandler.logError('messagingApi.getConversation', error)
       return null
@@ -95,7 +106,7 @@ class MessagingApiService {
       }
 
       const data: ConversationResponse = await response.json()
-      return data.conversation
+      return mapConversation(data.conversation)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to start conversation"
       errorHandler.showApiError('createConversation', errorMessage, error)
@@ -118,7 +129,7 @@ class MessagingApiService {
       }
 
       const data: MessagesResponse = await response.json()
-      return data.messages || []
+      return (data.messages || []).map(mapMessage)
     } catch (error) {
       errorHandler.logError('messagingApi.getMessages', error)
       return []
@@ -173,7 +184,7 @@ class MessagingApiService {
       }
 
       const data: MessageResponse = await response.json()
-      return data.message
+      return mapMessage(data.message)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to send message"
       errorHandler.showApiError('sendMessage', errorMessage, error)

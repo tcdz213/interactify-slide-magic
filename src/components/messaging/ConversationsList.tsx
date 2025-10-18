@@ -1,4 +1,4 @@
-import { memo, useState as useReactState } from "react"
+import { memo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
@@ -6,10 +6,11 @@ import { Conversation } from "@/types/messaging"
 import { cn } from "@/lib/utils"
 import { ConversationsListSkeleton } from "./ConversationSkeleton"
 import { Button } from "@/components/ui/button"
-import { RefreshCw, Trash2, Check, BellOff } from "lucide-react"
+import { RefreshCw, Trash2, MessageSquare } from "lucide-react"
 import { useConversations } from "@/hooks/use-conversations"
 import { formatConversationTime, getInitials } from "@/utils/messageFormatting"
 import { useKeyboardNavigation } from "@/hooks/use-keyboard-navigation"
+import { motion } from "framer-motion"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,177 +24,127 @@ import {
 import { useState } from "react"
 
 interface ConversationsListProps {
+  conversations?: Conversation[]
   onSelectConversation: (conversation: Conversation) => void
   selectedConversationId?: string
+  currentUserId?: string
 }
 
-// Memoized conversation item with swipe actions
+// Memoized conversation item for performance
 const ConversationItem = memo(({ 
   conversation, 
   isSelected, 
   onSelect,
   onDelete,
-  onMarkRead,
-  onMute
+  currentUserId
 }: { 
   conversation: Conversation
   isSelected: boolean
   onSelect: () => void
   onDelete: () => void
-  onMarkRead: () => void
-  onMute: () => void
+  currentUserId?: string
 }) => {
-  const [swipeOffset, setSwipeOffset] = useReactState(0)
-  const [startX, setStartX] = useReactState(0)
-  const [isSwiping, setIsSwiping] = useReactState(false)
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setStartX(e.touches[0].clientX)
-    setIsSwiping(true)
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isSwiping) return
-    const diff = e.touches[0].clientX - startX
-    if (diff < 0) {
-      setSwipeOffset(Math.max(diff, -120))
-    }
-  }
-
-  const handleTouchEnd = () => {
-    setIsSwiping(false)
-    if (swipeOffset < -60) {
-      setSwipeOffset(-120)
-    } else {
-      setSwipeOffset(0)
-    }
-  }
-
+  // Import the utility at the component level
+  const { getConversationPartner } = require("@/utils/messageFormatting")
+  const partner = getConversationPartner(conversation, currentUserId || '')
   return (
-    <div className="relative overflow-hidden">
-      {/* Swipe action buttons */}
-      <div className="absolute right-0 top-0 bottom-0 flex items-center gap-2 pr-2">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Card
+        className={cn(
+          "p-4 cursor-pointer transition-all duration-200 active:scale-[0.98] min-h-[44px]",
+          "hover:bg-accent/50 hover:shadow-sm active:bg-accent/80",
+          "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "border-border/50 bg-card/80 backdrop-blur-sm",
+          isSelected && "bg-primary/5 border-primary/30 shadow-sm"
+        )}
+        onClick={onSelect}
+        role="button"
+        tabIndex={0}
+        aria-label={`Conversation with ${partner.name}${conversation.unread_count > 0 ? `, ${conversation.unread_count} unread messages` : ''}`}
+        aria-current={isSelected ? 'true' : undefined}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onSelect()
+          } else if (e.key === 'Delete' && e.shiftKey) {
+            e.preventDefault()
+            onDelete()
+          }
+        }}
+      >
+      <div className="flex items-start gap-3">
+        <Avatar className="h-12 w-12" aria-hidden="true">
+          <AvatarImage
+            src={partner.avatar}
+            alt=""
+          />
+          <AvatarFallback>
+            {getInitials(partner.name)}
+          </AvatarFallback>
+        </Avatar>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-semibold text-foreground truncate">
+              {partner.name}
+            </h4>
+            {conversation.unread_count > 0 && (
+              <Badge 
+                variant="default" 
+                className="ml-auto flex-shrink-0"
+                aria-label={`${conversation.unread_count} unread messages`}
+              >
+                {conversation.unread_count}
+              </Badge>
+            )}
+          </div>
+
+          {conversation.last_message && (
+            <p className="text-sm text-muted-foreground truncate mt-1">
+              {conversation.last_message}
+            </p>
+          )}
+
+          {conversation.last_message_at && (
+            <p className="text-xs text-muted-foreground mt-1">
+              {formatConversationTime(conversation.last_message_at)}
+            </p>
+          )}
+        </div>
+
         <Button
-          size="icon"
           variant="ghost"
-          className="h-12 w-12 bg-green-500 hover:bg-green-600 text-white rounded-full"
-          onClick={(e) => {
-            e.stopPropagation()
-            onMarkRead()
-            setSwipeOffset(0)
-          }}
-          aria-label="Mark as read"
-        >
-          <Check className="h-5 w-5" />
-        </Button>
-        <Button
           size="icon"
-          variant="ghost"
-          className="h-12 w-12 bg-orange-500 hover:bg-orange-600 text-white rounded-full"
-          onClick={(e) => {
-            e.stopPropagation()
-            onMute()
-            setSwipeOffset(0)
-          }}
-          aria-label="Mute conversation"
-        >
-          <BellOff className="h-5 w-5" />
-        </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-12 w-12 bg-red-500 hover:bg-red-600 text-white rounded-full"
+          className="opacity-0 group-hover:opacity-100 focus:opacity-100 h-8 w-8"
           onClick={(e) => {
             e.stopPropagation()
             onDelete()
-            setSwipeOffset(0)
           }}
-          aria-label="Delete conversation"
+          aria-label={`Delete conversation with ${partner.name}`}
         >
-          <Trash2 className="h-5 w-5" />
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
         </Button>
       </div>
-
-      {/* Conversation item */}
-      <div
-        className={cn(
-          "relative bg-white dark:bg-gray-950 transition-all duration-200",
-          "hover:bg-gray-50 dark:hover:bg-gray-900/50 active:bg-gray-100 dark:active:bg-gray-900",
-          "border-b border-gray-200/50 dark:border-gray-800/50 last:border-0",
-          "cursor-pointer",
-          isSelected && "bg-gray-50 dark:bg-gray-900/50"
-        )}
-        style={{ transform: `translateX(${swipeOffset}px)` }}
-        onClick={onSelect}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        role="button"
-        tabIndex={0}
-        aria-label={`Conversation with ${conversation.business_name}${conversation.unread_count > 0 ? `, ${conversation.unread_count} unread messages` : ''}`}
-        aria-current={isSelected ? 'true' : undefined}
-      >
-        <div className="flex items-center gap-3 px-4 py-3">
-          <Avatar className="h-14 w-14 ring-2 ring-gray-200 dark:ring-gray-800" aria-hidden="true">
-            <AvatarImage
-              src={conversation.business_avatar}
-              alt=""
-            />
-            <AvatarFallback className="text-sm font-semibold bg-gradient-primary text-white">
-              {getInitials(conversation.business_name)}
-            </AvatarFallback>
-          </Avatar>
-
-          <div className="flex-1 min-w-0">
-            <div className="flex items-baseline justify-between gap-2 mb-0.5">
-              <h4 className={cn(
-                "text-[15px] truncate",
-                conversation.unread_count > 0 ? "font-bold text-foreground" : "font-medium text-foreground/90"
-              )}>
-                {conversation.business_name}
-              </h4>
-              {conversation.last_message_at && (
-                <span className={cn(
-                  "text-[12px] flex-shrink-0",
-                  conversation.unread_count > 0 ? "text-primary font-semibold" : "text-muted-foreground/60"
-                )}>
-                  {formatConversationTime(conversation.last_message_at)}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between gap-2">
-              {conversation.last_message && (
-                <p className={cn(
-                  "text-[13.5px] truncate leading-tight",
-                  conversation.unread_count > 0 ? "text-foreground font-semibold" : "text-muted-foreground/70 font-normal"
-                )}>
-                  {conversation.last_message}
-                </p>
-              )}
-              {conversation.unread_count > 0 && (
-                <div 
-                  className="h-5 min-w-[20px] px-1.5 rounded-full bg-gradient-primary text-white flex items-center justify-center text-[11px] font-bold flex-shrink-0 shadow-sm"
-                  aria-label={`${conversation.unread_count} unread messages`}
-                >
-                  {conversation.unread_count}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    </Card>
+    </motion.div>
   )
 })
 
 ConversationItem.displayName = 'ConversationItem'
 
 export const ConversationsList = ({
+  conversations: propConversations,
   onSelectConversation,
-  selectedConversationId
+  selectedConversationId,
+  currentUserId
 }: ConversationsListProps) => {
-  const { conversations, isLoading, isRefreshing, error, refresh, deleteConversation } = useConversations()
+  const { conversations: hookConversations, isLoading, isRefreshing, error, refresh, deleteConversation } = useConversations()
+  const conversations = propConversations || hookConversations
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [conversationToDelete, setConversationToDelete] = useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -245,23 +196,35 @@ export const ConversationsList = ({
 
   if (conversations.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground space-y-2" role="status">
-        <p>No conversations yet.</p>
-        <p className="text-sm">Start messaging businesses to see your conversations here.</p>
+      <div className="flex flex-col items-center justify-center min-h-[300px] text-center px-4" role="status">
+        <div className="relative mb-4">
+          <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+            <MessageSquare className="h-10 w-10 text-primary/40" aria-hidden="true" />
+          </div>
+          <motion.div
+            animate={{ scale: [1, 1.15, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="absolute inset-0 rounded-full bg-primary/5"
+          />
+        </div>
+        <h3 className="text-lg font-semibold text-foreground mb-2">No Conversations Yet</h3>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          Start messaging businesses to see your conversations here
+        </p>
       </div>
     )
   }
 
   return (
     <>
-      <div className="space-y-0" role="list" aria-label="Conversations">
+      <div className="space-y-3" role="list" aria-label="Conversations">
         {isRefreshing && (
-          <div className="flex items-center justify-center py-3 border-b border-border/50" role="status" aria-live="polite">
+          <div className="flex items-center justify-center py-2" role="status" aria-live="polite">
             <RefreshCw className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-            <span className="ml-2 text-sm text-muted-foreground">Refreshing...</span>
+            <span className="ml-2 text-sm text-muted-foreground">Refreshing conversations...</span>
           </div>
         )}
-        <div>
+        <div className="space-y-2 group">
           {conversations.map((conversation, index) => (
             <ConversationItem
               key={conversation.id}
@@ -272,14 +235,7 @@ export const ConversationsList = ({
                 setConversationToDelete(conversation.id)
                 setDeleteDialogOpen(true)
               }}
-              onMarkRead={() => {
-                // Mark as read logic
-                console.log('Mark as read:', conversation.id)
-              }}
-              onMute={() => {
-                // Mute logic
-                console.log('Mute:', conversation.id)
-              }}
+              currentUserId={currentUserId}
             />
           ))}
         </div>

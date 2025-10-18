@@ -20,6 +20,7 @@ export interface PaginationData {
 // ============= Message Types =============
 export interface Message {
   id: string
+  _id?: string  // MongoDB ID for API compatibility
   conversation_id: string
   sender_id: string
   sender_name: string
@@ -32,9 +33,11 @@ export interface Message {
 
 export interface Conversation {
   id: string
+  _id?: string  // MongoDB ID for API compatibility
   business_id: string
   business_name: string
   business_avatar?: string
+  is_verified?: boolean
   user_id: string
   user_name: string
   user_avatar?: string
@@ -109,7 +112,15 @@ export const messageContentSchema = z
     { message: "Invalid message content" }
   )
 
-export const conversationIdSchema = z.string().uuid({ message: "Invalid conversation ID" })
+export const conversationIdSchema = z.string().min(1, { message: "Invalid conversation ID" }).refine(
+  (id) => {
+    // Accept either UUID format or MongoDB ObjectId format (24 hex chars)
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    const mongoIdPattern = /^[0-9a-f]{24}$/i
+    return uuidPattern.test(id) || mongoIdPattern.test(id)
+  },
+  { message: "Invalid conversation ID format" }
+)
 
 export const sendMessageSchema = z.object({
   conversation_id: conversationIdSchema,

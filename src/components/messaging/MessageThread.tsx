@@ -1,8 +1,6 @@
 import { useRef, useEffect, useState, memo } from "react"
 import { MessageBubble } from "./MessageBubble"
 import { MessageInput } from "./MessageInput"
-import { MessagingHeader } from "./MessagingHeader"
-import { QuickShortcuts } from "./QuickShortcuts"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, ArrowDown, MessageSquare } from "lucide-react"
@@ -10,8 +8,7 @@ import { MessageThreadSkeleton } from "./MessageSkeleton"
 import { Button } from "@/components/ui/button"
 import { useMessages } from "@/hooks/use-messages"
 import { cn } from "@/lib/utils"
-import { messagingApi } from "@/services/messagingApi"
-import { Conversation } from "@/types/messaging"
+import { motion } from "framer-motion"
 
 interface MessageThreadProps {
   conversationId: string
@@ -26,7 +23,6 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [userScrolled, setUserScrolled] = useState(false)
-  const [conversation, setConversation] = useState<Conversation | null>(null)
 
   // Use custom hook for all message state management
   const {
@@ -38,19 +34,6 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
     retryMessage,
     deleteFailedMessage
   } = useMessages({ conversationId, currentUserId })
-
-  // Load conversation details for header
-  useEffect(() => {
-    const loadConversation = async () => {
-      try {
-        const conv = await messagingApi.getConversation(conversationId)
-        setConversation(conv)
-      } catch (error) {
-        console.error('Failed to load conversation:', error)
-      }
-    }
-    loadConversation()
-  }, [conversationId])
 
   // Smart scrolling - only auto-scroll if user is at bottom
   useEffect(() => {
@@ -82,32 +65,26 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900" role="log" aria-live="polite" aria-label="Message thread">
-      {/* Header */}
-      {conversation && (
-        <>
-          <MessagingHeader
-            businessId={conversation.business_id}
-            businessName={conversation.business_name}
-            businessAvatar={conversation.business_avatar}
-            isOnline={false}
-            isVerified={false}
-          />
-          <QuickShortcuts
-            businessId={conversation.business_id}
-            businessName={conversation.business_name}
-          />
-        </>
-      )}
-
+    <div className="flex flex-col h-full bg-muted/30" role="log" aria-live="polite" aria-label="Message thread">
       <div className="relative flex-1 overflow-hidden">
-        <ScrollArea className="h-full px-4 pt-4 pb-2" ref={scrollRef} onScroll={handleScroll}>
-          <div className="space-y-2 max-w-3xl mx-auto">
+        <ScrollArea className="h-full p-4" ref={scrollRef} onScroll={handleScroll}>
+          <div className="space-y-4">
             {messages.length === 0 ? (
-              <div className="text-center text-muted-foreground/60 py-12" role="status">
-                <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-20" aria-hidden="true" />
-                <p className="text-sm">No messages yet</p>
-                <p className="text-xs mt-1">Send a message to start the conversation</p>
+              <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-4" role="status">
+                <div className="relative mb-4">
+                  <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
+                    <MessageSquare className="h-10 w-10 text-primary/40" aria-hidden="true" />
+                  </div>
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 rounded-full bg-primary/5"
+                  />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground mb-2">Start the Conversation</h3>
+                <p className="text-sm text-muted-foreground max-w-sm">
+                  Send a message to begin chatting. They'll be notified right away.
+                </p>
               </div>
             ) : (
               messages.map((message) => {
@@ -119,18 +96,15 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
                       isCurrentUser={message.sender_id === currentUserId}
                     />
                     {isFailed && (
-                      <div className={cn(
-                        "flex gap-2 mt-1 mb-2",
-                        message.sender_id === currentUserId ? "justify-end" : "justify-start"
-                      )}>
-                        <Alert variant="destructive" className="w-auto py-1.5 px-3 text-xs" role="alert">
-                          <div className="flex items-center gap-2">
-                            <AlertCircle className="h-3 w-3" aria-hidden="true" />
-                            <span>Failed to send</span>
+                      <div className="flex justify-end gap-2 mt-1">
+                        <Alert variant="destructive" className="w-auto py-2 px-3" role="alert">
+                          <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                          <AlertDescription className="flex items-center gap-2">
+                            <span className="text-xs">Failed to send</span>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-5 px-2 text-xs hover:bg-destructive/20"
+                              className="h-6 px-2 text-xs"
                               onClick={() => retryMessage(message.id)}
                               aria-label="Retry sending message"
                             >
@@ -139,13 +113,13 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="h-5 px-2 text-xs hover:bg-destructive/20"
+                              className="h-6 px-2 text-xs"
                               onClick={() => deleteFailedMessage(message.id)}
                               aria-label="Delete failed message"
                             >
                               Delete
                             </Button>
-                          </div>
+                          </AlertDescription>
                         </Alert>
                       </div>
                     )}
@@ -157,17 +131,14 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
           </div>
         </ScrollArea>
 
-        {/* Scroll to bottom button - Instagram style */}
+        {/* Scroll to bottom button */}
         {showScrollButton && (
           <Button
             variant="secondary"
             size="icon"
             className={cn(
-              "absolute bottom-6 right-6 h-10 w-10 rounded-full",
-              "shadow-lg hover:shadow-xl",
-              "transition-all duration-300 animate-fade-in",
-              "bg-card border border-border",
-              "hover:scale-105 active:scale-95"
+              "absolute bottom-4 right-4 rounded-full shadow-lg",
+              "transition-all duration-200 active:scale-95"
             )}
             onClick={scrollToBottom}
             aria-label="Scroll to bottom"
@@ -177,13 +148,11 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
         )}
       </div>
 
-      <div className="border-t bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm px-4 py-3">
-        <div className="max-w-3xl mx-auto">
-          <MessageInput 
-            onSend={sendMessage}
-            disabled={isSending}
-          />
-        </div>
+      <div className="border-t bg-card/50 backdrop-blur-sm p-4">
+        <MessageInput 
+          onSend={sendMessage}
+          disabled={isSending}
+        />
       </div>
     </div>
   )
