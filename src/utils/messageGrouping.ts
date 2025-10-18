@@ -24,8 +24,7 @@ export const groupMessagesByDate = (messages: Message[]): MessageGroup[] => {
     const messageDate = new Date(message.created_at)
     const dateKey = messageDate.toLocaleDateString('en-US', {
       month: 'short',
-      day: 'numeric',
-      year: messageDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+      day: 'numeric'
     })
 
     // Start a new date group
