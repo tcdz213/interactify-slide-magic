@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button"
 import { useMessages } from "@/hooks/use-messages"
 import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
+import { groupMessagesByDate, formatDateSeparator } from "@/utils/messageGrouping"
+import { DateSeparator } from "./DateSeparator"
+import { TypingIndicator } from "./TypingIndicator"
 
 interface MessageThreadProps {
   conversationId: string
@@ -23,6 +26,7 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [userScrolled, setUserScrolled] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
 
   // Use custom hook for all message state management
   const {
@@ -35,12 +39,22 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
     deleteFailedMessage
   } = useMessages({ conversationId, currentUserId })
 
-  // Smart scrolling - only auto-scroll if user is at bottom
+  // Group messages by date
+  const messageGroups = groupMessagesByDate(messages)
+
+  // Auto-scroll to bottom on load and when new messages arrive
   useEffect(() => {
     if (!userScrolled && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [messages, userScrolled])
+
+  // Auto-scroll on initial load
+  useEffect(() => {
+    if (!isLoading && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'auto' })
+    }
+  }, [isLoading])
 
   // Handle scroll events to detect if user scrolled up
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -68,8 +82,8 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
     <div className="flex flex-col h-full bg-muted/30" role="log" aria-live="polite" aria-label="Message thread">
       <div className="relative flex-1 overflow-hidden">
         <ScrollArea className="h-full p-4" ref={scrollRef} onScroll={handleScroll}>
-          <div className="space-y-4">
-            {messages.length === 0 ? (
+          <div className="space-y-2">
+            {messageGroups.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center px-4" role="status">
                 <div className="relative mb-4">
                   <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center">
@@ -87,46 +101,67 @@ export const MessageThread = ({ conversationId, currentUserId }: MessageThreadPr
                 </p>
               </div>
             ) : (
-              messages.map((message) => {
-                const isFailed = failedMessages.has(message.id)
-                return (
-                  <div key={message.id}>
-                    <MemoizedMessageBubble
-                      message={message}
-                      isCurrentUser={message.sender_id === currentUserId}
-                    />
-                    {isFailed && (
-                      <div className="flex justify-end gap-2 mt-1">
-                        <Alert variant="destructive" className="w-auto py-2 px-3" role="alert">
-                          <AlertCircle className="h-4 w-4" aria-hidden="true" />
-                          <AlertDescription className="flex items-center gap-2">
-                            <span className="text-xs">Failed to send</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 px-2 text-xs"
-                              onClick={() => retryMessage(message.id)}
-                              aria-label="Retry sending message"
-                            >
-                              Retry
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 px-2 text-xs"
-                              onClick={() => deleteFailedMessage(message.id)}
-                              aria-label="Delete failed message"
-                            >
-                              Delete
-                            </Button>
-                          </AlertDescription>
-                        </Alert>
-                      </div>
-                    )}
+              messageGroups.map((group, groupIndex) => (
+                <div key={`group-${groupIndex}`}>
+                  {/* Date separator */}
+                  <DateSeparator date={formatDateSeparator(group.date)} />
+                  
+                  {/* Messages in this date group */}
+                  <div className="space-y-0.5">
+                    {group.messages.map(({ message, showAvatar, isFirstInGroup }) => {
+                      const isFailed = failedMessages.has(message.id)
+                      return (
+                        <div key={message.id}>
+                          <MemoizedMessageBubble
+                            message={message}
+                            isCurrentUser={message.sender_id === currentUserId}
+                            showAvatar={showAvatar}
+                            isFirstInGroup={isFirstInGroup}
+                          />
+                          {isFailed && (
+                            <div className="flex justify-end gap-2 mt-1 mb-2">
+                              <Alert variant="destructive" className="w-auto py-2 px-3" role="alert">
+                                <AlertCircle className="h-4 w-4" aria-hidden="true" />
+                                <AlertDescription className="flex items-center gap-2">
+                                  <span className="text-xs">Failed to send</span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={() => retryMessage(message.id)}
+                                    aria-label="Retry sending message"
+                                  >
+                                    Retry
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 px-2 text-xs"
+                                    onClick={() => deleteFailedMessage(message.id)}
+                                    aria-label="Delete failed message"
+                                  >
+                                    Delete
+                                  </Button>
+                                </AlertDescription>
+                              </Alert>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
-                )
-              })
+                </div>
+              ))
             )}
+            
+            {/* Typing indicator */}
+            {isTyping && (
+              <TypingIndicator 
+                senderName="Business" 
+                senderAvatar={undefined}
+              />
+            )}
+            
             <div ref={messagesEndRef} />
           </div>
         </ScrollArea>

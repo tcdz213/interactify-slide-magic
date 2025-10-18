@@ -29,6 +29,7 @@ export interface Message {
   read: boolean
   created_at: string
   updated_at?: string
+  image_url?: string  // Optional image attachment
 }
 
 export interface Conversation {
