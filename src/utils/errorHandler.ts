@@ -1,135 +1,69 @@
-import { toast } from "@/hooks/use-toast"
-
-interface ErrorEntry {
-  key: string
-  timestamp: number
-}
-
+/**
+ * Centralized error handler - uses inline errors for better UX
+ * No popups or toasts - errors are shown contextually
+ */
 class ErrorHandler {
-  private recentErrors: Map<string, ErrorEntry> = new Map()
-  private readonly DUPLICATE_THRESHOLD = 5000 // 5 seconds
-  private readonly MAX_STORED_ERRORS = 20
+  private errorCallbacks: Map<string, (message: string, title?: string) => void> = new Map()
 
   /**
-   * Check if an error was recently shown
+   * Register a callback for a specific context
    */
-  private isDuplicate(errorKey: string): boolean {
-    const existing = this.recentErrors.get(errorKey)
-    if (!existing) return false
-
-    const now = Date.now()
-    const timeSinceLastError = now - existing.timestamp
-
-    // If error was shown within threshold, it's a duplicate
-    return timeSinceLastError < this.DUPLICATE_THRESHOLD
+  registerErrorCallback(context: string, callback: (message: string, title?: string) => void): void {
+    this.errorCallbacks.set(context, callback)
   }
 
   /**
-   * Record that an error was shown
+   * Unregister a callback
    */
-  private recordError(errorKey: string): void {
-    const now = Date.now()
-    
-    // Clean up old errors
-    if (this.recentErrors.size >= this.MAX_STORED_ERRORS) {
-      const oldestKey = Array.from(this.recentErrors.entries())
-        .sort((a, b) => a[1].timestamp - b[1].timestamp)[0][0]
-      this.recentErrors.delete(oldestKey)
-    }
-
-    this.recentErrors.set(errorKey, { key: errorKey, timestamp: now })
+  unregisterErrorCallback(context: string): void {
+    this.errorCallbacks.delete(context)
   }
 
   /**
-   * Create a unique key for an error
-   */
-  private createErrorKey(type: string, message: string): string {
-    return `${type}:${message.substring(0, 50)}`
-  }
-
-  /**
-   * Show a network error toast (deduplicated)
+   * Show network error inline
    */
   showNetworkError(context: string, error?: Error | unknown): void {
-    const errorKey = this.createErrorKey('network', context)
+    this.logError(context, error)
     
-    if (this.isDuplicate(errorKey)) {
-      console.debug(`⚠️ Duplicate error suppressed: ${context}`)
-      return
+    const callback = this.errorCallbacks.get(context)
+    if (callback) {
+      callback(
+        "Unable to connect to server. Please check your connection.",
+        "Connection Error"
+      )
     }
-
-    this.recordError(errorKey)
-    
-    toast({
-      title: "Connection Error",
-      description: "Unable to connect to server. Please check your connection.",
-      variant: "destructive"
-    })
-
-    console.error(`Network error [${context}]:`, error)
   }
 
   /**
-   * Show a generic API error toast (deduplicated)
+   * Show API error inline
    */
   showApiError(context: string, message?: string, error?: Error | unknown): void {
-    const errorMessage = message || "Something went wrong. Please try again."
-    const errorKey = this.createErrorKey('api', `${context}:${errorMessage}`)
+    this.logError(context, error)
     
-    if (this.isDuplicate(errorKey)) {
-      console.debug(`⚠️ Duplicate error suppressed: ${context}`)
-      return
+    const callback = this.errorCallbacks.get(context)
+    if (callback) {
+      callback(
+        message || "Something went wrong. Please try again.",
+        "Error"
+      )
     }
-
-    this.recordError(errorKey)
-    
-    toast({
-      title: "Error",
-      description: errorMessage,
-      variant: "destructive"
-    })
-
-    console.error(`API error [${context}]:`, error || message)
   }
 
   /**
-   * Show a validation error toast (deduplicated)
+   * Show validation error inline
    */
-  showValidationError(message: string): void {
-    const errorKey = this.createErrorKey('validation', message)
-    
-    if (this.isDuplicate(errorKey)) {
-      console.debug(`⚠️ Duplicate validation error suppressed`)
-      return
+  showValidationError(context: string, message: string): void {
+    const callback = this.errorCallbacks.get(context)
+    if (callback) {
+      callback(message, "Validation Error")
     }
-
-    this.recordError(errorKey)
-    
-    toast({
-      title: "Validation Error",
-      description: message,
-      variant: "destructive"
-    })
   }
 
   /**
-   * Show a success message (deduplicated)
+   * Show success message (console only)
    */
   showSuccess(message: string, title: string = "Success"): void {
-    const key = this.createErrorKey('success', message)
-    
-    if (this.isDuplicate(key)) {
-      console.debug(`⚠️ Duplicate success message suppressed`)
-      return
-    }
-
-    this.recordError(key)
-    
-    toast({
-      title,
-      description: message,
-      variant: "success"
-    })
+    console.log(`✓ ${title}: ${message}`)
   }
 
   /**
@@ -150,10 +84,10 @@ class ErrorHandler {
   }
 
   /**
-   * Clear all stored errors (useful for testing or manual reset)
+   * Clear all registered callbacks
    */
   clearErrors(): void {
-    this.recentErrors.clear()
+    this.errorCallbacks.clear()
   }
 }
 
