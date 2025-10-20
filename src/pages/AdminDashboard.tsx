@@ -8,6 +8,7 @@ import {
   type AdminCard,
   type AdminReport,
   type AdminStats,
+  type ReportsResponse,
 } from "@/services/adminApi";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
@@ -19,6 +20,7 @@ import { UsersTab } from "@/components/admin/UsersTab";
 import { CardsTab } from "@/components/admin/CardsTab";
 import { PackagesTab } from "@/components/admin/PackagesTab";
 import { DomainsTab } from "@/components/admin/DomainsTab";
+import { ReportsTab } from "@/components/admin/ReportsTab";
 
 const AdminDashboard = () => {
   const { isAdmin, loading: adminLoading } = useAdmin();
@@ -73,7 +75,7 @@ const AdminDashboard = () => {
 
       setUsers(usersData);
       setBusinessCards(cardsData);
-      setReports(reportsData);
+      setReports(reportsData.reports);
       setReviews(reviewsData);
       setFeedback(feedbackData);
       setSubscriptions(subscriptionsData);
@@ -239,14 +241,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
-            {activeTab === "reports" && (
-              <div className="flex items-center justify-center h-96">
-                <div className="text-center text-muted-foreground">
-                  <p className="text-lg font-medium mb-2">Reports Management</p>
-                  <p className="text-sm">Coming soon...</p>
-                </div>
-              </div>
-            )}
+            {activeTab === "reports" && <ReportsTab />}
           </div>
         </main>
       </div>

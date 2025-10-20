@@ -38,13 +38,33 @@ export interface AdminCard {
 export interface AdminReport {
   id: string;
   card_id: string;
-  reporter_id: string;
-  reason: string;
-  description: string;
+  card_title: string;
+  user_id: string;
+  user_name: string;
+  user_email: string;
+  report_type: 'inappropriate' | 'incorrect' | 'spam' | 'copyright' | 'other';
+  details?: string;
   status: 'pending' | 'resolved' | 'dismissed';
+  admin_notes?: string;
+  resolved_by?: string;
+  resolved_at?: string;
   created_at: string;
-  card_name: string;
-  reporter_email: string;
+  updated_at: string;
+}
+
+export interface ReportsResponse {
+  reports: AdminReport[];
+  pagination: {
+    current_page: number;
+    total_pages: number;
+    total_reports: number;
+    per_page: number;
+  };
+  stats: {
+    pending: number;
+    resolved: number;
+    dismissed: number;
+  };
 }
 
 export interface AdminStats {
@@ -121,10 +141,23 @@ export const adminApi = {
     }
   },
 
-  // Fetch all reports
-  async getReports(): Promise<AdminReport[]> {
+  // Fetch all reports with pagination and filters
+  async getReports(params?: {
+    page?: number;
+    limit?: number;
+    status?: 'all' | 'pending' | 'resolved' | 'dismissed';
+    report_type?: 'all' | 'inappropriate' | 'incorrect' | 'spam' | 'copyright' | 'other';
+  }): Promise<ReportsResponse> {
     try {
-      const response = await fetch(`${API_CONFIG.baseURL}/admin/reports`, {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', String(params.page));
+      if (params?.limit) queryParams.append('limit', String(params.limit));
+      if (params?.status && params.status !== 'all') queryParams.append('status', params.status);
+      if (params?.report_type && params.report_type !== 'all') queryParams.append('report_type', params.report_type);
+
+      const url = `${API_CONFIG.baseURL}/admin/reports${queryParams.toString() ? `?${queryParams}` : ''}`;
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: getAuthHeaders()
       })
@@ -132,7 +165,20 @@ export const adminApi = {
       if (!response.ok) throw new Error('Failed to fetch reports')
 
       const data = await response.json()
-      return data.reports || []
+      return {
+        reports: data.reports || [],
+        pagination: data.pagination || {
+          current_page: 1,
+          total_pages: 1,
+          total_reports: 0,
+          per_page: 50
+        },
+        stats: data.stats || {
+          pending: 0,
+          resolved: 0,
+          dismissed: 0
+        }
+      }
     } catch (error) {
       errorHandler.showApiError('getReports', "Failed to load reports", error)
       throw error
@@ -355,18 +401,27 @@ export const adminApi = {
     }
   },
 
-  // Update report status
-  async updateReportStatus(reportId: string, status: 'resolved' | 'dismissed'): Promise<void> {
+  // Update report status with admin notes
+  async updateReportStatus(
+    reportId: string, 
+    status: 'resolved' | 'dismissed',
+    adminNotes?: string
+  ): Promise<AdminReport> {
     try {
       const response = await fetch(`${API_CONFIG.baseURL}/admin/reports/${reportId}/status`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ 
+          status,
+          admin_notes: adminNotes 
+        })
       })
 
       if (!response.ok) throw new Error('Failed to update report status')
 
+      const data = await response.json()
       errorHandler.showSuccess("Report status updated successfully", "Success")
+      return data.report
     } catch (error) {
       errorHandler.showApiError('updateReportStatus', "Failed to update report status", error)
       throw error
