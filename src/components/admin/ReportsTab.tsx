@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { adminApi, type AdminReport } from "@/services/adminApi";
+import { cardApi } from "@/services/cardApi";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { AlertCircle, CheckCircle, XCircle, Eye } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle, Eye, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import type { BusinessCard } from "@/types/business-card";
 
 export const ReportsTab = () => {
   const [reports, setReports] = useState<AdminReport[]>([]);
@@ -20,6 +23,8 @@ export const ReportsTab = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [stats, setStats] = useState({ pending: 0, resolved: 0, dismissed: 0 });
+  const [cardDetails, setCardDetails] = useState<BusinessCard | null>(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   useEffect(() => {
     loadReports();
@@ -43,6 +48,25 @@ export const ReportsTab = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadCardDetails = async (cardId: string) => {
+    try {
+      setLoadingDetails(true);
+      const card = await cardApi.getCard(cardId);
+      setCardDetails(card);
+    } catch (error) {
+      console.error("Failed to load card details:", error);
+      setCardDetails(null);
+    } finally {
+      setLoadingDetails(false);
+    }
+  };
+
+  const handleReportSelect = (report: AdminReport) => {
+    setSelectedReport(report);
+    setCardDetails(null);
+    loadCardDetails(report.card_id);
   };
 
   const handleResolve = async () => {
@@ -202,7 +226,16 @@ export const ReportsTab = () => {
                   ) : (
                     reports.map((report) => (
                       <tr key={report.id} className="border-b hover:bg-muted/50 transition-colors">
-                        <td className="px-4 py-3 font-medium">{report.card_title || report.card_id}</td>
+                        <td className="px-4 py-3">
+                          <Link 
+                            to={`/card/${report.card_id}`}
+                            className="font-medium hover:text-primary inline-flex items-center gap-1"
+                            target="_blank"
+                          >
+                            {report.card_title || report.card_id}
+                            <ExternalLink className="h-3 w-3" />
+                          </Link>
+                        </td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">{report.user_name || report.user_id}</td>
                         <td className="px-4 py-3">{getReportTypeBadge(report.report_type)}</td>
                         <td className="px-4 py-3">{getStatusBadge(report.status)}</td>
@@ -213,7 +246,7 @@ export const ReportsTab = () => {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => setSelectedReport(report)}
+                            onClick={() => handleReportSelect(report)}
                           >
                             <Eye className="h-4 w-4 mr-1" />
                             Review
@@ -266,27 +299,47 @@ export const ReportsTab = () => {
 
           {selectedReport && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium mb-1">Card</p>
-                  <p className="text-sm text-muted-foreground">{selectedReport.card_title || selectedReport.card_id}</p>
+              {loadingDetails ? (
+                <div className="flex justify-center py-4">
+                  <LoadingSpinner size="sm" />
                 </div>
-                <div>
-                  <p className="text-sm font-medium mb-1">Reporter</p>
-                  <p className="text-sm text-muted-foreground">{selectedReport.user_name || selectedReport.user_id}</p>
-                  {selectedReport.user_email && (
-                    <p className="text-xs text-muted-foreground">{selectedReport.user_email}</p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm font-medium mb-1">Report Type</p>
-                  {getReportTypeBadge(selectedReport.report_type)}
-                </div>
-                <div>
-                  <p className="text-sm font-medium mb-1">Status</p>
-                  {getStatusBadge(selectedReport.status)}
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm font-medium mb-1">Card</p>
+                      <Link 
+                        to={`/card/${selectedReport.card_id}`}
+                        className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+                        target="_blank"
+                      >
+                        {cardDetails?.title || selectedReport.card_title || selectedReport.card_id}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                      {cardDetails && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {cardDetails.domain_key} • {cardDetails.address?.split(',')[0] || 'No location'}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium mb-1">Reporter</p>
+                      <p className="text-sm text-muted-foreground">{selectedReport.user_name || selectedReport.user_id}</p>
+                      {selectedReport.user_email && (
+                        <p className="text-xs text-muted-foreground">{selectedReport.user_email}</p>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium mb-1">Report Type</p>
+                      {getReportTypeBadge(selectedReport.report_type)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium mb-1">Status</p>
+                      {getStatusBadge(selectedReport.status)}
+                    </div>
+                  </div>
+                </>
+              )}
 
               {selectedReport.details && (
                 <div>
