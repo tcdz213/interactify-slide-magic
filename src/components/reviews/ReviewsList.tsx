@@ -72,27 +72,27 @@ export const ReviewsList = ({ businessId, currentUserId, onEditReview }: Reviews
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       {/* Reviews Summary */}
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         <div className="space-y-4">
-          <div className="text-center">
-            <div className="text-5xl font-bold text-foreground">{stats.average_rating.toFixed(1)}</div>
-            <RatingStars rating={stats.average_rating} size={24} className="justify-center mt-2" />
-            <p className="text-muted-foreground mt-2">{stats.total_reviews} reviews</p>
+          <div className="text-center bg-muted/30 rounded-lg p-6">
+            <div className="text-4xl md:text-5xl font-bold text-foreground">{stats.average_rating.toFixed(1)}</div>
+            <RatingStars rating={stats.average_rating} size={24} className="justify-center mt-3" />
+            <p className="text-sm md:text-base text-muted-foreground mt-2">{stats.total_reviews} {stats.total_reviews === 1 ? 'review' : 'reviews'}</p>
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-2 md:space-y-3">
           {[5, 4, 3, 2, 1].map((star) => {
             const count = stats.rating_distribution[star as keyof typeof stats.rating_distribution] || 0
             const percentage = stats.total_reviews > 0 ? (count / stats.total_reviews) * 100 : 0
 
             return (
-              <div key={star} className="flex items-center gap-3">
-                <span className="text-sm font-medium w-8">{star}★</span>
-                <Progress value={percentage} className="flex-1" />
-                <span className="text-sm text-muted-foreground w-12 text-right">{count}</span>
+              <div key={star} className="flex items-center gap-2 md:gap-3">
+                <span className="text-xs md:text-sm font-medium w-7 md:w-8">{star}★</span>
+                <Progress value={percentage} className="flex-1 h-2 md:h-2.5" />
+                <span className="text-xs md:text-sm text-muted-foreground w-10 md:w-12 text-right">{count}</span>
               </div>
             )
           })}
@@ -101,8 +101,8 @@ export const ReviewsList = ({ businessId, currentUserId, onEditReview }: Reviews
 
       {/* Reviews List */}
       <div className="space-y-4">
-        <h3 className="text-xl font-semibold text-foreground">Customer Reviews</h3>
-        <div className="space-y-4">
+        <h3 className="text-lg md:text-xl font-semibold text-foreground px-1">Customer Reviews</h3>
+        <div className="space-y-3 md:space-y-4">
           {reviews.map((review) => (
             <ReviewCard
               key={review.id}
@@ -118,16 +118,16 @@ export const ReviewsList = ({ businessId, currentUserId, onEditReview }: Reviews
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteReviewId} onOpenChange={() => setDeleteReviewId(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Review</AlertDialogTitle>
             <AlertDialogDescription>
               Are you sure you want to delete this review? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+            <AlertDialogCancel className="m-0 h-11">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="m-0 h-11">Delete</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

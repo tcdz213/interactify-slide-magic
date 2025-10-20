@@ -10,6 +10,7 @@ import { AnimatedHeart } from "@/components/AnimatedHeart";
 import { ExportCardMenu } from "@/components/ExportCardMenu";
 import { subscriptionApi } from "@/services/subscriptionApi";
 import { useLanguage } from "@/hooks/use-language";
+import { useFavorites } from "@/hooks/use-favorites";
 import { QuickActions } from "@/components/business-card/QuickActions";
 import { CardHeader as BusinessCardHeader } from "@/components/business-card/CardHeader";
 import { CardStats } from "@/components/business-card/CardStats";
@@ -26,9 +27,9 @@ const BusinessCard = ({
   showStats = true,
   className
 }: BusinessCardProps) => {
-  const [isLiked, setIsLiked] = useState(false);
   const [isPro, setIsPro] = useState(false);
   const { t } = useLanguage();
+  const { isFavorited, toggleFavorite } = useFavorites();
   const currentUserId = localStorage.getItem('userId');
   const isOwner = card.user_id === currentUserId;
 
@@ -90,8 +91,8 @@ const BusinessCard = ({
             primaryPhone={primaryPhone}
             cardTitle={card.title}
             cardDescription={card.description}
-            isLiked={isLiked}
-            onLikeToggle={() => setIsLiked(!isLiked)}
+            isLiked={isFavorited(card._id)}
+            onLikeToggle={() => toggleFavorite(card._id)}
             variant="compact"
             className="pt-3 mt-3 border-t border-border/50"
             businessId={card._id}
@@ -285,10 +286,13 @@ const BusinessCard = ({
                 variant="outline"
                 size="sm"
               />
-              <Button variant="outline" size="sm" onClick={e => e.stopPropagation()}>
+              <Button variant="outline" size="sm" onClick={(e) => {
+                e.stopPropagation();
+                toggleFavorite(card._id);
+              }}>
                 <AnimatedHeart 
-                  isFavorite={isLiked} 
-                  onClick={() => setIsLiked(!isLiked)} 
+                  isFavorite={isFavorited(card._id)} 
+                  onClick={() => {}} 
                   size={16}
                   className="mr-2"
                 />
@@ -306,8 +310,8 @@ const BusinessCard = ({
           primaryPhone={primaryPhone}
           cardTitle={card.title}
           cardDescription={card.description}
-          isLiked={isLiked}
-          onLikeToggle={() => setIsLiked(!isLiked)}
+          isLiked={isFavorited(card._id)}
+          onLikeToggle={() => toggleFavorite(card._id)}
           variant="full"
           className="pt-4 border-t border-border"
           businessId={card._id}

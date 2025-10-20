@@ -38,9 +38,28 @@ const CardDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [isPro, setIsPro] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
-  const currentUserId = localStorage.getItem('userId');
+  const [editingReview, setEditingReview] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("reviews");
+  const [userExistingReview, setUserExistingReview] = useState<any>(null);
   const { t } = useLanguage();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const currentUserId = user?.id;
+
+  // Check if user already has a review for this business
+  useEffect(() => {
+    const checkExistingReview = async () => {
+      if (!id || !isAuthenticated) return;
+      
+      try {
+        const existingReview = await reviewsApi.getUserReviewForBusiness(id);
+        setUserExistingReview(existingReview);
+      } catch (error) {
+        console.error('Failed to check existing review:', error);
+      }
+    };
+
+    checkExistingReview();
+  }, [id, isAuthenticated]);
 
   useEffect(() => {
     const loadCard = async () => {
@@ -86,14 +105,46 @@ const CardDetail = () => {
     if (!id) return;
     
     try {
-      await reviewsApi.createReview({
-        business_id: id,
-        ...reviewData
-      });
+      if (editingReview || userExistingReview) {
+        // Update existing review
+        const reviewId = editingReview?.id || userExistingReview?.id;
+        await reviewsApi.updateReview(reviewId, reviewData);
+        setEditingReview(null);
+        // Refresh the existing review
+        const updatedReview = await reviewsApi.getUserReviewForBusiness(id);
+        setUserExistingReview(updatedReview);
+      } else {
+        // Create new review
+        await reviewsApi.createReview({
+          business_id: id,
+          ...reviewData
+        });
+        // Get the newly created review
+        const newReview = await reviewsApi.getUserReviewForBusiness(id);
+        setUserExistingReview(newReview);
+      }
       setShowReviewForm(false);
-    } catch (error) {
+      setActiveTab("reviews");
+    } catch (error: any) {
       console.error('Failed to submit review:', error);
+      // Handle 409 conflict (already has review)
+      if (error?.message?.includes('409') || error?.message?.toLowerCase().includes('already')) {
+        errorHandler.showApiError('submitReview', 'You already have a review for this business. Please edit your existing review instead.');
+        // Try to fetch the existing review
+        const existingReview = await reviewsApi.getUserReviewForBusiness(id);
+        if (existingReview) {
+          setUserExistingReview(existingReview);
+          setEditingReview(existingReview);
+          setActiveTab("write");
+        }
+      }
     }
+  };
+
+  const handleEditReview = (review: any) => {
+    setEditingReview(review);
+    setShowReviewForm(true);
+    setActiveTab("write"); // Switch to write tab
   };
 
   const handleStartConversation = async () => {
@@ -390,7 +441,7 @@ const CardDetail = () => {
         <div className="mt-8 space-y-6">
           <Card>
             <CardContent className="p-6">
-              <Tabs defaultValue="reviews" className="w-full">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="reviews">Reviews</TabsTrigger>
                   <TabsTrigger value="write">Write Review</TabsTrigger>
@@ -400,17 +451,44 @@ const CardDetail = () => {
                   <ReviewsList
                     businessId={id || ''}
                     currentUserId={currentUserId || undefined}
-                    onEditReview={() => setShowReviewForm(true)}
+                    onEditReview={handleEditReview}
                   />
                 </TabsContent>
 
                 <TabsContent value="write" className="mt-6">
-                  {currentUserId ? (
-                    <ReviewForm
-                      businessId={id || ''}
-                      onSubmit={handleSubmitReview}
-                      submitLabel="Post Review"
-                    />
+                  {isAuthenticated ? (
+                    <>
+                      {userExistingReview && !editingReview ? (
+                        <div className="text-center py-8 space-y-4">
+                          <p className="text-muted-foreground">
+                            You've already reviewed this business. You can edit your existing review.
+                          </p>
+                          <Button 
+                            onClick={() => {
+                              setEditingReview(userExistingReview);
+                            }}
+                          >
+                            Edit Your Review
+                          </Button>
+                        </div>
+                      ) : (
+                        <ReviewForm
+                          businessId={id || ''}
+                          initialData={(editingReview || userExistingReview) ? {
+                            rating: (editingReview || userExistingReview).rating,
+                            title: (editingReview || userExistingReview).title,
+                            comment: (editingReview || userExistingReview).comment
+                          } : undefined}
+                          onSubmit={handleSubmitReview}
+                          onCancel={(editingReview || userExistingReview) ? () => {
+                            setEditingReview(null);
+                            setShowReviewForm(false);
+                            setActiveTab("reviews");
+                          } : undefined}
+                          submitLabel={(editingReview || userExistingReview) ? "Update Review" : "Post Review"}
+                        />
+                      )}
+                    </>
                   ) : (
                     <div className="text-center py-8">
                       <p className="text-muted-foreground mb-4">

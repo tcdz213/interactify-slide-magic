@@ -24,9 +24,9 @@ export const SplashScreen = ({ isVisible }: SplashScreenProps) => {
           className="scale-150"
         />
         <div className="flex gap-2">
-          <div className="w-2 h-2 bg-primary rounded-full animate-[bounce_1s_ease-in-out_infinite]" />
-          <div className="w-2 h-2 bg-primary rounded-full animate-[bounce_1s_ease-in-out_0.1s_infinite]" />
-          <div className="w-2 h-2 bg-accent rounded-full animate-[bounce_1s_ease-in-out_0.2s_infinite]" />
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-[bounce_1s_ease-in-out_infinite]" />
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-[bounce_1s_ease-in-out_0.1s_infinite]" />
+          <div className="w-2 h-2 bg-red-500 rounded-full animate-[bounce_1s_ease-in-out_0.2s_infinite]" />
         </div>
       </div>
     </div>

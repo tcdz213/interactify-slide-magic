@@ -14,6 +14,8 @@ const CheckCircle = AiOutlineCheckCircle;
 const X = AiOutlineClose;
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { reportsApi, CreateReportData } from "@/services/reportsApi";
+import { errorHandler } from "@/utils/errorHandler";
 
 interface ReportModalProps {
   cardId: string;
@@ -69,8 +71,15 @@ export const ReportModal = ({ cardId, cardTitle }: ReportModalProps) => {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const reportData: CreateReportData = {
+        card_id: cardId,
+        report_type: reportType as CreateReportData['report_type'],
+        details: details || undefined,
+      };
+
+      await reportsApi.createReport(reportData);
+      
       setIsSubmitting(false);
       setIsSubmitted(true);
       
@@ -86,7 +95,16 @@ export const ReportModal = ({ cardId, cardTitle }: ReportModalProps) => {
         setDetails("");
         setIsOpen(false);
       }, 2000);
-    }, 1500);
+    } catch (error) {
+      setIsSubmitting(false);
+      console.error('Failed to submit report:', error);
+      
+      toast({
+        title: "Failed to submit report",
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    }
   };
 
   const isMobile = useIsMobile();

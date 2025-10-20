@@ -103,6 +103,31 @@ class ReviewsApiService {
   }
 
   /**
+   * Check if user has already reviewed this business
+   */
+  async getUserReviewForBusiness(businessId: string): Promise<Review | null> {
+    try {
+      const response = await fetch(`${API_CONFIG.baseURL}/businesses/${businessId}/reviews/user`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      })
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null // No review found
+        }
+        throw new Error('Failed to check for existing review')
+      }
+
+      const data = await response.json()
+      return data.review || null
+    } catch (error) {
+      errorHandler.logError('reviewsApi.getUserReviewForBusiness', error)
+      return null
+    }
+  }
+
+  /**
    * Create a new review
    */
   async createReview(reviewData: CreateReviewData): Promise<Review> {

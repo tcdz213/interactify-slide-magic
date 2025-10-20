@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "./use-auth";
 
 export const useAppLoading = (minLoadTime: number = 1000) => {
   const [isLoading, setIsLoading] = useState(true);
+  const { isLoading: isAuthLoading } = useAuth();
 
   useEffect(() => {
     const startTime = Date.now();
@@ -10,19 +12,22 @@ export const useAppLoading = (minLoadTime: number = 1000) => {
       const elapsed = Date.now() - startTime;
       const remainingTime = Math.max(0, minLoadTime - elapsed);
 
-      setTimeout(() => {
-        setIsLoading(false);
-      }, remainingTime);
+      // Wait for both page load AND auth check
+      if (!isAuthLoading) {
+        setTimeout(() => {
+          setIsLoading(false);
+        }, remainingTime);
+      }
     };
 
-    // Wait for all critical resources
-    if (document.readyState === 'complete') {
+    // Wait for all critical resources and auth
+    if (document.readyState === 'complete' && !isAuthLoading) {
       handleLoad();
     } else {
       window.addEventListener('load', handleLoad);
       return () => window.removeEventListener('load', handleLoad);
     }
-  }, [minLoadTime]);
+  }, [minLoadTime, isAuthLoading]);
 
   return isLoading;
 };

@@ -6,8 +6,9 @@ import { getDomainIcon } from '@/utils/categoryIcons';
 import { renderToString } from 'react-dom/server';
 import { AnimatedLoading } from '@/components/AnimatedLoading';
 import { Button } from '@/components/ui/button';
-import { Locate, Maximize2, Minimize2 } from 'lucide-react';
+import { Locate, Maximize2, Minimize2, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LazyBusinessCard } from '@/components/LazyBusinessCard';
 
 // Fix default marker icon issue with Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -30,6 +31,7 @@ export const BusinessMapView = ({ businesses, onBusinessClick }: BusinessMapView
   const [isLoading, setIsLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessCardDisplay | null>(null);
 
   useEffect(() => {
     if (!containerRef.current || initializedRef.current) return;
@@ -186,7 +188,7 @@ export const BusinessMapView = ({ businesses, onBusinessClick }: BusinessMapView
       const businessId = e.detail;
       const business = businesses.find(b => b._id === businessId);
       if (business) {
-        onBusinessClick(business);
+        setSelectedBusiness(business);
       }
     };
 
@@ -264,6 +266,27 @@ export const BusinessMapView = ({ businesses, onBusinessClick }: BusinessMapView
         className="w-full h-full"
         style={{ zIndex: 0 }}
       />
+
+      {/* Business Card Overlay */}
+      {selectedBusiness && (
+        <div className="absolute bottom-4 left-4 right-4 z-[1000] max-w-md mx-auto animate-in slide-in-from-bottom-5">
+          <div className="relative bg-background/95 backdrop-blur-sm rounded-lg shadow-2xl border border-border">
+            <Button
+              size="icon"
+              variant="ghost"
+              className="absolute -top-2 -right-2 h-8 w-8 rounded-full bg-background shadow-lg hover:scale-110 transition-transform z-10"
+              onClick={() => setSelectedBusiness(null)}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+            <LazyBusinessCard 
+              card={selectedBusiness} 
+              variant="compact"
+              onClick={() => onBusinessClick(selectedBusiness)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

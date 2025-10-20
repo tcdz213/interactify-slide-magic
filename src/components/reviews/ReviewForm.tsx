@@ -52,39 +52,39 @@ export const ReviewForm = ({
   }
 
   return (
-    <Card className="p-6">
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <Card className="p-4 md:p-6">
+      <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
         <div>
-          <Label>Your Rating *</Label>
-          <div className="mt-2">
+          <Label className="text-base">Your Rating *</Label>
+          <div className="mt-3 flex justify-center md:justify-start">
             <RatingStars
               rating={rating}
               interactive
               onRatingChange={setRating}
-              size={32}
+              size={36}
             />
           </div>
           {rating === 0 && (
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground mt-2 text-center md:text-left">
               Please select a rating
             </p>
           )}
         </div>
 
         <div>
-          <Label htmlFor="title">Review Title *</Label>
+          <Label htmlFor="title" className="text-base">Review Title *</Label>
           <Input
             id="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Sum up your experience"
             required
-            className="mt-2"
+            className="mt-2 h-12 text-base"
           />
         </div>
 
         <div>
-          <Label htmlFor="comment">Your Review *</Label>
+          <Label htmlFor="comment" className="text-base">Your Review *</Label>
           <Textarea
             id="comment"
             value={comment}
@@ -92,22 +92,31 @@ export const ReviewForm = ({
             placeholder="Share your experience with this business..."
             required
             rows={6}
-            className="mt-2"
+            className="mt-2 text-base min-h-[150px]"
           />
+          <p className="text-xs text-muted-foreground mt-1">
+            {comment.length} characters
+          </p>
         </div>
 
-        <div className="flex gap-3">
-          <Button
-            type="submit"
-            disabled={isSubmitting || rating === 0 || !title.trim() || !comment.trim()}
-          >
-            {isSubmitting ? "Submitting..." : submitLabel}
-          </Button>
+        <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onCancel}
+              className="h-12 text-base"
+            >
               Cancel
             </Button>
           )}
+          <Button
+            type="submit"
+            disabled={isSubmitting || rating === 0 || !title.trim() || !comment.trim()}
+            className="h-12 text-base flex-1 sm:flex-none"
+          >
+            {isSubmitting ? "Submitting..." : submitLabel}
+          </Button>
         </div>
       </form>
     </Card>

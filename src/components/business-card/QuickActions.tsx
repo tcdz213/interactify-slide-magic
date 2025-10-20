@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Phone, Share2, MessageCircle } from "@/components/ui/icon";
+import { Phone, Share2 } from "@/components/ui/icon";
+import { MessageSquare } from "lucide-react";
 import { AnimatedHeart } from "@/components/AnimatedHeart";
 import { useLanguage } from "@/hooks/use-language";
 import { useConversationManager } from "@/hooks/use-conversation-manager";
@@ -61,15 +62,19 @@ export const QuickActions = ({
         disabled={isLoading}
         aria-label={`${t('message')} ${cardTitle}`}
       >
-        <MessageCircle className={`${iconSize}`} aria-hidden="true" />
+        <MessageSquare className={`${iconSize}`} aria-hidden="true" />
       </Button>
       
-      <Button variant="outline" size="sm" className={`${buttonHeight} flex-1 gap-1.5`} onClick={e => {
-      e.stopPropagation();
-      onLikeToggle();
-    }} aria-label={isLiked ? t('remove_from_favorites') : t('add_to_favorites')}>
-        <AnimatedHeart isFavorite={isLiked} onClick={() => {}} size={variant === "compact" ? 16 : 20} className="p-0" />
-      </Button>
+      <AnimatedHeart 
+        isFavorite={isLiked} 
+        onClick={(e) => {
+          e.stopPropagation();
+          onLikeToggle();
+        }} 
+        size={variant === "compact" ? 16 : 20} 
+        className={`${buttonHeight} flex-1 border border-input bg-background rounded-lg hover:bg-accent hover:text-accent-foreground transition-colors`}
+        aria-label={isLiked ? t('remove_from_favorites') : t('add_to_favorites')}
+      />
       
       <Button variant="outline" size="sm" className={`${buttonHeight} flex-1 gap-1.5`} onClick={handleShare} aria-label={`${t('share')} ${cardTitle}`}>
         <Share2 className={`${iconSize}`} aria-hidden="true" />

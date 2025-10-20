@@ -15,6 +15,7 @@ import { useDomains } from "@/hooks/use-domains";
 import { useLanguage } from "@/hooks/use-language";
 import { useGeolocation } from "@/hooks/use-geolocation";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useFavorites } from "@/hooks/use-favorites";
 import { applySmartFilters, analyzeSearchQuery } from "@/utils/smartSearch";
 import { SEOHead } from "@/components/SEOHead";
 import { Footer } from "@/components/Footer";
@@ -33,8 +34,8 @@ const Home = () => {
     language
   } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
-  const debouncedSearch = useDebounce(searchQuery, 400); // Debounce search for 400ms
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const debouncedSearch = useDebounce(searchQuery, 400);
+  const { favorites } = useFavorites();
   const [showFavorites, setShowFavorites] = useState(false);
   const [businesses, setBusinesses] = useState<BusinessCardDisplay[]>([]);
   const [loading, setLoading] = useState(false);
@@ -161,23 +162,6 @@ const Home = () => {
     setCurrentPage(1);
     setHasMore(true);
   }, [filters, sortBy, debouncedSearch]);
-
-  // Load favorites from localStorage
-  useEffect(() => {
-    const savedFavorites = localStorage.getItem("business_favorites");
-    if (savedFavorites) {
-      try {
-        setFavorites(JSON.parse(savedFavorites));
-      } catch (error) {
-        console.error("Failed to load favorites:", error);
-      }
-    }
-  }, []);
-
-  // Save favorites to localStorage
-  useEffect(() => {
-    localStorage.setItem("business_favorites", JSON.stringify(favorites));
-  }, [favorites]);
 
   // Memoize filtered and displayed cards
   const displayedCards = useMemo(() => {

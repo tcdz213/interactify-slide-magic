@@ -3,63 +3,50 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import BusinessCard from "@/components/BusinessCard";
-import { BusinessCardSkeleton } from "@/components/BusinessCardSkeleton";
 import { AnimatedHeart } from "@/components/AnimatedHeart";
 import { AnimatedLoading } from "@/components/AnimatedLoading";
 import { AnimatedNoResults } from "@/components/AnimatedNoResults";
-import { businessApi, BusinessCardDisplay } from "@/services/businessApi";
+import { favoritesApi } from "@/services/favoritesApi";
 import { SEOHead } from "@/components/SEOHead";
 import { Footer } from "@/components/Footer";
 import { useLanguage } from "@/hooks/use-language";
+import { useFavorites } from "@/hooks/use-favorites";
 import { getSEOText, SupportedLanguage } from "@/utils/seoTranslations";
 import { useProtectedRoute } from "@/hooks/use-protected-route";
+import { businessApi, BusinessCardDisplay } from "@/services/businessApi";
 
 const Favorites = () => {
   const { language } = useLanguage();
   const { isAuthenticated, isLoading: authLoading } = useProtectedRoute('/profile');
+  const { favorites, isLoading: favoritesLoading } = useFavorites();
   const navigate = useNavigate();
-  const [favorites, setFavorites] = useState<string[]>([]);
   const [businesses, setBusinesses] = useState<BusinessCardDisplay[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Load favorites from localStorage
-  useEffect(() => {
-    const savedFavorites = localStorage.getItem('business_favorites');
-    if (savedFavorites) {
-      try {
-        setFavorites(JSON.parse(savedFavorites));
-      } catch (error) {
-        console.error('Failed to load favorites:', error);
-      }
-    }
-    setLoading(false);
-  }, []);
-
-  // Load favorite businesses
+  // Load favorite businesses from API
   useEffect(() => {
     const loadFavoriteBusinesses = async () => {
-      if (favorites.length === 0) {
-        setBusinesses([]);
-        return;
-      }
+      if (authLoading || favoritesLoading) return;
 
       setLoading(true);
       try {
-        // Fetch all businesses and filter by favorites
-        const featuredData = await businessApi.getFeaturedBusinesses();
-        const favoriteBusinesses = featuredData.featured.filter(b => 
-          favorites.includes(b._id)
-        );
-        setBusinesses(favoriteBusinesses);
+        if (isAuthenticated && favorites.length > 0) {
+          // Use the favorites API to get full business details
+          const response = await favoritesApi.getFavoriteBusinesses(1, 100);
+          setBusinesses(response.businesses);
+        } else {
+          setBusinesses([]);
+        }
       } catch (error) {
         console.error('Failed to load favorite businesses:', error);
+        setBusinesses([]);
       } finally {
         setLoading(false);
       }
     };
 
     loadFavoriteBusinesses();
-  }, [favorites]);
+  }, [favorites, isAuthenticated, authLoading, favoritesLoading]);
 
   const handleCardClick = async (card: BusinessCardDisplay) => {
     await businessApi.recordView(card._id, 'favorites');

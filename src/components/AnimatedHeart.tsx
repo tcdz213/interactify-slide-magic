@@ -6,7 +6,7 @@ import heartAnimation from "@/assets/heart-animation.json";
 
 interface AnimatedHeartProps {
   isFavorite: boolean;
-  onClick?: () => void;
+  onClick?: (e?: React.MouseEvent) => void;
   className?: string;
   size?: number;
   "aria-label"?: string;
@@ -26,7 +26,7 @@ export const AnimatedHeart = ({
     
     if (!isAnimating) {
       setIsAnimating(true);
-      onClick?.();
+      onClick?.(e);
       
       setTimeout(() => {
         setIsAnimating(false);

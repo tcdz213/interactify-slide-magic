@@ -13,6 +13,8 @@ const CheckCircle = AiOutlineCheckCircle;
 const Star = AiOutlineStar;
 import { useToast } from "@/hooks/use-toast";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { feedbackApi, CreateFeedbackData } from "@/services/feedbackApi";
+import { errorHandler } from "@/utils/errorHandler";
 
 interface FeedbackModalProps {
   cardId: string;
@@ -48,10 +50,28 @@ export const FeedbackModal = ({ cardId, cardTitle }: FeedbackModalProps) => {
       return;
     }
 
+    if (!subject.trim()) {
+      toast({
+        title: "Please provide a subject",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const feedbackData: CreateFeedbackData = {
+        card_id: cardId,
+        feedback_type: feedbackType as CreateFeedbackData['feedback_type'],
+        subject: subject.trim(),
+        message: message.trim(),
+        email: email.trim() || undefined,
+        rating: rating > 0 ? rating : undefined,
+      };
+
+      await feedbackApi.createFeedback(feedbackData);
+      
       setIsSubmitting(false);
       setIsSubmitted(true);
       
@@ -70,7 +90,16 @@ export const FeedbackModal = ({ cardId, cardTitle }: FeedbackModalProps) => {
         setRating(0);
         setIsOpen(false);
       }, 2000);
-    }, 1500);
+    } catch (error) {
+      setIsSubmitting(false);
+      console.error('Failed to submit feedback:', error);
+      
+      toast({
+        title: "Failed to submit feedback",
+        description: "Please try again later",
+        variant: "destructive"
+      });
+    }
   };
 
   const StarRating = () => (
@@ -184,7 +213,9 @@ export const FeedbackModal = ({ cardId, cardTitle }: FeedbackModalProps) => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="subject" className="text-base font-medium mb-2 block">Subject</Label>
+                    <Label htmlFor="subject" className="text-base font-medium mb-2 block">
+                      Subject <span className="text-destructive">*</span>
+                    </Label>
                     <Input
                       id="subject"
                       placeholder="Brief summary of your feedback"
@@ -192,6 +223,7 @@ export const FeedbackModal = ({ cardId, cardTitle }: FeedbackModalProps) => {
                       onChange={(e) => setSubject(e.target.value)}
                       className="h-12 text-base"
                       maxLength={100}
+                      required
                     />
                   </div>
                 </div>
@@ -233,7 +265,7 @@ export const FeedbackModal = ({ cardId, cardTitle }: FeedbackModalProps) => {
                   type="submit"
                   onClick={handleSubmit}
                   className="flex-1 h-12 text-base font-semibold"
-                  disabled={isSubmitting || !message.trim()}
+                  disabled={isSubmitting || !message.trim() || !subject.trim()}
                 >
                   {isSubmitting ? (
                     <>
