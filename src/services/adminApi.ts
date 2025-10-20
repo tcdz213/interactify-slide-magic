@@ -38,10 +38,10 @@ export interface AdminCard {
 export interface AdminReport {
   id: string;
   card_id: string;
-  card_title: string;
+  card_title?: string;
   user_id: string;
-  user_name: string;
-  user_email: string;
+  user_name?: string;
+  user_email?: string;
   report_type: 'inappropriate' | 'incorrect' | 'spam' | 'copyright' | 'other';
   details?: string;
   status: 'pending' | 'resolved' | 'dismissed';

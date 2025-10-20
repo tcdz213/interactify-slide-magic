@@ -202,8 +202,8 @@ export const ReportsTab = () => {
                   ) : (
                     reports.map((report) => (
                       <tr key={report.id} className="border-b hover:bg-muted/50 transition-colors">
-                        <td className="px-4 py-3 font-medium">{report.card_title}</td>
-                        <td className="px-4 py-3 text-sm text-muted-foreground">{report.user_name}</td>
+                        <td className="px-4 py-3 font-medium">{report.card_title || report.card_id}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground">{report.user_name || report.user_id}</td>
                         <td className="px-4 py-3">{getReportTypeBadge(report.report_type)}</td>
                         <td className="px-4 py-3">{getStatusBadge(report.status)}</td>
                         <td className="px-4 py-3 text-sm text-muted-foreground">
@@ -269,12 +269,14 @@ export const ReportsTab = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium mb-1">Card</p>
-                  <p className="text-sm text-muted-foreground">{selectedReport.card_title}</p>
+                  <p className="text-sm text-muted-foreground">{selectedReport.card_title || selectedReport.card_id}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium mb-1">Reporter</p>
-                  <p className="text-sm text-muted-foreground">{selectedReport.user_name}</p>
-                  <p className="text-xs text-muted-foreground">{selectedReport.user_email}</p>
+                  <p className="text-sm text-muted-foreground">{selectedReport.user_name || selectedReport.user_id}</p>
+                  {selectedReport.user_email && (
+                    <p className="text-xs text-muted-foreground">{selectedReport.user_email}</p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm font-medium mb-1">Report Type</p>
