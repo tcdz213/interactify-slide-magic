@@ -22,6 +22,7 @@ import { PackagesTab } from "@/components/admin/PackagesTab";
 import { DomainsTab } from "@/components/admin/DomainsTab";
 import { ReportsTab } from "@/components/admin/ReportsTab";
 import { FeedbackTab } from "@/components/admin/FeedbackTab";
+import { ReviewsTab } from "@/components/admin/ReviewsTab";
 
 const AdminDashboard = () => {
   const { isAdmin, loading: adminLoading } = useAdmin();
@@ -69,7 +70,10 @@ const AdminDashboard = () => {
         adminApi.getCards(),
         adminApi.getReports(),
         adminApi.getStats(),
-        adminApi.getAllReviews().catch(() => []),
+        adminApi.getAllReviews().catch(() => ({ 
+          reviews: [], 
+          pagination: { current_page: 1, total_pages: 1, total_reviews: 0, per_page: 50 }
+        })),
         adminApi.getAllFeedback().catch(() => ({ 
           feedback: [], 
           pagination: { current_page: 1, total_pages: 1, total_feedback: 0, per_page: 50 },
@@ -81,7 +85,7 @@ const AdminDashboard = () => {
       setUsers(usersData);
       setBusinessCards(cardsData);
       setReports(reportsData.reports);
-      setReviews(reviewsData);
+      setReviews(reviewsData.reviews);
       setFeedback(feedbackData.feedback);
       setSubscriptions(subscriptionsData);
       setStats(statsData);
@@ -208,14 +212,7 @@ const AdminDashboard = () => {
               </div>
             )}
             {activeTab === "domains" && <DomainsTab />}
-            {activeTab === "reviews" && (
-              <div className="flex items-center justify-center h-96">
-                <div className="text-center text-muted-foreground">
-                  <p className="text-lg font-medium mb-2">Reviews Management</p>
-                  <p className="text-sm">Coming soon...</p>
-                </div>
-              </div>
-            )}
+            {activeTab === "reviews" && <ReviewsTab />}
             {activeTab === "feedback" && <FeedbackTab />}
             {activeTab === "subscriptions" && (
               <div className="flex items-center justify-center h-96">

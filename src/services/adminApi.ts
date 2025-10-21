@@ -447,9 +447,30 @@ export const adminApi = {
   },
 
   // Reviews Management
-  async getAllReviews(): Promise<any[]> {
+  async getAllReviews(
+    page: number = 1, 
+    limit: number = 50,
+    status?: 'all' | 'flagged' | 'verified'
+  ): Promise<{
+    reviews: any[];
+    pagination: {
+      current_page: number;
+      total_pages: number;
+      total_reviews: number;
+      per_page: number;
+    };
+  }> {
     try {
-      const response = await fetch(`${API_CONFIG.baseURL}/admin/reviews`, {
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      
+      if (status && status !== 'all') {
+        params.append('status', status);
+      }
+
+      const response = await fetch(`${API_CONFIG.baseURL}/admin/reviews?${params}`, {
         method: 'GET',
         headers: getAuthHeaders()
       })
@@ -457,7 +478,15 @@ export const adminApi = {
       if (!response.ok) throw new Error('Failed to fetch reviews')
 
       const data = await response.json()
-      return data.reviews || []
+      return {
+        reviews: data.reviews || [],
+        pagination: data.pagination || {
+          current_page: 1,
+          total_pages: 1,
+          total_reviews: 0,
+          per_page: limit,
+        },
+      };
     } catch (error) {
       errorHandler.showApiError('getAllReviews', "Failed to load reviews", error)
       throw error
