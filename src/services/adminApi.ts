@@ -481,9 +481,38 @@ export const adminApi = {
   },
 
   // Feedback Management
-  async getAllFeedback(): Promise<any[]> {
+  async getAllFeedback(params?: {
+    page?: number;
+    limit?: number;
+    status?: 'all' | 'pending' | 'reviewed' | 'resolved';
+    feedback_type?: 'all' | 'general' | 'bug' | 'feature' | 'improvement' | 'question';
+    rating?: number;
+  }): Promise<{
+    feedback: any[];
+    pagination: {
+      current_page: number;
+      total_pages: number;
+      total_feedback: number;
+      per_page: number;
+    };
+    stats: {
+      pending: number;
+      reviewed: number;
+      resolved: number;
+      average_rating: number;
+    };
+  }> {
     try {
-      const response = await fetch(`${API_CONFIG.baseURL}/admin/feedback`, {
+      const queryParams = new URLSearchParams();
+      if (params?.page) queryParams.append('page', params.page.toString());
+      if (params?.limit) queryParams.append('limit', params.limit.toString());
+      if (params?.status && params.status !== 'all') queryParams.append('status', params.status);
+      if (params?.feedback_type && params.feedback_type !== 'all') queryParams.append('feedback_type', params.feedback_type);
+      if (params?.rating) queryParams.append('rating', params.rating.toString());
+
+      const url = `${API_CONFIG.baseURL}/admin/feedback${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: getAuthHeaders()
       })
@@ -491,24 +520,47 @@ export const adminApi = {
       if (!response.ok) throw new Error('Failed to fetch feedback')
 
       const data = await response.json()
-      return data.feedback || []
+      return {
+        feedback: data.feedback || [],
+        pagination: data.pagination || {
+          current_page: 1,
+          total_pages: 1,
+          total_feedback: 0,
+          per_page: 50
+        },
+        stats: data.stats || {
+          pending: 0,
+          reviewed: 0,
+          resolved: 0,
+          average_rating: 0
+        }
+      }
     } catch (error) {
       errorHandler.showApiError('getAllFeedback', "Failed to load feedback", error)
       throw error
     }
   },
 
-  async updateFeedbackStatus(feedbackId: string, status: 'pending' | 'reviewed' | 'resolved'): Promise<void> {
+  async updateFeedbackStatus(
+    feedbackId: string, 
+    status: 'pending' | 'reviewed' | 'resolved',
+    adminNotes?: string
+  ): Promise<any> {
     try {
       const response = await fetch(`${API_CONFIG.baseURL}/admin/feedback/${feedbackId}/status`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ 
+          status,
+          admin_notes: adminNotes 
+        })
       })
 
       if (!response.ok) throw new Error('Failed to update feedback status')
 
+      const data = await response.json()
       errorHandler.showSuccess("Feedback status updated successfully", "Success")
+      return data.feedback
     } catch (error) {
       errorHandler.showApiError('updateFeedbackStatus', "Failed to update feedback status", error)
       throw error

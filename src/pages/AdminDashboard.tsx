@@ -21,6 +21,7 @@ import { CardsTab } from "@/components/admin/CardsTab";
 import { PackagesTab } from "@/components/admin/PackagesTab";
 import { DomainsTab } from "@/components/admin/DomainsTab";
 import { ReportsTab } from "@/components/admin/ReportsTab";
+import { FeedbackTab } from "@/components/admin/FeedbackTab";
 
 const AdminDashboard = () => {
   const { isAdmin, loading: adminLoading } = useAdmin();
@@ -69,7 +70,11 @@ const AdminDashboard = () => {
         adminApi.getReports(),
         adminApi.getStats(),
         adminApi.getAllReviews().catch(() => []),
-        adminApi.getAllFeedback().catch(() => []),
+        adminApi.getAllFeedback().catch(() => ({ 
+          feedback: [], 
+          pagination: { current_page: 1, total_pages: 1, total_feedback: 0, per_page: 50 },
+          stats: { pending: 0, reviewed: 0, resolved: 0, average_rating: 0 }
+        })),
         adminApi.getAllSubscriptions().catch(() => []),
       ]);
 
@@ -77,7 +82,7 @@ const AdminDashboard = () => {
       setBusinessCards(cardsData);
       setReports(reportsData.reports);
       setReviews(reviewsData);
-      setFeedback(feedbackData);
+      setFeedback(feedbackData.feedback);
       setSubscriptions(subscriptionsData);
       setStats(statsData);
     } catch (error) {
@@ -211,16 +216,7 @@ const AdminDashboard = () => {
                 </div>
               </div>
             )}
-            {activeTab === "feedback" && (
-              <div className="flex items-center justify-center h-96">
-                <div className="text-center text-muted-foreground">
-                  <p className="text-lg font-medium mb-2">
-                    Feedback Management
-                  </p>
-                  <p className="text-sm">Coming soon...</p>
-                </div>
-              </div>
-            )}
+            {activeTab === "feedback" && <FeedbackTab />}
             {activeTab === "subscriptions" && (
               <div className="flex items-center justify-center h-96">
                 <div className="text-center text-muted-foreground">
