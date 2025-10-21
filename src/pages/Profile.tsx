@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { FeedbackModal } from "@/components/FeedbackModal";
 import { Icon } from "@/components/ui/icon";
 import { ProfileDomainSelection } from "@/components/ProfileDomainSelection";
 import { SEOHead } from "@/components/SEOHead";
@@ -361,7 +360,6 @@ export default function Profile() {
           <div className="flex items-center gap-2">
             <LanguageToggle />
             <ThemeToggle />
-            <FeedbackModal cardId="profile" cardTitle="Profile Page" />
           </div>
         </div>
       </header>
