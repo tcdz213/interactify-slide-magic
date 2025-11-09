@@ -1,6 +1,6 @@
 import * as React from "react";
 import { OTPInput, OTPInputContext } from "input-otp";
-import { Circle as Dot } from "@/components/ui/icon";
+import { Dot } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
