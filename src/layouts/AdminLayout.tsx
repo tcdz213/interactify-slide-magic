@@ -10,7 +10,8 @@ import {
   Menu,
   X,
   LogOut,
-  Shield
+  Shield,
+  Code
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,7 @@ const menuItems = [
   { icon: Package, label: "المنتجات", path: "/admin/products" },
   { icon: ShoppingCart, label: "الطلبات", path: "/admin/orders" },
   { icon: CreditCard, label: "الاشتراكات", path: "/admin/subscriptions" },
+  { icon: Code, label: "وثائق API", path: "/api-docs" },
   { icon: Settings, label: "الإعدادات", path: "/admin/settings" },
 ];
 

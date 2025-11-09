@@ -9,7 +9,8 @@ import {
   Settings,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Code
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,7 @@ const menuItems = [
   { icon: ShoppingCart, label: "الطلبات", path: "/dashboard/orders" },
   { icon: BarChart3, label: "التحليلات", path: "/dashboard/analytics" },
   { icon: CreditCard, label: "الاشتراك", path: "/dashboard/subscription" },
+  { icon: Code, label: "وثائق API", path: "/api-docs" },
   { icon: Settings, label: "الإعدادات", path: "/dashboard/settings" },
 ];
 
