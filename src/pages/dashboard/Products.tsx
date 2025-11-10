@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SEO } from "@/components/SEO";
 import { Plus, Search, Edit, Trash2, Package } from "lucide-react";
 import { EmptyState } from "@/components/EmptyState";
 import { Card } from "@/components/ui/card";
@@ -15,6 +16,11 @@ const Products = () => {
 
   return (
     <div dir="rtl">
+      <SEO
+        title="المنتجات"
+        description="إدارة منتجاتك - إضافة، تعديل، وحذف المنتجات من متجرك الإلكتروني."
+        noindex={true}
+      />
       <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold mb-2">المنتجات</h1>

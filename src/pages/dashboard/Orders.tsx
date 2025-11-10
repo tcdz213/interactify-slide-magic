@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { SEO } from "@/components/SEO";
 import { ShoppingCart, Eye, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
@@ -48,6 +49,11 @@ const Orders = () => {
 
   return (
     <div dir="rtl">
+      <SEO
+        title="الطلبات"
+        description="إدارة طلبات العملاء - تتبع حالة الطلبات، معالجة الطلبات الجديدة، وإدارة الشحن."
+        noindex={true}
+      />
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">الطلبات</h1>
         <p className="text-muted-foreground">إدارة طلبات العملاء</p>

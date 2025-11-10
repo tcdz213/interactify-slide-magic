@@ -1,5 +1,6 @@
 import { DollarSign, Package, ShoppingCart, TrendingUp } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
+import { SEO } from "@/components/SEO";
 
 const Dashboard = () => {
   const stats = [
@@ -34,6 +35,11 @@ const Dashboard = () => {
 
   return (
     <div dir="rtl">
+      <SEO
+        title="لوحة التحكم"
+        description="إدارة متجرك الإلكتروني - تتبع المبيعات، الطلبات، والمنتجات من لوحة التحكم الخاصة بك."
+        noindex={true}
+      />
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">لوحة التحكم</h1>
         <p className="text-muted-foreground">مرحباً بك في متجرك</p>

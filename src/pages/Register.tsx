@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SEO } from "@/components/SEO";
 import { Store } from "lucide-react";
 import { toast } from "sonner";
 
@@ -53,6 +54,11 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero p-4" dir="rtl">
+      <SEO
+        title="إنشاء حساب جديد"
+        description="انضم إلى منصة التجارة الإلكترونية وابدأ رحلتك في البيع أونلاين. إنشاء حساب مجاني وابدأ متجرك الإلكتروني اليوم."
+        noindex={true}
+      />
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { SEO, generateOrganizationSchema } from "@/components/SEO";
 import { Store, Package, BarChart3, Users, TrendingUp, Shield, Monitor, ShoppingCart, Check, Sparkles, ArrowRight, Zap, Star } from "lucide-react";
 import dashboardPreview from "@/assets/dashboard-preview.png";
 import productsPreview from "@/assets/products-preview.png";
@@ -44,6 +45,13 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      <SEO
+        title="منصة التجارة الإلكترونية الأولى في الجزائر"
+        description="ابدأ متجرك الإلكتروني اليوم مع أفضل منصة تجارة إلكترونية في الجزائر. إدارة المنتجات، الطلبات، والمبيعات بكل سهولة مع أدوات احترافية وواجهة سهلة الاستخدام."
+        keywords="تجارة إلكترونية، متجر إلكتروني، منصة تجارة، إدارة المنتجات، إدارة الطلبات، التجارة الرقمية، الجزائر"
+        type="website"
+        structuredData={generateOrganizationSchema()}
+      />
       {/* Header */}
       <header className="border-b sticky top-0 bg-background/80 backdrop-blur-md z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">

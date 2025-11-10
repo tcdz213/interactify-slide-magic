@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SEO } from "@/components/SEO";
 import { Code, Lock, Server, Users, Package, ShoppingCart, MessageSquare, Star, Shield } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -334,6 +335,11 @@ const ApiDocs = () => {
 
   return (
     <div className="min-h-screen bg-background" dir="rtl">
+      <SEO
+        title="وثائق API"
+        description="وثائق API الشاملة لمنصة التجارة الإلكترونية - تعرف على كيفية التكامل مع API الخاص بنا لإدارة المنتجات، الطلبات، والمستخدمين."
+        keywords="API documentation, REST API, وثائق API, تكامل API"
+      />
       {/* Header */}
       <header className="border-b bg-card sticky top-0 z-50 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-6">
