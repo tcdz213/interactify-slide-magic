@@ -1,38 +1,25 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SEO } from "@/components/SEO";
 import { ShoppingCart, Eye, Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/EmptyState";
+import { useQuery } from "@tanstack/react-query";
+import { ordersService } from "@/services/orders";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useNavigate } from "react-router-dom";
 
 const Orders = () => {
-  const [orders] = useState([
-    { 
-      id: 1001, 
-      customer: "أحمد محمد", 
-      total: 4500, 
-      status: "قيد المعالجة", 
-      date: "2024-01-15",
-      items: 3 
-    },
-    { 
-      id: 1002, 
-      customer: "فاطمة علي", 
-      total: 2800, 
-      status: "تم التوصيل", 
-      date: "2024-01-14",
-      items: 2 
-    },
-    { 
-      id: 1003, 
-      customer: "خالد حسن", 
-      total: 6200, 
-      status: "قيد الشحن", 
-      date: "2024-01-13",
-      items: 5 
-    },
-  ]);
+  const navigate = useNavigate();
+
+  const { data: orders = [], isLoading } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => ordersService.getAll(),
+  });
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -76,23 +63,27 @@ const Orders = () => {
                   </div>
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold text-lg">طلب #{order.id}</h3>
+                      <h3 className="font-bold text-lg">طلب #{order.orderNumber}</h3>
                       <Badge className={getStatusColor(order.status)}>
                         {order.status}
                       </Badge>
                     </div>
-                    <p className="text-muted-foreground mb-1">{order.customer}</p>
+                    <p className="text-muted-foreground mb-1">{order.customerName}</p>
                     <p className="text-sm text-muted-foreground">
-                      {order.items} منتجات · {order.date}
+                      {order.items.length} منتجات · {new Date(order.createdAt).toLocaleDateString('ar-DZ')}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
                   <div className="text-left">
-                    <p className="text-2xl font-bold text-primary">{order.total} د.ج</p>
+                    <p className="text-2xl font-bold text-primary">{order.totalAmount} {order.currency}</p>
                   </div>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/dashboard/orders/${order.id}`)}
+                  >
                     <Eye className="w-4 h-4 ml-2" />
                     عرض
                   </Button>

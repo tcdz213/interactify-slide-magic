@@ -8,50 +8,34 @@ import dashboardPreview from "@/assets/dashboard-preview.png";
 import productsPreview from "@/assets/products-preview.png";
 import ordersPreview from "@/assets/orders-preview.png";
 import analyticsPreview from "@/assets/analytics-preview.png";
-
 const Landing = () => {
-  const features = [
-    {
-      icon: Store,
-      title: "متجر متعدد البائعين",
-      description: "منصة شاملة تمكن البائعين من إدارة منتجاتهم وطلباتهم بسهولة"
-    },
-    {
-      icon: Package,
-      title: "إدارة المنتجات",
-      description: "أضف وعدل منتجاتك بكل سهولة مع دعم الصور والأوصاف التفصيلية"
-    },
-    {
-      icon: BarChart3,
-      title: "تحليلات متقدمة",
-      description: "تتبع مبيعاتك وأدائك من خلال لوحة تحكم تحليلية متطورة"
-    },
-    {
-      icon: Users,
-      title: "إدارة العملاء",
-      description: "نظام شامل لإدارة العملاء والطلبات بكفاءة عالية"
-    },
-    {
-      icon: TrendingUp,
-      title: "نمو الأعمال",
-      description: "أدوات تساعدك على تطوير عملك وزيادة مبيعاتك"
-    },
-    {
-      icon: Shield,
-      title: "أمان وحماية",
-      description: "نظام آمن لحماية بياناتك ومعلومات عملائك"
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-background" dir="rtl">
-      <SEO
-        title="منصة التجارة الإلكترونية الأولى في الجزائر"
-        description="ابدأ متجرك الإلكتروني اليوم مع أفضل منصة تجارة إلكترونية في الجزائر. إدارة المنتجات، الطلبات، والمبيعات بكل سهولة مع أدوات احترافية وواجهة سهلة الاستخدام."
-        keywords="تجارة إلكترونية، متجر إلكتروني، منصة تجارة، إدارة المنتجات، إدارة الطلبات، التجارة الرقمية، الجزائر"
-        type="website"
-        structuredData={generateOrganizationSchema()}
-      />
+  const features = [{
+    icon: Store,
+    title: "متجر متعدد البائعين",
+    description: "منصة شاملة تمكن البائعين من إدارة منتجاتهم وطلباتهم بسهولة"
+  }, {
+    icon: Package,
+    title: "إدارة المنتجات",
+    description: "أضف وعدل منتجاتك بكل سهولة مع دعم الصور والأوصاف التفصيلية"
+  }, {
+    icon: BarChart3,
+    title: "تحليلات متقدمة",
+    description: "تتبع مبيعاتك وأدائك من خلال لوحة تحكم تحليلية متطورة"
+  }, {
+    icon: Users,
+    title: "إدارة العملاء",
+    description: "نظام شامل لإدارة العملاء والطلبات بكفاءة عالية"
+  }, {
+    icon: TrendingUp,
+    title: "نمو الأعمال",
+    description: "أدوات تساعدك على تطوير عملك وزيادة مبيعاتك"
+  }, {
+    icon: Shield,
+    title: "أمان وحماية",
+    description: "نظام آمن لحماية بياناتك ومعلومات عملائك"
+  }];
+  return <div className="min-h-screen bg-background" dir="rtl">
+      <SEO title="منصة التجارة الإلكترونية الأولى في الجزائر" description="ابدأ متجرك الإلكتروني اليوم مع أفضل منصة تجارة إلكترونية في الجزائر. إدارة المنتجات، الطلبات، والمبيعات بكل سهولة مع أدوات احترافية وواجهة سهلة الاستخدام." keywords="تجارة إلكترونية، متجر إلكتروني، منصة تجارة، إدارة المنتجات، إدارة الطلبات، التجارة الرقمية، الجزائر" type="website" structuredData={generateOrganizationSchema()} />
       {/* Header */}
       <header className="border-b sticky top-0 bg-background/80 backdrop-blur-md z-50 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -80,7 +64,9 @@ const Landing = () => {
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-1/2 -right-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute -bottom-1/2 -left-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+          <div className="absolute -bottom-1/2 -left-1/4 w-96 h-96 bg-accent/20 rounded-full blur-3xl animate-pulse" style={{
+          animationDelay: '1s'
+        }} />
         </div>
         
         <div className="container mx-auto px-4 text-center relative z-10">
@@ -160,39 +146,7 @@ const Landing = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-24 bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
-              <Zap className="w-4 h-4 ml-2" />
-              ميزات قوية
-            </Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">ميزات متجري</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              كل ما تحتاجه لإدارة متجرك بنجاح في مكان واحد
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <Card
-                key={index}
-                className="p-6 hover:shadow-xl transition-all hover:-translate-y-2 border-2 hover:border-primary/20 bg-card group"
-              >
-                <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center mb-5 shadow-primary group-hover:scale-110 transition-transform">
-                  <feature.icon className="w-7 h-7 text-primary-foreground" />
-                </div>
-                <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
-                  {feature.title}
-                </h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {feature.description}
-                </p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+      
 
       {/* Platform Features with Screenshots */}
       <section className="py-24 bg-background">
@@ -215,11 +169,7 @@ const Landing = () => {
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity" />
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-border">
-                    <img 
-                      src={dashboardPreview} 
-                      alt="لوحة التحكم" 
-                      className="w-full h-auto group-hover:scale-105 transition-transform duration-700"
-                    />
+                    <img src={dashboardPreview} alt="لوحة التحكم" className="w-full h-auto group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
               </div>
@@ -230,7 +180,7 @@ const Landing = () => {
                 </div>
                 <h3 className="text-3xl md:text-4xl font-bold leading-tight">
                   لوحة تحكم شاملة
-                  <br />
+                  
                   <span className="text-muted-foreground text-2xl">لإدارة ذكية</span>
                 </h3>
                 <p className="text-lg text-muted-foreground leading-relaxed">
@@ -317,11 +267,7 @@ const Landing = () => {
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-accent rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity" />
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-border">
-                    <img 
-                      src={productsPreview} 
-                      alt="إدارة المنتجات" 
-                      className="w-full h-auto group-hover:scale-105 transition-transform duration-700"
-                    />
+                    <img src={productsPreview} alt="إدارة المنتجات" className="w-full h-auto group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
               </div>
@@ -333,11 +279,7 @@ const Landing = () => {
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-primary rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity" />
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-border">
-                    <img 
-                      src={ordersPreview} 
-                      alt="إدارة الطلبات" 
-                      className="w-full h-auto group-hover:scale-105 transition-transform duration-700"
-                    />
+                    <img src={ordersPreview} alt="إدارة الطلبات" className="w-full h-auto group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
               </div>
@@ -435,11 +377,7 @@ const Landing = () => {
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-accent rounded-2xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity" />
                   <div className="relative rounded-2xl overflow-hidden shadow-2xl border-2 border-border">
-                    <img 
-                      src={analyticsPreview} 
-                      alt="التحليلات" 
-                      className="w-full h-auto group-hover:scale-105 transition-transform duration-700"
-                    />
+                    <img src={analyticsPreview} alt="التحليلات" className="w-full h-auto group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 </div>
               </div>
@@ -464,31 +402,24 @@ const Landing = () => {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {[
-              {
-                name: "أحمد محمد",
-                role: "صاحب متجر إلكترونيات",
-                content: "منصة رائعة ساعدتني على تنظيم متجري وزيادة مبيعاتي بنسبة 200% في أول 3 أشهر. أنصح بها بشدة!",
-                rating: 5
-              },
-              {
-                name: "فاطمة الزهراء",
-                role: "تاجرة أزياء",
-                content: "واجهة سهلة الاستخدام ودعم فني ممتاز. تمكنت من إدارة أكثر من 500 منتج بكل سهولة.",
-                rating: 5
-              },
-              {
-                name: "كريم بن علي",
-                role: "صاحب متجر مستحضرات",
-                content: "التحليلات والتقارير ساعدتني على فهم عملائي بشكل أفضل واتخاذ قرارات صحيحة لتنمية عملي.",
-                rating: 5
-              }
-            ].map((testimonial, index) => (
-              <Card key={index} className="p-6 hover:shadow-xl transition-all border-2">
+            {[{
+            name: "أحمد محمد",
+            role: "صاحب متجر إلكترونيات",
+            content: "منصة رائعة ساعدتني على تنظيم متجري وزيادة مبيعاتي بنسبة 200% في أول 3 أشهر. أنصح بها بشدة!",
+            rating: 5
+          }, {
+            name: "فاطمة الزهراء",
+            role: "تاجرة أزياء",
+            content: "واجهة سهلة الاستخدام ودعم فني ممتاز. تمكنت من إدارة أكثر من 500 منتج بكل سهولة.",
+            rating: 5
+          }, {
+            name: "كريم بن علي",
+            role: "صاحب متجر مستحضرات",
+            content: "التحليلات والتقارير ساعدتني على فهم عملائي بشكل أفضل واتخاذ قرارات صحيحة لتنمية عملي.",
+            rating: 5
+          }].map((testimonial, index) => <Card key={index} className="p-6 hover:shadow-xl transition-all border-2">
                 <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-accent text-accent" />
-                  ))}
+                  {[...Array(testimonial.rating)].map((_, i) => <Star key={i} className="w-5 h-5 fill-accent text-accent" />)}
                 </div>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
                   "{testimonial.content}"
@@ -502,8 +433,7 @@ const Landing = () => {
                     <div className="text-sm text-muted-foreground">{testimonial.role}</div>
                   </div>
                 </div>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -722,8 +652,6 @@ const Landing = () => {
           <p>© 2024 متجري. جميع الحقوق محفوظة.</p>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Landing;

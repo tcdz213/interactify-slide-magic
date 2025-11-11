@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SEO } from "@/components/SEO";
-import { Store } from "lucide-react";
-import { toast } from "sonner";
+import { Store, Mail } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const registerSchema = z.object({
   name: z.string().min(2, "الاسم يجب أن يكون حرفين على الأقل"),
@@ -26,6 +26,14 @@ type RegisterForm = z.infer<typeof registerSchema>;
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { register: registerUser, loginWithGoogle, isAuthenticated, user } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
@@ -40,13 +48,21 @@ const Register = () => {
   const onSubmit = async (data: RegisterForm) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      toast.success("تم إنشاء الحساب بنجاح");
-      navigate("/login");
+      await registerUser(data.email, data.password, data.name);
+      navigate("/dashboard");
     } catch (error) {
-      toast.error("خطأ في إنشاء الحساب");
+      // Error already handled in AuthContext
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setIsLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      // Error already handled in AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -129,6 +145,27 @@ const Register = () => {
               </Button>
             </form>
           </Form>
+          
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">أو</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleSignup}
+            disabled={isLoading}
+          >
+            <Mail className="w-4 h-4 ml-2" />
+            التسجيل بواسطة Google
+          </Button>
+
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               لديك حساب بالفعل؟{" "}

@@ -1,35 +1,69 @@
 import { DollarSign, Package, ShoppingCart, TrendingUp } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
 import { SEO } from "@/components/SEO";
+import { useQuery } from "@tanstack/react-query";
+import { ordersService } from "@/services/orders";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
+  const { toast } = useToast();
+  
+  const { data: orderStats, isLoading, error: statsError } = useQuery({
+    queryKey: ['orderStats'],
+    queryFn: () => ordersService.getStats(),
+  });
+
+  const { data: recentOrders, error: ordersError } = useQuery({
+    queryKey: ['recentOrders'],
+    queryFn: () => ordersService.getAll(),
+    select: (orders) => orders.slice(0, 3),
+  });
+
+  if (statsError) {
+    toast({
+      title: "خطأ",
+      description: (statsError as Error).message,
+      variant: "destructive",
+    });
+  }
+
+  if (ordersError) {
+    toast({
+      title: "خطأ",
+      description: (ordersError as Error).message,
+      variant: "destructive",
+    });
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   const stats = [
     {
-      title: "إجمالي المبيعات",
-      value: "45,231 د.ج",
+      title: "إجمالي الإيرادات",
+      value: `${orderStats?.revenue || 0} د.ج`,
       icon: DollarSign,
-      trend: { value: 12.5, isPositive: true },
-      description: "مقارنة بالشهر الماضي"
+      description: "إجمالي المبيعات"
     },
     {
-      title: "الطلبات",
-      value: "124",
+      title: "الطلبات الكلية",
+      value: String(orderStats?.total || 0),
       icon: ShoppingCart,
-      trend: { value: 8.2, isPositive: true },
-      description: "طلب جديد هذا الشهر"
+      description: "جميع الطلبات"
     },
     {
-      title: "المنتجات",
-      value: "48",
+      title: "قيد المعالجة",
+      value: String(orderStats?.processing || 0),
       icon: Package,
-      description: "منتج نشط"
+      description: "طلبات قيد المعالجة"
     },
     {
-      title: "معدل النمو",
-      value: "23.5%",
+      title: "تم التوصيل",
+      value: String(orderStats?.delivered || 0),
       icon: TrendingUp,
-      trend: { value: 4.3, isPositive: true },
-      description: "نمو شهري"
+      description: "طلبات مكتملة"
     },
   ];
 
@@ -55,20 +89,24 @@ const Dashboard = () => {
         <div className="border rounded-lg p-6 bg-card">
           <h2 className="text-xl font-bold mb-4">آخر الطلبات</h2>
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div>
-                  <p className="font-medium">طلب #{1000 + i}</p>
-                  <p className="text-sm text-muted-foreground">منذ {i} ساعات</p>
+            {recentOrders && recentOrders.length > 0 ? (
+              recentOrders.map((order) => (
+                <div key={order.id} className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                  <div>
+                    <p className="font-medium">طلب #{order.orderNumber}</p>
+                    <p className="text-sm text-muted-foreground">{order.customerName}</p>
+                  </div>
+                  <div className="text-left">
+                    <p className="font-bold">{order.totalAmount} {order.currency}</p>
+                    <span className="text-xs px-2 py-1 bg-success/10 text-success rounded-full">
+                      {order.status}
+                    </span>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="font-bold">{(Math.random() * 5000 + 1000).toFixed(0)} د.ج</p>
-                  <span className="text-xs px-2 py-1 bg-success/10 text-success rounded-full">
-                    قيد المعالجة
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-muted-foreground text-center">لا توجد طلبات</p>
+            )}
           </div>
         </div>
 

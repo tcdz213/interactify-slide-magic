@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,8 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SEO } from "@/components/SEO";
-import { Store } from "lucide-react";
-import { toast } from "sonner";
+import { Store, Mail } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const loginSchema = z.object({
   email: z.string().email("البريد الإلكتروني غير صحيح"),
@@ -21,6 +21,18 @@ type LoginForm = z.infer<typeof loginSchema>;
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const { login, loginWithGoogle, isAuthenticated, user, checkAdminRole } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    const redirect = async () => {
+      if (isAuthenticated && user) {
+        const isAdmin = await checkAdminRole();
+        navigate(isAdmin ? '/admin' : '/dashboard');
+      }
+    };
+    redirect();
+  }, [isAuthenticated, user, navigate, checkAdminRole]);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -33,28 +45,24 @@ const Login = () => {
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await login(data.email, data.password);
       
-      // Mock login - In production, this would be an API call
-      const mockUser = {
-        email: data.email,
-        role: data.email.includes("admin") ? "admin" : "seller",
-        token: "mock-jwt-token",
-      };
-
-      localStorage.setItem("token", mockUser.token);
-      localStorage.setItem("userRole", mockUser.role);
-
-      toast.success("تم تسجيل الدخول بنجاح");
-      
-      if (mockUser.role === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/dashboard");
-      }
+      // Check role and redirect
+      const isAdmin = await checkAdminRole();
+      navigate(isAdmin ? '/admin' : '/dashboard');
     } catch (error) {
-      toast.error("خطأ في تسجيل الدخول");
+      // Error already handled in AuthContext
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    try {
+      await loginWithGoogle();
+    } catch (error) {
+      // Error already handled in AuthContext
     } finally {
       setIsLoading(false);
     }
@@ -111,15 +119,33 @@ const Login = () => {
               </Button>
             </form>
           </Form>
+          
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-card px-2 text-muted-foreground">أو</span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+          >
+            <Mail className="w-4 h-4 ml-2" />
+            تسجيل الدخول بواسطة Google
+          </Button>
+
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               ليس لديك حساب؟{" "}
               <Link to="/register" className="text-primary hover:underline font-medium">
                 سجل الآن
               </Link>
-            </p>
-            <p className="text-xs text-muted-foreground mt-4">
-              استخدم admin@test.com لتسجيل الدخول كمسؤول
             </p>
           </div>
         </CardContent>

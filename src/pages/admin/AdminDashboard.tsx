@@ -1,34 +1,57 @@
 import { Users, Package, ShoppingCart, DollarSign } from "lucide-react";
 import { StatsCard } from "@/components/StatsCard";
+import { useQuery } from "@tanstack/react-query";
+import { adminService } from "@/services/admin";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
+  const { toast } = useToast();
+
+  const { data: adminStats, isLoading, error } = useQuery({
+    queryKey: ['adminStats'],
+    queryFn: () => adminService.getDashboardStats(),
+  });
+
+  if (error) {
+    toast({
+      title: "خطأ",
+      description: (error as Error).message,
+      variant: "destructive",
+    });
+  }
+
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+
   const stats = [
     {
       title: "إجمالي المستخدمين",
-      value: "1,245",
+      value: String(adminStats?.totalUsers || 0),
       icon: Users,
-      trend: { value: 18.2, isPositive: true },
+      trend: { value: adminStats?.userGrowth || 0, isPositive: (adminStats?.userGrowth || 0) > 0 },
       description: "مستخدم نشط"
     },
     {
       title: "إجمالي المنتجات",
-      value: "3,842",
+      value: String(adminStats?.totalProducts || 0),
       icon: Package,
-      trend: { value: 12.8, isPositive: true },
+      trend: { value: adminStats?.productGrowth || 0, isPositive: (adminStats?.productGrowth || 0) > 0 },
       description: "منتج على المنصة"
     },
     {
       title: "إجمالي الطلبات",
-      value: "8,521",
+      value: String(adminStats?.totalOrders || 0),
       icon: ShoppingCart,
-      trend: { value: 24.5, isPositive: true },
+      trend: { value: adminStats?.orderGrowth || 0, isPositive: (adminStats?.orderGrowth || 0) > 0 },
       description: "طلب تم معالجته"
     },
     {
       title: "إجمالي الإيرادات",
-      value: "2.4M د.ج",
+      value: `${adminStats?.totalRevenue || 0} د.ج`,
       icon: DollarSign,
-      trend: { value: 32.1, isPositive: true },
+      trend: { value: adminStats?.revenueGrowth || 0, isPositive: (adminStats?.revenueGrowth || 0) > 0 },
       description: "إيرادات هذا الشهر"
     },
   ];
@@ -48,45 +71,57 @@ const AdminDashboard = () => {
 
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="border rounded-lg p-6 bg-card">
-          <h2 className="text-xl font-bold mb-4">أحدث البائعين</h2>
-          <div className="space-y-4">
-            {[
-              { name: "أحمد محمد", products: 24, joined: "منذ يومين" },
-              { name: "فاطمة علي", products: 18, joined: "منذ 3 أيام" },
-              { name: "خالد حسن", products: 32, joined: "منذ أسبوع" },
-            ].map((seller, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Users className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{seller.name}</p>
-                    <p className="text-sm text-muted-foreground">{seller.products} منتج</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">{seller.joined}</p>
-              </div>
-            ))}
+          <h2 className="text-xl font-bold mb-4">نظرة عامة على البيانات</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            جميع البيانات يتم جلبها من API الخاص بك. تأكد من تكوين VITE_API_BASE_URL في ملف .env
+          </p>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center justify-between p-3 bg-muted rounded">
+              <span>حالة الاتصال بـ API:</span>
+              <span className="font-semibold text-green-600">متصل</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted rounded">
+              <span>المستخدمون النشطون:</span>
+              <span className="font-semibold">{adminStats?.totalUsers || 0}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-muted rounded">
+              <span>الطلبات هذا الشهر:</span>
+              <span className="font-semibold">{adminStats?.totalOrders || 0}</span>
+            </div>
           </div>
         </div>
 
         <div className="border rounded-lg p-6 bg-card">
-          <h2 className="text-xl font-bold mb-4">الطلبات الأخيرة</h2>
-          <div className="space-y-4">
-            {[
-              { id: 1023, status: "جديد", amount: 4500 },
-              { id: 1024, status: "قيد المعالجة", amount: 3200 },
-              { id: 1025, status: "تم التوصيل", amount: 5800 },
-            ].map((order, i) => (
-              <div key={i} className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                <div>
-                  <p className="font-medium">طلب #{order.id}</p>
-                  <p className="text-sm text-muted-foreground">{order.status}</p>
-                </div>
-                <p className="font-bold">{order.amount} د.ج</p>
-              </div>
-            ))}
+          <h2 className="text-xl font-bold mb-4">روابط سريعة</h2>
+          <div className="grid grid-cols-2 gap-3">
+            <a
+              href="/admin/users"
+              className="p-4 border rounded-lg hover:bg-muted transition-colors text-center"
+            >
+              <Users className="w-6 h-6 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium">إدارة المستخدمين</p>
+            </a>
+            <a
+              href="/admin/products"
+              className="p-4 border rounded-lg hover:bg-muted transition-colors text-center"
+            >
+              <Package className="w-6 h-6 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium">إدارة البطاقات</p>
+            </a>
+            <a
+              href="/admin/orders"
+              className="p-4 border rounded-lg hover:bg-muted transition-colors text-center"
+            >
+              <ShoppingCart className="w-6 h-6 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium">الطلبات</p>
+            </a>
+            <a
+              href="/admin/subscriptions"
+              className="p-4 border rounded-lg hover:bg-muted transition-colors text-center"
+            >
+              <DollarSign className="w-6 h-6 mx-auto mb-2 text-primary" />
+              <p className="text-sm font-medium">الاشتراكات</p>
+            </a>
           </div>
         </div>
       </div>

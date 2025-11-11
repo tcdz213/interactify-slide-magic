@@ -1,46 +1,60 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Check, CreditCard } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { subscriptionsService } from "@/services/subscriptions";
+import { toast } from "sonner";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 const Subscription = () => {
-  const plans = [
-    {
-      name: "المجاني",
-      price: "0",
-      features: [
-        "حتى 10 منتجات",
-        "100 طلب شهرياً",
-        "دعم البريد الإلكتروني",
-        "تحليلات أساسية",
-      ],
-      current: true,
+  const queryClient = useQueryClient();
+
+  const { data: plans, isLoading: plansLoading } = useQuery({
+    queryKey: ['subscription-plans'],
+    queryFn: subscriptionsService.getPlans,
+  });
+
+  const { data: currentSubscription, isLoading: subscriptionLoading } = useQuery({
+    queryKey: ['current-subscription'],
+    queryFn: subscriptionsService.getCurrentSubscription,
+  });
+
+  const subscribeMutation = useMutation({
+    mutationFn: (planId: string) => subscriptionsService.subscribe(planId),
+    onSuccess: (data) => {
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
     },
-    {
-      name: "المحترف",
-      price: "2,999",
-      features: [
-        "منتجات غير محدودة",
-        "طلبات غير محدودة",
-        "دعم على مدار الساعة",
-        "تحليلات متقدمة",
-        "أدوات تسويق",
-        "تقارير مخصصة",
-      ],
-      popular: true,
+    onError: (error: Error) => {
+      toast.error(error.message || 'فشل الاشتراك');
     },
-    {
-      name: "المؤسسات",
-      price: "9,999",
-      features: [
-        "كل ميزات المحترف",
-        "متاجر متعددة",
-        "مدير حساب مخصص",
-        "تكامل API مخصص",
-        "تدريب فريق العمل",
-        "SLA مخصص",
-      ],
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: subscriptionsService.cancelSubscription,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
+      toast.success('تم إلغاء الاشتراك بنجاح');
     },
-  ];
+    onError: (error: Error) => {
+      toast.error(error.message || 'فشل إلغاء الاشتراك');
+    },
+  });
+
+  const handleSubscribe = (planId: string) => {
+    subscribeMutation.mutate(planId);
+  };
+
+  const handleCancel = () => {
+    if (confirm('هل أنت متأكد من إلغاء اشتراكك؟')) {
+      cancelMutation.mutate();
+    }
+  };
+
+  if (plansLoading || subscriptionLoading) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div dir="rtl">
@@ -52,58 +66,79 @@ const Subscription = () => {
       <Card className="p-6 mb-8 bg-gradient-primary text-white">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold mb-2">خطتك الحالية: المجاني</h2>
-            <p className="text-white/90">قم بالترقية للحصول على ميزات أكثر</p>
+            <h2 className="text-2xl font-bold mb-2">
+              خطتك الحالية: {currentSubscription?.planName || 'المجاني'}
+            </h2>
+            <p className="text-white/90">
+              {currentSubscription?.status === 'active' 
+                ? `صالح حتى ${new Date(currentSubscription.currentPeriodEnd).toLocaleDateString('ar-DZ')}`
+                : 'قم بالترقية للحصول على ميزات أكثر'}
+            </p>
           </div>
           <CreditCard className="w-12 h-12 opacity-50" />
         </div>
+        {currentSubscription?.status === 'active' && (
+          <Button 
+            variant="outline" 
+            className="mt-4"
+            onClick={handleCancel}
+            disabled={cancelMutation.isPending}
+          >
+            إلغاء الاشتراك
+          </Button>
+        )}
       </Card>
 
       <div className="grid md:grid-cols-3 gap-6">
-        {plans.map((plan, index) => (
-          <Card
-            key={index}
-            className={`p-6 relative ${
-              plan.popular ? "border-primary shadow-primary ring-2 ring-primary" : ""
-            }`}
-          >
-            {plan.popular && (
-              <div className="absolute -top-3 right-6 bg-accent text-accent-foreground px-4 py-1 rounded-full text-sm font-medium">
-                الأكثر شعبية
-              </div>
-            )}
-            
-            <div className="mb-6">
-              <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-4xl font-bold">{plan.price}</span>
-                <span className="text-muted-foreground">د.ج/شهر</span>
-              </div>
-            </div>
-
-            <ul className="space-y-3 mb-6">
-              {plan.features.map((feature, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Button
-              className={`w-full ${
-                plan.current
-                  ? "bg-muted text-muted-foreground cursor-not-allowed"
-                  : plan.popular
-                  ? "bg-gradient-accent"
-                  : "bg-gradient-primary"
+        {plans?.map((plan) => {
+          const isCurrentPlan = currentSubscription?.planId === plan.id;
+          
+          return (
+            <Card
+              key={plan.id}
+              className={`p-6 relative ${
+                plan.popular ? "border-primary shadow-primary ring-2 ring-primary" : ""
               }`}
-              disabled={plan.current}
             >
-              {plan.current ? "الخطة الحالية" : "ترقية الآن"}
-            </Button>
-          </Card>
-        ))}
+              {plan.popular && (
+                <div className="absolute -top-3 right-6 bg-accent text-accent-foreground px-4 py-1 rounded-full text-sm font-medium">
+                  الأكثر شعبية
+                </div>
+              )}
+              
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold">{plan.price}</span>
+                  <span className="text-muted-foreground">{plan.currency}/شهر</span>
+                </div>
+              </div>
+
+              <ul className="space-y-3 mb-6">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <Check className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                className={`w-full ${
+                  isCurrentPlan
+                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                    : plan.popular
+                    ? "bg-gradient-accent"
+                    : "bg-gradient-primary"
+                }`}
+                disabled={isCurrentPlan || subscribeMutation.isPending}
+                onClick={() => !isCurrentPlan && handleSubscribe(plan.id)}
+              >
+                {subscribeMutation.isPending ? 'جاري المعالجة...' : isCurrentPlan ? "الخطة الحالية" : "ترقية الآن"}
+              </Button>
+            </Card>
+          );
+        })}
       </div>
 
       <Card className="p-6 mt-8">

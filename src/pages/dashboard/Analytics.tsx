@@ -1,15 +1,39 @@
 import { Card } from "@/components/ui/card";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { analyticsService } from "@/services/analytics";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { useToast } from "@/hooks/use-toast";
 
 const Analytics = () => {
-  const salesData = [
-    { name: "يناير", sales: 4000, orders: 24 },
-    { name: "فبراير", sales: 3000, orders: 18 },
-    { name: "مارس", sales: 5000, orders: 32 },
-    { name: "أبريل", sales: 4500, orders: 28 },
-    { name: "مايو", sales: 6000, orders: 38 },
-    { name: "يونيو", sales: 5500, orders: 35 },
-  ];
+  const { toast } = useToast();
+
+  const { data: salesData = [], isLoading: loadingSales, error: salesError } = useQuery({
+    queryKey: ['sales'],
+    queryFn: () => analyticsService.getSales(),
+  });
+
+  const { data: revenueData, error: revenueError } = useQuery({
+    queryKey: ['revenue'],
+    queryFn: () => analyticsService.getRevenue(),
+  });
+
+  const { data: productsAnalytics = [], error: productsError } = useQuery({
+    queryKey: ['productsAnalytics'],
+    queryFn: () => analyticsService.getProductsAnalytics(),
+  });
+
+  if (salesError) {
+    toast({
+      title: "خطأ",
+      description: (salesError as Error).message,
+      variant: "destructive",
+    });
+  }
+
+  if (loadingSales) {
+    return <LoadingSpinner />;
+  }
 
   return (
     <div dir="rtl">
@@ -48,12 +72,7 @@ const Analytics = () => {
         <Card className="p-6">
           <h2 className="text-xl font-bold mb-4">أداء المنتجات</h2>
           <div className="space-y-4">
-            {[
-              { name: "منتج 1", percentage: 85 },
-              { name: "منتج 2", percentage: 70 },
-              { name: "منتج 3", percentage: 60 },
-              { name: "منتج 4", percentage: 45 },
-            ].map((product, i) => (
+            {productsAnalytics.slice(0, 4).map((product: any, i: number) => (
               <div key={i}>
                 <div className="flex justify-between mb-2">
                   <span className="font-medium">{product.name}</span>
@@ -74,20 +93,20 @@ const Analytics = () => {
           <h2 className="text-xl font-bold mb-4">الإحصائيات السريعة</h2>
           <div className="space-y-4">
             <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-              <span className="text-muted-foreground">متوسط قيمة الطلب</span>
-              <span className="text-xl font-bold">3,850 د.ج</span>
+              <span className="text-muted-foreground">إجمالي الإيرادات</span>
+              <span className="text-xl font-bold">{revenueData?.total || 0} {revenueData?.currency || 'د.ج'}</span>
             </div>
             <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-              <span className="text-muted-foreground">معدل التحويل</span>
-              <span className="text-xl font-bold text-success">24.5%</span>
+              <span className="text-muted-foreground">إيرادات يومية</span>
+              <span className="text-xl font-bold text-success">{revenueData?.byPeriod.daily || 0} {revenueData?.currency || 'د.ج'}</span>
             </div>
             <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-              <span className="text-muted-foreground">العملاء الجدد</span>
-              <span className="text-xl font-bold">156</span>
+              <span className="text-muted-foreground">إيرادات أسبوعية</span>
+              <span className="text-xl font-bold">{revenueData?.byPeriod.weekly || 0} {revenueData?.currency || 'د.ج'}</span>
             </div>
             <div className="flex justify-between items-center p-4 bg-muted rounded-lg">
-              <span className="text-muted-foreground">معدل الإرجاع</span>
-              <span className="text-xl font-bold text-destructive">2.1%</span>
+              <span className="text-muted-foreground">إيرادات شهرية</span>
+              <span className="text-xl font-bold">{revenueData?.byPeriod.monthly || 0} {revenueData?.currency || 'د.ج'}</span>
             </div>
           </div>
         </Card>

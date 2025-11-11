@@ -12,10 +12,15 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/dashboard/Dashboard";
 import Products from "./pages/dashboard/Products";
 import Orders from "./pages/dashboard/Orders";
+import OrderDetails from "./pages/dashboard/OrderDetails";
 import Analytics from "./pages/dashboard/Analytics";
 import Subscription from "./pages/dashboard/Subscription";
 import Settings from "./pages/dashboard/Settings";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminCards from "./pages/admin/AdminCards";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import ApiDocs from "./pages/ApiDocs";
 import NotFound from "./pages/NotFound";
 
@@ -62,6 +67,7 @@ const App = () => (
             <Route index element={<Dashboard />} />
             <Route path="products" element={<Products />} />
             <Route path="orders" element={<Orders />} />
+            <Route path="orders/:id" element={<OrderDetails />} />
             <Route path="analytics" element={<Analytics />} />
             <Route path="subscription" element={<Subscription />} />
             <Route path="settings" element={<Settings />} />
@@ -77,10 +83,10 @@ const App = () => (
             }
           >
             <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<div dir="rtl" className="text-2xl font-bold">المستخدمين</div>} />
-            <Route path="products" element={<div dir="rtl" className="text-2xl font-bold">المنتجات</div>} />
-            <Route path="orders" element={<div dir="rtl" className="text-2xl font-bold">الطلبات</div>} />
-            <Route path="subscriptions" element={<div dir="rtl" className="text-2xl font-bold">الاشتراكات</div>} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="products" element={<AdminCards />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="settings" element={<div dir="rtl" className="text-2xl font-bold">الإعدادات</div>} />
           </Route>
 
