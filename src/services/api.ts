@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { API_CONFIG } from '@/config/api';
+import { getCSRFToken } from '@/utils/security';
 
 // Create axios instance
 const api: AxiosInstance = axios.create({
@@ -10,13 +11,20 @@ const api: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor - add auth token
+// Request interceptor - add auth token and CSRF token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Add CSRF token for state-changing operations
+    const csrfEnabled = import.meta.env.VITE_ENABLE_CSRF === 'true';
+    if (csrfEnabled && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(config.method?.toUpperCase() || '')) {
+      config.headers['X-CSRF-Token'] = getCSRFToken();
+    }
+    
     return config;
   },
   (error) => {

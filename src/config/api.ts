@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://api.yourdomain.com',
-  TIMEOUT: 30000,
+  TIMEOUT: Number(import.meta.env.VITE_API_TIMEOUT) || 30000,
   ENDPOINTS: {
     // Auth
     AUTH: {
