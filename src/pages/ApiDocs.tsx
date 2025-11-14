@@ -928,6 +928,370 @@ Content-Type: multipart/form-data
             </div>
           </section>
 
+          {/* Admin Endpoints */}
+          <section id="admin">
+            <h2 className="text-3xl font-bold mb-6">Admin Endpoints</h2>
+
+            <div className="space-y-8">
+              {/* Check Admin Role */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      GET
+                    </span>
+                    <code className="text-lg">/api/v1/admin/check-role</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Verify if user has admin role</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "data": {
+    "isAdmin": true
+  }
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Dashboard Stats */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      GET
+                    </span>
+                    <code className="text-lg">/api/v1/admin/dashboard/stats</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Get admin dashboard statistics</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token - Admin only)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "data": {
+    "totalUsers": 1250,
+    "totalProducts": 450,
+    "totalOrders": 780,
+    "totalRevenue": 125000.00,
+    "revenueGrowth": 15.5,
+    "userGrowth": 8.2,
+    "productGrowth": 12.3,
+    "orderGrowth": 10.8
+  }
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Get Users */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      GET
+                    </span>
+                    <code className="text-lg">/api/v1/admin/users</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Get list of users with pagination and search</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token - Admin only)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Query Parameters:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
+                      <li><code>page</code>: Page number (default: 1)</li>
+                      <li><code>limit</code>: Items per page (default: 10)</li>
+                      <li><code>search</code>: Search by name or email</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "data": {
+    "users": [
+      {
+        "id": "user-123",
+        "email": "user@example.com",
+        "name": "John Doe",
+        "role": "customer",
+        "isVerified": true,
+        "productsCount": 5,
+        "joinedAt": "2025-01-15T10:00:00.000Z"
+      }
+    ],
+    "total": 1250,
+    "page": 1,
+    "totalPages": 125
+  }
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Get Cards */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      GET
+                    </span>
+                    <code className="text-lg">/api/v1/admin/cards</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Get list of cards for management</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token - Admin only)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Query Parameters:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      <li><code>status</code>: Filter by status (all, active, flagged, deleted)</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "data": [
+    {
+      "id": "card-123",
+      "title": "Business Card Title",
+      "status": "active",
+      "views": 1250,
+      "clicks": 85,
+      "createdAt": "2025-10-01T10:00:00.000Z",
+      "flagReason": null
+    }
+  ]
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Flag Card */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-orange-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      PUT
+                    </span>
+                    <code className="text-lg">/api/v1/admin/cards/:id/flag</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Flag a card for review</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token - Admin only)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">URL Parameters:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      <li><code>id</code>: Card ID</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Request Body:</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "reason": "Inappropriate content"
+}`}
+                    </pre>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "message": "Card flagged successfully"
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Unflag Card */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-orange-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      PUT
+                    </span>
+                    <code className="text-lg">/api/v1/admin/cards/:id/unflag</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Remove flag from a card</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token - Admin only)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">URL Parameters:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      <li><code>id</code>: Card ID</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "message": "Card unflagged successfully"
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Delete Card */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-red-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      DELETE
+                    </span>
+                    <code className="text-lg">/api/v1/admin/cards/:id</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Soft delete a card (can be restored)</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token - Admin only)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">URL Parameters:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      <li><code>id</code>: Card ID</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "message": "Card deleted successfully"
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Permanent Delete Card */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-red-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      DELETE
+                    </span>
+                    <code className="text-lg">/api/v1/admin/cards/:id/permanent</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Permanently delete a card (cannot be restored)</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token - Admin only)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">URL Parameters:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      <li><code>id</code>: Card ID</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "message": "Card permanently deleted"
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Restore Card */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <span className="bg-green-500 text-white px-3 py-1 rounded text-sm font-semibold">
+                      POST
+                    </span>
+                    <code className="text-lg">/api/v1/admin/cards/:id/restore</code>
+                  </div>
+                  <p className="text-muted-foreground mt-2">Restore a soft-deleted card</p>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="font-semibold mb-2">Authentication:</p>
+                    <p className="text-sm text-muted-foreground">Required (Bearer Token - Admin only)</p>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">URL Parameters:</p>
+                    <ul className="list-disc list-inside text-sm text-muted-foreground">
+                      <li><code>id</code>: Card ID</li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-semibold mb-2">Success Response (200 OK):</p>
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
+{`{
+  "success": true,
+  "message": "Card restored successfully"
+}`}
+                    </pre>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
           {/* Common Responses */}
           <section id="common-responses">
             <h2 className="text-3xl font-bold mb-6">Common HTTP Status Codes</h2>

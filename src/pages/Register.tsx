@@ -26,14 +26,14 @@ type RegisterForm = z.infer<typeof registerSchema>;
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { register: registerUser, loginWithGoogle, isAuthenticated, user } = useAuth();
+  const { register: registerUser, loginWithGoogle, isAuthenticated, user, isLoading: authLoading } = useAuth();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (but only after auth is done loading)
   useEffect(() => {
-    if (isAuthenticated && user) {
-      navigate('/dashboard');
+    if (!authLoading && isAuthenticated && user) {
+      navigate('/dashboard', { replace: true });
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [authLoading, isAuthenticated, user, navigate]);
 
   const form = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),

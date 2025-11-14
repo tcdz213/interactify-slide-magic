@@ -48,13 +48,19 @@ api.interceptors.response.use(
           throw new Error('No refresh token');
         }
 
-        // Try to refresh the token
+        // POST /api/v1/auth/refresh
+        // Request: { "refresh_token": "refresh-token-here" }
+        // Response: { "access_token": "new-jwt-token", "refresh_token": "new-refresh-token" }
         const response = await axios.post(
           `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REFRESH}`,
           { refresh_token: refreshToken }
         );
 
         const { access_token, refresh_token: newRefreshToken } = response.data;
+
+        if (!access_token) {
+          throw new Error('Invalid refresh response');
+        }
 
         // Save new tokens
         localStorage.setItem('access_token', access_token);

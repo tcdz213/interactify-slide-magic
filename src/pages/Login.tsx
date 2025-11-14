@@ -21,18 +21,20 @@ type LoginForm = z.infer<typeof loginSchema>;
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { login, loginWithGoogle, isAuthenticated, user, checkAdminRole } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated, user, checkAdminRole, isLoading: authLoading } = useAuth();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (but only after auth is done loading)
   useEffect(() => {
     const redirect = async () => {
-      if (isAuthenticated && user) {
+      if (!authLoading && isAuthenticated && user) {
+        console.log('🔄 [LOGIN PAGE] User already authenticated, checking role for redirect...');
         const isAdmin = await checkAdminRole();
-        navigate(isAdmin ? '/admin' : '/dashboard');
+        console.log(`🚀 [LOGIN PAGE] Redirecting authenticated user (${isAdmin ? 'ADMIN' : 'USER'}) to: ${isAdmin ? '/admin' : '/dashboard'}`);
+        navigate(isAdmin ? '/admin' : '/dashboard', { replace: true });
       }
     };
     redirect();
-  }, [isAuthenticated, user, navigate, checkAdminRole]);
+  }, [authLoading, isAuthenticated, user, navigate, checkAdminRole]);
 
   const form = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -43,28 +45,39 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginForm) => {
+    console.log('🔐 [LOGIN] Starting login process...', { email: data.email });
     setIsLoading(true);
     try {
+      console.log('📤 [LOGIN] Calling login API...');
       await login(data.email, data.password);
+      console.log('✅ [LOGIN] Login successful, checking user role...');
       
       // Check role and redirect
       const isAdmin = await checkAdminRole();
+      console.log(`👤 [LOGIN] User role determined: ${isAdmin ? 'ADMIN' : 'USER'}`);
+      console.log(`🚀 [LOGIN] Redirecting to: ${isAdmin ? '/admin' : '/dashboard'}`);
       navigate(isAdmin ? '/admin' : '/dashboard');
     } catch (error) {
+      console.error('❌ [LOGIN] Login failed:', error);
       // Error already handled in AuthContext
     } finally {
       setIsLoading(false);
+      console.log('🏁 [LOGIN] Login process completed');
     }
   };
 
   const handleGoogleLogin = async () => {
+    console.log('🔐 [GOOGLE LOGIN] Starting Google OAuth login...');
     setIsLoading(true);
     try {
       await loginWithGoogle();
+      console.log('✅ [GOOGLE LOGIN] OAuth initiated successfully');
     } catch (error) {
+      console.error('❌ [GOOGLE LOGIN] OAuth login failed:', error);
       // Error already handled in AuthContext
     } finally {
       setIsLoading(false);
+      console.log('🏁 [GOOGLE LOGIN] Google login process completed');
     }
   };
 
