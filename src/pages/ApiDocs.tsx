@@ -1,44 +1,194 @@
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  Server, 
+  Database, 
+  Shield, 
+  Code, 
+  AlertCircle, 
+  CheckCircle,
+  Lock,
+  GitBranch,
+  Settings,
+  Zap
+} from "lucide-react";
 
 const ApiDocs = () => {
   return (
     <>
       <SEO
-        title="API Documentation"
-        description="Complete API documentation for all endpoints"
+        title="API Documentation - Backend Integration Guide"
+        description="Complete API documentation with backend setup, database schemas, security requirements, and implementation examples"
       />
-      <div className="container mx-auto px-4 py-8 max-w-6xl" dir="ltr">
+      <div className="container mx-auto px-4 py-8 max-w-7xl" dir="ltr">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">API Documentation</h1>
-          <p className="text-muted-foreground text-lg">
-            Complete reference for all API endpoints
+          <h1 className="text-4xl font-bold mb-3">API Documentation & Backend Integration Guide</h1>
+          <p className="text-muted-foreground text-lg mb-4">
+            Complete reference for API endpoints, backend setup, security requirements, and database schemas
           </p>
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="outline" className="gap-1">
+              <Server className="w-3 h-3" />
+              REST API
+            </Badge>
+            <Badge variant="outline" className="gap-1">
+              <Lock className="w-3 h-3" />
+              JWT Auth
+            </Badge>
+            <Badge variant="outline" className="gap-1">
+              <Database className="w-3 h-3" />
+              PostgreSQL
+            </Badge>
+            <Badge variant="outline" className="gap-1">
+              <Shield className="w-3 h-3" />
+              CORS Enabled
+            </Badge>
+          </div>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Base Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <p className="font-semibold mb-1">Base URL:</p>
-              <code className="bg-muted px-3 py-1 rounded text-sm">
-                http://localhost:3000/api/v1
-              </code>
-            </div>
-            <div>
-              <p className="font-semibold mb-1">Version:</p>
-              <code className="bg-muted px-3 py-1 rounded text-sm">1.0.0</code>
-            </div>
-            <div>
-              <p className="font-semibold mb-1">Authentication:</p>
-              <p className="text-sm text-muted-foreground">
-                Bearer Token (JWT) - Include in Authorization header
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 h-auto">
+            <TabsTrigger value="overview" className="gap-2">
+              <Code className="w-4 h-4" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="setup" className="gap-2">
+              <Settings className="w-4 h-4" />
+              Setup
+            </TabsTrigger>
+            <TabsTrigger value="endpoints" className="gap-2">
+              <Server className="w-4 h-4" />
+              Endpoints
+            </TabsTrigger>
+            <TabsTrigger value="database" className="gap-2">
+              <Database className="w-4 h-4" />
+              Database
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-2">
+              <Shield className="w-4 h-4" />
+              Security
+            </TabsTrigger>
+            <TabsTrigger value="testing" className="gap-2">
+              <Zap className="w-4 h-4" />
+              Testing
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Code className="w-5 h-5" />
+                  Base Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="font-semibold mb-2">Base URL:</p>
+                  <code className="bg-muted px-3 py-2 rounded text-sm block">
+                    http://localhost:3000/api/v1
+                  </code>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Production: Replace with your actual domain (e.g., https://api.yourdomain.com/api/v1)
+                  </p>
+                </div>
+                <div>
+                  <p className="font-semibold mb-2">API Version:</p>
+                  <Badge>1.0.0</Badge>
+                </div>
+                <div>
+                  <p className="font-semibold mb-2">Authentication:</p>
+                  <p className="text-sm text-muted-foreground">
+                    Bearer Token (JWT) - Include in Authorization header for protected endpoints
+                  </p>
+                  <code className="bg-muted px-3 py-2 rounded text-xs block mt-2">
+                    Authorization: Bearer {"<"}access_token{">"}
+                  </code>
+                </div>
+                <div>
+                  <p className="font-semibold mb-2">Content Type:</p>
+                  <code className="bg-muted px-3 py-2 rounded text-sm block">
+                    application/json
+                  </code>
+                </div>
+                <div>
+                  <p className="font-semibold mb-2">Response Format:</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    All responses follow a consistent structure:
+                  </p>
+                  <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-xs">
+{`{
+  "success": true,
+  "data": { ... },
+  "message": "Operation successful"
+}`}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Start</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <p className="font-semibold mb-2">1. Set Environment Variables</p>
+                  <pre className="bg-muted p-4 rounded-lg text-xs">
+{`# Frontend .env
+VITE_API_BASE_URL=http://localhost:3000
+
+# Backend .env
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+JWT_SECRET=your-secret-key-min-32-characters
+JWT_REFRESH_SECRET=your-refresh-secret-key
+JWT_EXPIRES_IN=1h
+JWT_REFRESH_EXPIRES_IN=7d
+PORT=3000
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173`}
+                  </pre>
+                </div>
+                
+                <div>
+                  <p className="font-semibold mb-2">2. Install Dependencies (Node.js Backend)</p>
+                  <pre className="bg-muted p-4 rounded-lg text-xs">
+{`npm install express cors jsonwebtoken bcrypt pg
+npm install --save-dev @types/express @types/cors @types/jsonwebtoken @types/bcrypt`}
+                  </pre>
+                </div>
+
+                <div>
+                  <p className="font-semibold mb-2">3. Test Authentication</p>
+                  <pre className="bg-muted p-4 rounded-lg text-xs">
+{`curl -X POST http://localhost:3000/api/v1/auth/register \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "email": "test@example.com",
+    "password": "password123",
+    "name": "Test User",
+    "role": "customer"
+  }'`}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <strong>Important:</strong> Never expose your JWT secrets. Use environment variables and keep them secure.
+                Minimum 32 characters recommended for production secrets.
+              </AlertDescription>
+            </Alert>
+          </TabsContent>
+
+          {/* Setup Tab */}
+          <TabsContent value="setup" className="space-y-6">
 
         <div className="space-y-12">
           {/* Authentication Endpoints */}
