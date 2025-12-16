@@ -13,7 +13,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,6 +36,7 @@ const navItems = [
   { icon: Rocket, label: 'Releases', path: '/dashboard/releases' },
   { icon: Users, label: 'Team', path: '/dashboard/team' },
   { icon: BarChart3, label: 'Analytics', path: '/dashboard/analytics' },
+  { icon: FileText, label: 'API Docs', path: '/dashboard/api-docs' },
   { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
 ];
 
