@@ -15,6 +15,7 @@ import Tasks from "./pages/Tasks";
 import TaskDetail from "./pages/TaskDetail";
 import Bugs from "./pages/Bugs";
 import BugDetail from "./pages/BugDetail";
+import ApiDocs from "./pages/ApiDocs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -90,6 +91,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <BugDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/api-docs"
+              element={
+                <ProtectedRoute>
+                  <ApiDocs />
                 </ProtectedRoute>
               }
             />
