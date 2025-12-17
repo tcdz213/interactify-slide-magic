@@ -1,5 +1,7 @@
 import type { Config } from "tailwindcss";
 
+// Add cobalt colors for API docs
+
 export default {
   darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
@@ -49,6 +51,17 @@ export default {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
+        },
+        cobalt: {
+          100: "hsl(210, 100%, 90%)",
+          200: "hsl(210, 100%, 80%)",
+          300: "hsl(210, 100%, 70%)",
+          400: "hsl(210, 100%, 60%)",
+          500: "hsl(210, 100%, 50%)",
+          600: "hsl(210, 100%, 40%)",
+          700: "hsl(210, 100%, 30%)",
+          800: "hsl(210, 100%, 20%)",
+          900: "hsl(210, 100%, 12%)",
         },
       },
       borderRadius: {

@@ -16,6 +16,12 @@ import TaskDetail from "./pages/TaskDetail";
 import Bugs from "./pages/Bugs";
 import BugDetail from "./pages/BugDetail";
 import ApiDocs from "./pages/ApiDocs";
+import Team from "./pages/Team";
+import Settings from "./pages/Settings";
+import Releases from "./pages/Releases";
+import ReleaseDetail from "./pages/ReleaseDetail";
+import Analytics from "./pages/Analytics";
+import Billing from "./pages/Billing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -99,6 +105,54 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ApiDocs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/team"
+              element={
+                <ProtectedRoute>
+                  <Team />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/releases"
+              element={
+                <ProtectedRoute>
+                  <Releases />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/releases/:id"
+              element={
+                <ProtectedRoute>
+                  <ReleaseDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/analytics"
+              element={
+                <ProtectedRoute>
+                  <Analytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/billing"
+              element={
+                <ProtectedRoute>
+                  <Billing />
                 </ProtectedRoute>
               }
             />
