@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Features from "./pages/Features";
 import Sprints from "./pages/Sprints";
+import SprintDetail from "./pages/SprintDetail";
 import Tasks from "./pages/Tasks";
 import TaskDetail from "./pages/TaskDetail";
 import Bugs from "./pages/Bugs";
@@ -65,6 +66,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Sprints />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/sprints/:id"
+              element={
+                <ProtectedRoute>
+                  <SprintDetail />
                 </ProtectedRoute>
               }
             />
