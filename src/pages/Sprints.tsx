@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +55,7 @@ const STATUS_LABELS: Record<SprintStatus, string> = {
 };
 
 export default function Sprints() {
+  const navigate = useNavigate();
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -228,7 +230,11 @@ export default function Sprints() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSprints.map((sprint) => (
-            <Card key={sprint.id} className="p-6 hover:border-primary/30 transition-colors group">
+            <Card 
+              key={sprint.id} 
+              className="p-6 hover:border-primary/30 transition-colors group cursor-pointer"
+              onClick={() => navigate(`/dashboard/sprints/${sprint.id}`)}
+            >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -242,12 +248,12 @@ export default function Sprints() {
                   </div>
                 </div>
                 <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                  <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                     <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                     {sprint.status === 'planning' && (
                       <>
                         <DropdownMenuItem onClick={() => handleEdit(sprint)}>
