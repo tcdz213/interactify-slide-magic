@@ -37,6 +37,17 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  useDraggable,
+} from '@dnd-kit/core';
 import { sprintsApi } from '@/services/sprintApi';
 import { tasksApi } from '@/services/taskApi';
 import { bugsApi } from '@/services/bugApi';
@@ -76,6 +87,97 @@ const PRIORITY_COLORS: Record<string, string> = {
   critical: 'bg-red-500/20 text-red-400',
 };
 
+// Draggable Task Card Component
+function DraggableTaskCard({ task, onStatusChange }: { task: Task; onStatusChange: (id: string, status: TaskStatus) => void }) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: task.id,
+    data: { task },
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+        opacity: isDragging ? 0.5 : 1,
+      }
+    : undefined;
+
+  return (
+    <Card
+      ref={setNodeRef}
+      style={style}
+      className={`p-3 cursor-grab hover:border-primary/50 transition-colors ${isDragging ? 'ring-2 ring-primary' : ''}`}
+      {...attributes}
+      {...listeners}
+    >
+      <div className="flex items-start gap-2">
+        <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <Link
+            to={`/dashboard/tasks/${task.id}`}
+            className="font-medium text-sm hover:text-primary line-clamp-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {task.title}
+          </Link>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[task.priority]}`}>
+              {task.priority}
+            </Badge>
+            {task.assigneeName && (
+              <span className="text-xs text-muted-foreground truncate">
+                {task.assigneeName}
+              </span>
+            )}
+          </div>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+              <MoreVertical className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {TASK_COLUMNS.filter(c => c.status !== task.status).map((col) => (
+              <DropdownMenuItem
+                key={col.status}
+                onClick={() => onStatusChange(task.id, col.status)}
+              >
+                <ArrowRight className="h-4 w-4 mr-2" />
+                Move to {col.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </Card>
+  );
+}
+
+// Droppable Column Component
+function DroppableColumn({ status, label, color, children }: { status: TaskStatus; label: string; color: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: status,
+  });
+
+  return (
+    <div className="min-w-[200px]">
+      <div className={`rounded-t-lg px-3 py-2 ${color}`}>
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium text-sm">{label}</h3>
+        </div>
+      </div>
+      <ScrollArea
+        ref={setNodeRef}
+        className={`h-[500px] bg-muted/30 rounded-b-lg p-2 transition-colors ${isOver ? 'bg-primary/10 ring-2 ring-primary ring-inset' : ''}`}
+      >
+        <div className="space-y-2">
+          {children}
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
 export default function SprintDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -87,6 +189,15 @@ export default function SprintDetail() {
   const [backlogBugs, setBacklogBugs] = useState<BugType[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('board');
+  const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const fetchData = async () => {
     if (!id) return;
@@ -216,6 +327,27 @@ export default function SprintDetail() {
 
   const getTasksByStatus = (status: TaskStatus) => tasks.filter(t => t.status === status);
 
+  const handleDragStart = (event: DragStartEvent) => {
+    const { active } = event;
+    const task = tasks.find(t => t.id === active.id);
+    setActiveTask(task || null);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveTask(null);
+
+    if (!over) return;
+
+    const taskId = active.id as string;
+    const newStatus = over.id as TaskStatus;
+    const task = tasks.find(t => t.id === taskId);
+
+    if (task && task.status !== newStatus) {
+      handleTaskStatusChange(taskId, newStatus);
+    }
+  };
+
   if (loading || !sprint) {
     return (
       <DashboardLayout title="Sprint Details" description="Loading...">
@@ -332,70 +464,50 @@ export default function SprintDetail() {
 
         {/* Kanban Board */}
         <TabsContent value="board" className="mt-6">
-          <div className="grid grid-cols-6 gap-4 overflow-x-auto pb-4">
-            {TASK_COLUMNS.map((column) => (
-              <div key={column.status} className="min-w-[200px]">
-                <div className={`rounded-t-lg px-3 py-2 ${column.color}`}>
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-medium text-sm">{column.label}</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      {getTasksByStatus(column.status).length}
-                    </Badge>
+          <DndContext
+            sensors={sensors}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="grid grid-cols-6 gap-4 overflow-x-auto pb-4">
+              {TASK_COLUMNS.map((column) => (
+                <DroppableColumn
+                  key={column.status}
+                  status={column.status}
+                  label={column.label}
+                  color={column.color}
+                >
+                  <Badge variant="secondary" className="text-xs mb-2 w-full justify-center">
+                    {getTasksByStatus(column.status).length} items
+                  </Badge>
+                  {getTasksByStatus(column.status).map((task) => (
+                    <DraggableTaskCard
+                      key={task.id}
+                      task={task}
+                      onStatusChange={handleTaskStatusChange}
+                    />
+                  ))}
+                </DroppableColumn>
+              ))}
+            </div>
+            <DragOverlay>
+              {activeTask ? (
+                <Card className="p-3 cursor-grabbing shadow-lg border-primary">
+                  <div className="flex items-start gap-2">
+                    <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm line-clamp-2">{activeTask.title}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[activeTask.priority]}`}>
+                          {activeTask.priority}
+                        </Badge>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <ScrollArea className="h-[500px] bg-muted/30 rounded-b-lg p-2">
-                  <div className="space-y-2">
-                    {getTasksByStatus(column.status).map((task) => (
-                      <Card
-                        key={task.id}
-                        className="p-3 cursor-pointer hover:border-primary/50 transition-colors"
-                      >
-                        <div className="flex items-start gap-2">
-                          <GripVertical className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <Link
-                              to={`/dashboard/tasks/${task.id}`}
-                              className="font-medium text-sm hover:text-primary line-clamp-2"
-                            >
-                              {task.title}
-                            </Link>
-                            <div className="flex items-center gap-2 mt-2">
-                              <Badge variant="outline" className={`text-xs ${PRIORITY_COLORS[task.priority]}`}>
-                                {task.priority}
-                              </Badge>
-                              {task.assigneeName && (
-                                <span className="text-xs text-muted-foreground truncate">
-                                  {task.assigneeName}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6">
-                                <MoreVertical className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {TASK_COLUMNS.filter(c => c.status !== task.status).map((col) => (
-                                <DropdownMenuItem
-                                  key={col.status}
-                                  onClick={() => handleTaskStatusChange(task.id, col.status)}
-                                >
-                                  <ArrowRight className="h-4 w-4 mr-2" />
-                                  Move to {col.label}
-                                </DropdownMenuItem>
-                              ))}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </Card>
-                    ))}
-                  </div>
-                </ScrollArea>
-              </div>
-            ))}
-          </div>
+                </Card>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
 
           {/* Bugs Section */}
           {bugs.length > 0 && (
