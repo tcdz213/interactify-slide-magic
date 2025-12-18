@@ -77,9 +77,7 @@ export default function Auth() {
         const result = await login(formData.email, formData.password);
         
         if (result.success) {
-          // Get the user from the session to check role
-          const session = await import('@/services/auth.service').then(m => m.authService.getStoredSession());
-          const redirectPath = getRedirectPath(session?.user?.role);
+          const redirectPath = getRedirectPath(result.user?.role);
           toast({ title: 'Welcome back!', description: 'Successfully logged in.' });
           navigate(redirectPath, { replace: true });
         } else {
@@ -91,8 +89,7 @@ export default function Auth() {
         const result = await signup(formData.email, formData.password, formData.name);
         
         if (result.success) {
-          const session = await import('@/services/auth.service').then(m => m.authService.getStoredSession());
-          const redirectPath = getRedirectPath(session?.user?.role);
+          const redirectPath = getRedirectPath(result.user?.role);
           toast({ title: 'Account created!', description: 'Welcome to DevCycle.' });
           navigate(redirectPath, { replace: true });
         } else {
