@@ -46,10 +46,18 @@ export default function AdminDashboard() {
           adminStatsApi.getRevenueStats('month'),
           adminStatsApi.getPlanDistribution(),
         ]);
-        setStats(statsRes.data);
-        setUserGrowth(growthRes.data);
-        setRevenueData(revenueRes.data);
-        setPlanDistribution(plansRes.data);
+        
+        // Handle nested data.data structure from API
+        const extractData = (res: any) => {
+          if (res?.data?.data) return res.data.data;
+          if (res?.data) return res.data;
+          return res;
+        };
+        
+        setStats(extractData(statsRes));
+        setUserGrowth(Array.isArray(extractData(growthRes)) ? extractData(growthRes) : []);
+        setRevenueData(Array.isArray(extractData(revenueRes)) ? extractData(revenueRes) : []);
+        setPlanDistribution(Array.isArray(extractData(plansRes)) ? extractData(plansRes) : []);
       } catch (error) {
         // Use mock data for demo
         setStats({
