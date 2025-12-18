@@ -1,4 +1,4 @@
-// Auth Service Layer - Mock implementation ready for real API integration
+// Auth Service Layer - Real API Implementation
 import type {
   User,
   UserWithRole,
@@ -12,270 +12,319 @@ import type {
   UpdateProfileRequest,
   UserRole,
 } from '@/types/auth';
+import { tokenStorage } from '@/lib/tokenStorage';
 
-const API_BASE = '/api/v1/auth';
-const STORAGE_KEY = 'devcycle_auth';
-const USERS_STORAGE_KEY = 'devcycle_users';
+const API_BASE = 'http://localhost:3000/api/v1/auth';
 
-// Mock users database
-const MOCK_USERS: Record<string, { password: string; user: UserWithRole }> = {
-  'admin@devcycle.com': {
-    password: 'Root@1234',
-    user: {
-      id: '1',
-      email: 'admin@devcycle.com',
-      name: 'Admin User',
-      avatar: null,
-      emailVerified: true,
-      workspaceId: 'ws-1',
-      role: 'admin',
-      permissions: [
-        'products:read', 'products:create', 'products:update', 'products:delete',
-        'features:read', 'features:create', 'features:update', 'features:delete',
-        'tasks:read', 'tasks:create', 'tasks:update', 'tasks:delete',
-        'bugs:read', 'bugs:create', 'bugs:update', 'bugs:delete',
-        'sprints:read', 'sprints:create', 'sprints:update', 'sprints:delete',
-        'team:read', 'team:manage',
-        'admin:access', 'roles:assign'
-      ],
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: '2024-01-01T00:00:00Z',
-    },
-  },
-};
+// Track if a token refresh is in progress to prevent multiple simultaneous refreshes
+let isRefreshing = false;
+let refreshPromise: Promise<RefreshTokenResponse | null> | null = null;
 
-// Helper to generate mock tokens
-const generateTokens = (): Tokens => ({
-  accessToken: `mock_access_${crypto.randomUUID()}`,
-  refreshToken: `mock_refresh_${crypto.randomUUID()}`,
-  expiresIn: 3600,
-});
+// Generic fetch wrapper for auth endpoints
+async function authFetch<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  includeAuth: boolean = false
+): Promise<T> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...options.headers,
+  };
 
-// Helper to simulate network delay
-const delay = (ms: number = 500) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Helper to get registered users from localStorage
-const getRegisteredUsers = (): Record<string, { password: string; user: UserWithRole }> => {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '{}');
-  } catch {
-    return {};
+  if (includeAuth) {
+    const token = tokenStorage.getAccessToken();
+    if (token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+    }
   }
-};
 
-// Helper to save registered users to localStorage
-const saveRegisteredUsers = (users: Record<string, { password: string; user: UserWithRole }>) => {
-  localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-};
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  // Handle 401 - attempt token refresh
+  if (response.status === 401 && includeAuth) {
+    const refreshed = await authService.tryRefreshToken();
+    if (refreshed) {
+      // Retry the request with new token
+      const newToken = tokenStorage.getAccessToken();
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${newToken}`;
+      
+      const retryResponse = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers,
+      });
+      
+      if (!retryResponse.ok) {
+        const error = await retryResponse.json().catch(() => ({ error: { message: 'Request failed' } }));
+        throw new Error(error.error?.message || `HTTP ${retryResponse.status}`);
+      }
+      
+      if (retryResponse.status === 204) {
+        return {} as T;
+      }
+      
+      return retryResponse.json();
+    }
+    
+    // Refresh failed - clear session and throw
+    tokenStorage.clearSession();
+    throw new Error('Session expired. Please login again.');
+  }
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }));
+    throw new Error(error.error?.message || `HTTP ${response.status}`);
+  }
+
+  if (response.status === 204) {
+    return {} as T;
+  }
+
+  return response.json();
+}
+
+// Decode JWT to check token type (RS256 = Google, HS256 = backend)
+function decodeJwtHeader(token: string): { alg: string } | null {
+  try {
+    const [headerBase64] = token.split('.');
+    if (!headerBase64) return null;
+    const header = JSON.parse(atob(headerBase64));
+    return header;
+  } catch {
+    return null;
+  }
+}
 
 // === AUTH SERVICE FUNCTIONS ===
 
 export const authService = {
   // POST /login
   async login(request: LoginRequest): Promise<{ success: true; data: LoginResponse } | { success: false; error: string }> {
-    await delay();
-    
-    const email = request.email.toLowerCase();
-    const mockUser = MOCK_USERS[email];
-    const registeredUsers = getRegisteredUsers();
-    const registeredUser = registeredUsers[email];
-
-    if (mockUser && mockUser.password === request.password) {
-      const tokens = generateTokens();
-      return { success: true, data: { user: mockUser.user, tokens } };
+    try {
+      const response = await authFetch<{ data: LoginResponse }>('/login', {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+      
+      // Verify we got backend tokens (HS256), not Google tokens (RS256)
+      const header = decodeJwtHeader(response.data.tokens.accessToken);
+      if (header?.alg === 'RS256') {
+        return { success: false, error: 'Invalid token type received' };
+      }
+      
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Login failed' };
     }
-
-    if (registeredUser && registeredUser.password === request.password) {
-      const tokens = generateTokens();
-      return { success: true, data: { user: registeredUser.user, tokens } };
-    }
-
-    return { success: false, error: 'Invalid email or password' };
   },
 
   // POST /signup
   async signup(request: SignupRequest): Promise<{ success: true; data: SignupResponse } | { success: false; error: string }> {
-    await delay();
-    
-    const email = request.email.toLowerCase();
-    
-    if (MOCK_USERS[email]) {
-      return { success: false, error: 'User with this email already exists' };
+    try {
+      const response = await authFetch<{ data: SignupResponse }>('/signup', {
+        method: 'POST',
+        body: JSON.stringify(request),
+      });
+      
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Signup failed' };
     }
-
-    const registeredUsers = getRegisteredUsers();
-    if (registeredUsers[email]) {
-      return { success: false, error: 'User with this email already exists' };
-    }
-
-    const newUser: UserWithRole = {
-      id: crypto.randomUUID(),
-      email,
-      name: request.name,
-      avatar: null,
-      emailVerified: false,
-      workspaceId: crypto.randomUUID(),
-      role: 'user',
-      permissions: [
-        'products:read', 'products:create',
-        'features:read', 'features:create',
-        'tasks:read', 'tasks:create', 'tasks:update',
-        'bugs:read', 'bugs:create',
-        'sprints:read'
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    registeredUsers[email] = { password: request.password, user: newUser };
-    saveRegisteredUsers(registeredUsers);
-
-    const tokens = generateTokens();
-    return { success: true, data: { user: newUser, tokens } };
   },
 
   // GET /me
-  async getCurrentUser(accessToken: string): Promise<{ success: true; data: UserWithRole } | { success: false; error: string }> {
-    await delay(200);
-    
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return { success: false, error: 'No token provided' };
-    }
-
+  async getCurrentUser(): Promise<{ success: true; data: UserWithRole } | { success: false; error: string }> {
     try {
-      const { user } = JSON.parse(stored);
-      return { success: true, data: user };
-    } catch {
-      return { success: false, error: 'Invalid session' };
+      const response = await authFetch<{ data: UserWithRole }>('/me', {}, true);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to get user' };
     }
   },
 
   // GET /me/roles
-  async getUserRoles(accessToken: string): Promise<{ success: true; data: { id: string; userId: string; role: string; createdAt: string }[] } | { success: false; error: string }> {
-    await delay(200);
-    
-    const userResult = await this.getCurrentUser(accessToken);
-    if (!userResult.success) {
-      return userResult;
+  async getUserRoles(): Promise<{ success: true; data: { id: string; userId: string; role: string; createdAt: string }[] } | { success: false; error: string }> {
+    try {
+      const response = await authFetch<{ data: { id: string; userId: string; role: string; createdAt: string }[] }>('/me/roles', {}, true);
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to get roles' };
     }
-
-    return {
-      success: true,
-      data: [{
-        id: crypto.randomUUID(),
-        userId: userResult.data.id,
-        role: userResult.data.role,
-        createdAt: userResult.data.createdAt,
-      }]
-    };
   },
 
   // PATCH /me
-  async updateProfile(accessToken: string, request: UpdateProfileRequest): Promise<{ success: true; data: User } | { success: false; error: string }> {
-    await delay();
-    
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
+  async updateProfile(request: UpdateProfileRequest): Promise<{ success: true; data: User } | { success: false; error: string }> {
     try {
-      const session = JSON.parse(stored);
-      const updatedUser = {
-        ...session.user,
-        ...request,
-        updatedAt: new Date().toISOString(),
-      };
-      session.user = updatedUser;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-      return { success: true, data: updatedUser };
-    } catch {
-      return { success: false, error: 'Failed to update profile' };
+      const response = await authFetch<{ data: User }>('/me', {
+        method: 'PATCH',
+        body: JSON.stringify(request),
+      }, true);
+      
+      // Update stored session with new user data
+      const session = tokenStorage.getSession();
+      if (session) {
+        tokenStorage.saveSession({ ...session.user, ...response.data } as UserWithRole, session.tokens);
+      }
+      
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to update profile' };
     }
   },
 
   // POST /password/change
-  async changePassword(accessToken: string, request: ChangePasswordRequest): Promise<{ success: true; message: string } | { success: false; error: string }> {
-    await delay();
-    
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) {
-      return { success: false, error: 'Unauthorized' };
+  async changePassword(request: ChangePasswordRequest): Promise<{ success: true; message: string } | { success: false; error: string }> {
+    try {
+      await authFetch<{ data: { message: string } }>('/password/change', {
+        method: 'POST',
+        body: JSON.stringify(request),
+      }, true);
+      
+      return { success: true, message: 'Password changed successfully' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to change password' };
     }
-
-    // In a real implementation, verify current password and update
-    // For mock, just return success
-    return { success: true, message: 'Password changed successfully' };
   },
 
-  // POST /refresh
+  // POST /refresh - with deduplication
   async refreshToken(refreshToken: string): Promise<{ success: true; data: RefreshTokenResponse } | { success: false; error: string }> {
-    await delay(200);
+    try {
+      const response = await authFetch<{ data: RefreshTokenResponse }>('/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken }),
+      });
+      
+      return { success: true, data: response.data };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to refresh token' };
+    }
+  },
+
+  // Attempt token refresh with deduplication
+  async tryRefreshToken(): Promise<boolean> {
+    // If already refreshing, wait for the existing promise
+    if (isRefreshing && refreshPromise) {
+      const result = await refreshPromise;
+      return result !== null;
+    }
     
-    // In mock, just generate new tokens
-    const tokens = generateTokens();
-    return {
-      success: true,
-      data: {
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        expiresIn: tokens.expiresIn,
+    const currentRefreshToken = tokenStorage.getRefreshToken();
+    if (!currentRefreshToken) {
+      return false;
+    }
+    
+    isRefreshing = true;
+    refreshPromise = (async () => {
+      try {
+        const result = await this.refreshToken(currentRefreshToken);
+        
+        if (result.success) {
+          tokenStorage.updateTokens({
+            accessToken: result.data.accessToken,
+            refreshToken: result.data.refreshToken,
+            expiresIn: result.data.expiresIn,
+          });
+          return result.data;
+        }
+        
+        return null;
+      } catch {
+        return null;
+      } finally {
+        isRefreshing = false;
+        refreshPromise = null;
       }
-    };
+    })();
+    
+    const result = await refreshPromise;
+    return result !== null;
+  },
+
+  // Proactive token refresh - call this periodically or before critical operations
+  async ensureFreshToken(): Promise<boolean> {
+    if (tokenStorage.isTokenExpired()) {
+      return this.tryRefreshToken();
+    }
+    return true;
   },
 
   // POST /password/reset-request
-  async requestPasswordReset(email: string): Promise<{ success: true; message: string }> {
-    await delay();
-    // Always return success for security
-    return { success: true, message: 'Password reset email sent' };
+  async requestPasswordReset(email: string): Promise<{ success: true; message: string } | { success: false; error: string }> {
+    try {
+      await authFetch<{ data: { message: string } }>('/password/reset-request', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      
+      return { success: true, message: 'Password reset email sent' };
+    } catch (error) {
+      // Always return success for security (don't reveal if email exists)
+      return { success: true, message: 'If an account exists with this email, a reset link will be sent.' };
+    }
   },
 
   // POST /password/reset
   async resetPassword(token: string, newPassword: string): Promise<{ success: true; message: string } | { success: false; error: string }> {
-    await delay();
-    // Mock implementation
-    return { success: true, message: 'Password reset successful' };
+    try {
+      await authFetch<{ data: { message: string } }>('/password/reset', {
+        method: 'POST',
+        body: JSON.stringify({ token, newPassword }),
+      });
+      
+      return { success: true, message: 'Password reset successful' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to reset password' };
+    }
   },
 
   // POST /verify-email
   async verifyEmail(token: string): Promise<{ success: true; message: string } | { success: false; error: string }> {
-    await delay();
-    return { success: true, message: 'Email verified successfully' };
+    try {
+      await authFetch<{ data: { message: string } }>('/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ token }),
+      });
+      
+      return { success: true, message: 'Email verified successfully' };
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : 'Failed to verify email' };
+    }
   },
 
   // POST /logout
   async logout(): Promise<void> {
-    localStorage.removeItem(STORAGE_KEY);
-  },
-
-  // Session management helpers
-  saveSession(user: UserWithRole, tokens: Tokens): void {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ user, tokens }));
-  },
-
-  getStoredSession(): { user: UserWithRole; tokens: Tokens } | null {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return null;
-      return JSON.parse(stored);
+      // Attempt to notify server (best effort)
+      await authFetch<void>('/logout', { method: 'POST' }, true);
     } catch {
-      return null;
+      // Ignore errors - still clear local session
+    } finally {
+      tokenStorage.clearSession();
     }
   },
 
+  // Session management using tokenStorage
+  saveSession(user: UserWithRole, tokens: Tokens): void {
+    tokenStorage.saveSession(user, tokens);
+  },
+
+  getStoredSession(): { user: UserWithRole; tokens: Tokens } | null {
+    return tokenStorage.getSession();
+  },
+
   clearSession(): void {
-    localStorage.removeItem(STORAGE_KEY);
+    tokenStorage.clearSession();
   },
 
   // Role checking
   hasPermission(user: UserWithRole, permission: string): boolean {
-    return user.permissions.includes(permission);
+    return user.permissions?.includes(permission) ?? false;
   },
 
   hasRole(user: UserWithRole, requiredRole: UserRole): boolean {
-    const roleHierarchy: Record<string, number> = { admin: 3, moderator: 2, user: 1 };
-    return roleHierarchy[user.role] >= roleHierarchy[requiredRole];
+    const roleHierarchy: Record<UserRole, number> = { owner: 4, admin: 3, moderator: 2, user: 1 };
+    return (roleHierarchy[user.role] ?? 0) >= (roleHierarchy[requiredRole] ?? 0);
   },
 };

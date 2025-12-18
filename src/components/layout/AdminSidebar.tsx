@@ -2,20 +2,16 @@ import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Package, 
-  Sparkles, 
-  CheckSquare, 
-  Bug, 
-  Zap, 
-  Rocket, 
   Users, 
+  CreditCard, 
+  MessageSquare, 
   BarChart3, 
-  Settings,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  FileText,
-  CreditCard
+  Shield,
+  ArrowLeft,
+  Globe
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,21 +24,15 @@ import {
 } from '@/components/ui/tooltip';
 
 const navItems = [
-  { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
-  { icon: Package, label: 'Products', path: '/dashboard/products' },
-  { icon: Sparkles, label: 'Features', path: '/dashboard/features' },
-  { icon: CheckSquare, label: 'Tasks', path: '/dashboard/tasks' },
-  { icon: Bug, label: 'Bugs', path: '/dashboard/bugs' },
-  { icon: Zap, label: 'Sprints', path: '/dashboard/sprints' },
-  { icon: Rocket, label: 'Releases', path: '/dashboard/releases' },
-  { icon: Users, label: 'Team', path: '/dashboard/team' },
-  { icon: BarChart3, label: 'Analytics', path: '/dashboard/analytics' },
-  { icon: FileText, label: 'API Docs', path: '/dashboard/api-docs' },
-  { icon: CreditCard, label: 'Billing', path: '/dashboard/billing' },
-  { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
+  { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
+  { icon: Users, label: 'Users', path: '/admin/users' },
+  { icon: CreditCard, label: 'Billing', path: '/admin/billing' },
+  { icon: MessageSquare, label: 'Reports', path: '/admin/reports' },
+  { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
+  { icon: Globe, label: 'CORS', path: '/admin/cors' },
 ];
 
-export function Sidebar() {
+export function AdminSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -55,28 +45,55 @@ export function Sidebar() {
   return (
     <aside 
       className={cn(
-        "flex flex-col h-screen bg-gradient-to-b from-card to-card/95 border-r border-border/50 transition-all duration-300 ease-in-out shadow-lg",
+        "flex flex-col h-screen bg-gradient-to-b from-slate-900 to-slate-950 border-r border-slate-800/50 transition-all duration-300 ease-in-out shadow-2xl",
         collapsed ? "w-[72px]" : "w-64"
       )}
     >
       {/* Logo */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-slate-800/50 bg-slate-900/50 backdrop-blur-sm">
         {!collapsed && (
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-            DevCycle
-          </span>
+          <div className="flex items-center gap-2">
+            <Shield className="h-6 w-6 text-amber-500" />
+            <span className="text-xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+              Admin
+            </span>
+          </div>
         )}
         <Button 
           variant="ghost" 
           size="icon" 
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200",
+            "h-8 w-8 rounded-lg hover:bg-amber-500/10 hover:text-amber-500 transition-all duration-200 text-slate-400",
             collapsed && "mx-auto"
           )}
         >
           {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </Button>
+      </div>
+
+      {/* Back to Dashboard */}
+      <div className="px-3 py-3 border-b border-slate-800/50">
+        <Tooltip delayDuration={0}>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/dashboard')}
+              className={cn(
+                "w-full justify-start gap-3 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50",
+                collapsed && "justify-center px-2"
+              )}
+            >
+              <ArrowLeft className="h-4 w-4" />
+              {!collapsed && <span className="text-sm">Back to Dashboard</span>}
+            </Button>
+          </TooltipTrigger>
+          {collapsed && (
+            <TooltipContent side="right" className="bg-slate-800 border-slate-700">
+              Back to Dashboard
+            </TooltipContent>
+          )}
+        </Tooltip>
       </div>
 
       {/* Navigation */}
@@ -88,19 +105,19 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                   <NavLink
                     to={item.path}
-                    end={item.path === '/dashboard'}
+                    end={item.path === '/admin'}
                     className={({ isActive }) =>
                       cn(
                         "group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
-                        "text-muted-foreground/80 hover:text-foreground",
-                        "hover:bg-gradient-to-r hover:from-primary/10 hover:to-transparent",
+                        "text-slate-400 hover:text-slate-100",
+                        "hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-transparent",
                         "relative overflow-hidden",
                         isActive && [
-                          "bg-gradient-to-r from-primary/15 to-primary/5",
-                          "text-primary font-medium",
-                          "shadow-sm shadow-primary/10",
+                          "bg-gradient-to-r from-amber-500/20 to-amber-500/5",
+                          "text-amber-400 font-medium",
+                          "shadow-sm shadow-amber-500/10",
                           "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
-                          "before:w-1 before:h-6 before:rounded-full before:bg-primary"
+                          "before:w-1 before:h-6 before:rounded-full before:bg-amber-500"
                         ],
                         collapsed && "justify-center px-2"
                       )
@@ -118,7 +135,7 @@ export function Sidebar() {
                 {collapsed && (
                   <TooltipContent 
                     side="right" 
-                    className="bg-popover/95 backdrop-blur-sm border-border/50 shadow-lg"
+                    className="bg-slate-800 border-slate-700"
                   >
                     {item.label}
                   </TooltipContent>
@@ -130,26 +147,26 @@ export function Sidebar() {
       </nav>
 
       {/* User Section */}
-      <div className="p-3 border-t border-border/50 bg-card/30 backdrop-blur-sm">
+      <div className="p-3 border-t border-slate-800/50 bg-slate-900/30 backdrop-blur-sm">
         <div className={cn(
           "flex items-center gap-3 p-2 rounded-xl transition-all duration-200",
-          "hover:bg-primary/5",
+          "hover:bg-slate-800/50",
           collapsed && "justify-center p-1"
         )}>
           <Avatar className={cn(
-            "h-9 w-9 ring-2 ring-primary/20 ring-offset-2 ring-offset-card transition-all duration-200",
-            "hover:ring-primary/40"
+            "h-9 w-9 ring-2 ring-amber-500/20 ring-offset-2 ring-offset-slate-900 transition-all duration-200",
+            "hover:ring-amber-500/40"
           )}>
             <AvatarImage src={user?.avatar || undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary text-sm font-semibold">
-              {user?.name?.charAt(0).toUpperCase() || 'U'}
+            <AvatarFallback className="bg-gradient-to-br from-amber-500/30 to-amber-500/10 text-amber-400 text-sm font-semibold">
+              {user?.name?.charAt(0).toUpperCase() || 'S'}
             </AvatarFallback>
           </Avatar>
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate text-foreground">{user?.name}</p>
-                <p className="text-xs text-muted-foreground/70 truncate">{user?.email}</p>
+                <p className="text-sm font-medium truncate text-slate-100">{user?.name}</p>
+                <p className="text-xs text-slate-500 truncate">{user?.email}</p>
               </div>
               <Tooltip delayDuration={0}>
                 <TooltipTrigger asChild>
@@ -157,12 +174,12 @@ export function Sidebar() {
                     variant="ghost" 
                     size="icon" 
                     onClick={handleLogout}
-                    className="h-8 w-8 shrink-0 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-all duration-200"
+                    className="h-8 w-8 shrink-0 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-all duration-200 text-slate-400"
                   >
                     <LogOut className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent side="right" className="bg-popover/95 backdrop-blur-sm">
+                <TooltipContent side="right" className="bg-slate-800 border-slate-700">
                   Logout
                 </TooltipContent>
               </Tooltip>

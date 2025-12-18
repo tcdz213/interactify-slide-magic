@@ -1,6 +1,6 @@
 // Auth API Types matching the API documentation
 
-export type UserRole = 'admin' | 'moderator' | 'user';
+export type UserRole = 'owner' | 'admin' | 'moderator' | 'user';
 
 export interface User {
   id: string;

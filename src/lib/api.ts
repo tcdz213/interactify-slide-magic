@@ -19,26 +19,21 @@ import type {
   ApprovalWorkflow,
 } from '@/types/feature';
 
-const API_BASE = 'http://localhost:3000/api/v1';
+import { tokenStorage } from '@/lib/tokenStorage';
+import { authService } from '@/services/auth.service';
 
-// Get auth token from localStorage
-const getAuthToken = (): string | null => {
-  try {
-    const stored = localStorage.getItem('devcycle_auth');
-    if (!stored) return null;
-    const { tokens } = JSON.parse(stored);
-    return tokens?.accessToken || null;
-  } catch {
-    return null;
-  }
-};
+// Use environment variable or default to localhost for development
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 
-// Generic fetch wrapper with auth
+// Generic fetch wrapper with auth and automatic token refresh
 async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = getAuthToken();
+  // Ensure token is fresh before making request
+  await authService.ensureFreshToken();
+  
+  const token = tokenStorage.getAccessToken();
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -53,6 +48,39 @@ async function apiFetch<T>(
     ...options,
     headers,
   });
+
+  // Handle 401 - attempt token refresh and retry
+  if (response.status === 401) {
+    const refreshed = await authService.tryRefreshToken();
+    if (refreshed) {
+      // Retry with new token
+      const newToken = tokenStorage.getAccessToken();
+      if (newToken) {
+        (headers as Record<string, string>)['Authorization'] = `Bearer ${newToken}`;
+      }
+      
+      const retryResponse = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers,
+      });
+      
+      if (!retryResponse.ok) {
+        const error = await retryResponse.json().catch(() => ({ error: { message: 'Request failed' } }));
+        throw new Error(error.error?.message || `HTTP ${retryResponse.status}`);
+      }
+      
+      if (retryResponse.status === 204) {
+        return {} as T;
+      }
+      
+      return retryResponse.json();
+    }
+    
+    // Refresh failed - session expired
+    tokenStorage.clearSession();
+    window.location.href = '/auth';
+    throw new Error('Session expired. Please login again.');
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: { message: 'Request failed' } }));
