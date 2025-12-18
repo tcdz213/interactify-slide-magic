@@ -5,8 +5,8 @@ import type { UserWithRole, UserRole } from '@/types/auth';
 interface AuthContextType {
   user: UserWithRole | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; user?: UserWithRole }>;
+  signup: (email: string, password: string, name: string) => Promise<{ success: boolean; error?: string; user?: UserWithRole }>;
   logout: () => void;
   hasRole: (role: UserRole) => boolean;
   hasPermission: (permission: string) => boolean;
@@ -27,27 +27,56 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string; user?: UserWithRole }> => {
     const result = await authService.login({ email, password });
     
     if (result.success) {
-      const userWithRole = result.data.user as UserWithRole;
+      // Save tokens first to enable authenticated requests
+      authService.saveSession(result.data.user as UserWithRole, result.data.tokens);
+      
+      // Fetch user roles from /me/roles endpoint
+      const rolesResult = await authService.getUserRoles();
+      const userRole = rolesResult.success && rolesResult.data.length > 0 
+        ? rolesResult.data[0].role as UserRole 
+        : 'user';
+      
+      const userWithRole: UserWithRole = {
+        ...result.data.user,
+        role: userRole,
+        permissions: [],
+      };
+      
+      // Update session with role
       authService.saveSession(userWithRole, result.data.tokens);
       setUser(userWithRole);
-      return { success: true };
+      return { success: true, user: userWithRole };
     }
 
     return { success: false, error: 'error' in result ? result.error : 'Login failed' };
   };
 
-  const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string }> => {
+  const signup = async (email: string, password: string, name: string): Promise<{ success: boolean; error?: string; user?: UserWithRole }> => {
     const result = await authService.signup({ email, password, name });
 
     if (result.success) {
-      const userWithRole = result.data.user as UserWithRole;
+      // Save tokens first
+      authService.saveSession(result.data.user as UserWithRole, result.data.tokens);
+      
+      // Fetch user roles
+      const rolesResult = await authService.getUserRoles();
+      const userRole = rolesResult.success && rolesResult.data.length > 0 
+        ? rolesResult.data[0].role as UserRole 
+        : 'user';
+      
+      const userWithRole: UserWithRole = {
+        ...result.data.user,
+        role: userRole,
+        permissions: [],
+      };
+      
       authService.saveSession(userWithRole, result.data.tokens);
       setUser(userWithRole);
-      return { success: true };
+      return { success: true, user: userWithRole };
     }
 
     return { success: false, error: 'error' in result ? result.error : 'Signup failed' };
