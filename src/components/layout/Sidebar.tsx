@@ -15,7 +15,8 @@ import {
   ChevronRight,
   LogOut,
   FileText,
-  CreditCard
+  CreditCard,
+  Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +42,8 @@ const navItems = [
   { icon: CreditCard, label: 'Billing', path: '/dashboard/billing' },
   { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
 ];
+
+const adminNavItem = { icon: Shield, label: 'Admin Panel', path: '/admin' };
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -126,6 +129,51 @@ export function Sidebar() {
               </Tooltip>
             </li>
           ))}
+          
+          {/* Admin Panel - Only for owners */}
+          {user?.role === 'owner' && (
+            <li className="pt-2 mt-2 border-t border-border/30">
+              <Tooltip delayDuration={0}>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to={adminNavItem.path}
+                    className={({ isActive }) =>
+                      cn(
+                        "group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
+                        "text-amber-500/80 hover:text-amber-400",
+                        "hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-transparent",
+                        "relative overflow-hidden",
+                        isActive && [
+                          "bg-gradient-to-r from-amber-500/15 to-amber-500/5",
+                          "text-amber-400 font-medium",
+                          "shadow-sm shadow-amber-500/10",
+                          "before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2",
+                          "before:w-1 before:h-6 before:rounded-full before:bg-amber-500"
+                        ],
+                        collapsed && "justify-center px-2"
+                      )
+                    }
+                  >
+                    <adminNavItem.icon className={cn(
+                      "h-5 w-5 shrink-0 transition-transform duration-200",
+                      "group-hover:scale-110"
+                    )} />
+                    {!collapsed && (
+                      <span className="text-sm tracking-tight">{adminNavItem.label}</span>
+                    )}
+                  </NavLink>
+                </TooltipTrigger>
+                {collapsed && (
+                  <TooltipContent 
+                    side="right" 
+                    className="bg-popover/95 backdrop-blur-sm border-border/50 shadow-lg"
+                  >
+                    {adminNavItem.label}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </li>
+          )}
         </ul>
       </nav>
 
