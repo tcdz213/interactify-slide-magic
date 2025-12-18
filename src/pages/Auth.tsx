@@ -41,12 +41,19 @@ export default function Auth() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [resetSent, setResetSent] = useState(false);
 
-  const { login, signup } = useAuth();
+  const { login, signup, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
 
-  const from = (location.state as any)?.from?.pathname || '/dashboard';
+  const getRedirectPath = (userRole?: string) => {
+    const fromPath = (location.state as any)?.from?.pathname;
+    // If owner, redirect to admin panel unless they were trying to access a specific page
+    if (userRole === 'owner' && !fromPath) {
+      return '/admin';
+    }
+    return fromPath || '/dashboard';
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,8 +77,11 @@ export default function Auth() {
         const result = await login(formData.email, formData.password);
         
         if (result.success) {
+          // Get the user from the session to check role
+          const session = await import('@/services/auth.service').then(m => m.authService.getStoredSession());
+          const redirectPath = getRedirectPath(session?.user?.role);
           toast({ title: 'Welcome back!', description: 'Successfully logged in.' });
-          navigate(from, { replace: true });
+          navigate(redirectPath, { replace: true });
         } else {
           setErrors({ form: result.error || 'Login failed' });
         }
@@ -81,8 +91,10 @@ export default function Auth() {
         const result = await signup(formData.email, formData.password, formData.name);
         
         if (result.success) {
+          const session = await import('@/services/auth.service').then(m => m.authService.getStoredSession());
+          const redirectPath = getRedirectPath(session?.user?.role);
           toast({ title: 'Account created!', description: 'Welcome to DevCycle.' });
-          navigate(from, { replace: true });
+          navigate(redirectPath, { replace: true });
         } else {
           setErrors({ form: result.error || 'Signup failed' });
         }
