@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
+
+const ctaPoints = [
+  "Free tier available forever",
+  "Setup in under 5 minutes",
+  "No credit card required",
+  "Cancel anytime",
+];
 
 export function CTA() {
   return (
@@ -21,7 +28,7 @@ export function CTA() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-8">
             <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">14-day free trial</span>
+            <span className="text-sm font-medium text-foreground">Start building today</span>
           </div>
 
           <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 text-balance">
@@ -30,14 +37,24 @@ export function CTA() {
           </h2>
           
           <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto text-balance">
-            Join thousands of teams shipping better software, faster. 
-            Start your free trial today.
+            Join product teams who ship better software with DevCycle. 
+            Start with our free tier and scale as you grow.
           </p>
+
+          {/* CTA Points */}
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 mb-10">
+            {ctaPoints.map((point) => (
+              <div key={point} className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-primary" />
+                <span className="text-sm text-muted-foreground">{point}</span>
+              </div>
+            ))}
+          </div>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link to="/auth">
               <Button variant="hero" size="xl" className="group">
-                Start Free Trial
+                Get Started Free
                 <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
               </Button>
             </Link>
@@ -45,10 +62,6 @@ export function CTA() {
               Schedule a Demo
             </Button>
           </div>
-          
-          <p className="mt-8 text-sm text-muted-foreground">
-            No credit card required • Cancel anytime
-          </p>
         </div>
       </div>
     </section>
