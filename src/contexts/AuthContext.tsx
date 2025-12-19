@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { authService } from '@/services/auth.service';
 import type { UserWithRole, UserRole } from '@/types/auth';
 
@@ -17,6 +18,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserWithRole | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Check for existing session
@@ -83,7 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    authService.clearSession();
+    // Clear all caches
+    queryClient.clear(); // Clear React Query cache
+    authService.clearSession(); // Clear auth tokens
+    localStorage.clear(); // Clear all localStorage
+    sessionStorage.clear(); // Clear sessionStorage
     setUser(null);
   };
 
