@@ -12,12 +12,12 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>DevCycle - Ship Software 10x Faster | Product Development Platform</title>
+        <title>DevCycle - Product Development Platform for Modern Teams</title>
         <meta 
           name="description" 
-          content="DevCycle is the complete product development platform for modern teams. From ideation to production with AI-powered sprint planning, feature lifecycle management, and real-time analytics." 
+          content="DevCycle is the complete product development platform that unifies feature lifecycle, sprint management, team collaboration, and release pipeline in one place." 
         />
-        <meta name="keywords" content="product development, sprint planning, agile, project management, software development, team collaboration" />
+        <meta name="keywords" content="product development, sprint planning, agile, project management, software development, team collaboration, feature management" />
         <link rel="canonical" href="https://devcycle.app" />
       </Helmet>
       <main className="min-h-screen bg-background">

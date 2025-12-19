@@ -5,44 +5,44 @@ const features = [
   {
     icon: GitBranch,
     title: "Feature Lifecycle",
-    description: "Track features from ideation to deployment with voting, approval gates, and complete audit trails.",
+    description: "Track features from ideation to deployment with stakeholder voting, approval gates, and complete audit trails.",
     color: "primary",
-    stats: "3x faster releases",
+    highlight: "End-to-end visibility",
   },
   {
     icon: Zap,
     title: "Agile Sprints",
     description: "Sprint planning with burndown charts, velocity tracking, and automated retrospective insights.",
     color: "accent",
-    stats: "42% more velocity",
+    highlight: "Built for agile teams",
   },
   {
     icon: BarChart3,
     title: "Real-time Analytics",
     description: "Custom dashboards with team metrics, cycle time analysis, and predictive delivery forecasting.",
     color: "primary",
-    stats: "Real-time insights",
+    highlight: "Data-driven decisions",
   },
   {
     icon: Users,
     title: "Team Collaboration",
     description: "Role-based access, workload management, and seamless cross-team communication.",
     color: "accent",
-    stats: "50% less meetings",
+    highlight: "Work together, ship faster",
   },
   {
     icon: Shield,
     title: "Enterprise Security",
     description: "SOC2 compliant with SSO, audit logs, and granular permission controls.",
     color: "primary",
-    stats: "A+ security rating",
+    highlight: "Enterprise-ready",
   },
   {
     icon: Rocket,
     title: "Release Management",
     description: "CI/CD integration, staged rollouts, and instant rollback capabilities.",
     color: "accent",
-    stats: "99.9% success rate",
+    highlight: "Ship with confidence",
   },
 ];
 
@@ -110,14 +110,13 @@ export function Features() {
                   {feature.description}
                 </p>
                 
-                {/* Stats Badge */}
+                {/* Highlight Badge */}
                 <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${
                   feature.color === 'accent'
                     ? 'bg-accent/10 text-accent'
                     : 'bg-primary/10 text-primary'
                 }`}>
-                  <Zap className="w-3 h-3" />
-                  {feature.stats}
+                  {feature.highlight}
                 </div>
               </div>
             </div>
