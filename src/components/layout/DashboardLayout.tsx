@@ -3,6 +3,7 @@ import { Sidebar, MobileSidebar } from './Sidebar';
 import { Bell, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { EmailVerificationBanner } from '@/components/EmailVerificationBanner';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -17,6 +18,9 @@ export function DashboardLayout({ children, title, description, actions }: Dashb
       <Sidebar />
       
       <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Email Verification Banner */}
+        <EmailVerificationBanner />
+        
         {/* Header */}
         <header className="h-14 md:h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-3 md:px-6 gap-2">
           <div className="flex items-center gap-2 md:gap-4">

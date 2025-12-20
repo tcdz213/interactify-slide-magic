@@ -18,7 +18,6 @@ import {
   CreditCard,
   Shield,
   Menu,
-  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +30,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { RoleBadge } from '@/components/RoleBadge';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
@@ -207,7 +207,10 @@ function SidebarContent({ collapsed, setCollapsed, onNavigate }: {
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate text-foreground">{user?.name}</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium truncate text-foreground">{user?.name}</p>
+                  {user?.role && <RoleBadge role={user.role} size="sm" showIcon={false} />}
+                </div>
                 <p className="text-xs text-muted-foreground/70 truncate">{user?.email}</p>
               </div>
               <Tooltip delayDuration={0}>
