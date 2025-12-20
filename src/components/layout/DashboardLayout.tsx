@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Sidebar } from './Sidebar';
+import { Sidebar, MobileSidebar } from './Sidebar';
 import { Bell, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -18,34 +18,35 @@ export function DashboardLayout({ children, title, description, actions }: Dashb
       
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <div className="relative">
+        <header className="h-14 md:h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-3 md:px-6 gap-2">
+          <div className="flex items-center gap-2 md:gap-4">
+            <MobileSidebar />
+            <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder="Search..." 
-                className="w-64 pl-9 bg-secondary/50 border-border/50"
+                className="w-40 md:w-64 pl-9 bg-secondary/50 border-border/50"
               />
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
+          <div className="flex items-center gap-2 md:gap-3">
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 md:h-10 md:w-10">
+              <Bell className="h-4 w-4 md:h-5 md:w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 bg-primary rounded-full" />
             </Button>
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-6">
-          <div className="mb-6 flex items-start justify-between">
+        <main className="flex-1 overflow-y-auto p-3 md:p-6">
+          <div className="mb-4 md:mb-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-bold">{title}</h1>
+              <h1 className="text-xl md:text-2xl font-bold">{title}</h1>
               {description && (
-                <p className="text-muted-foreground mt-1">{description}</p>
+                <p className="text-muted-foreground text-sm md:text-base mt-1">{description}</p>
               )}
             </div>
-            {actions && <div className="flex items-center gap-2">{actions}</div>}
+            {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
           </div>
           {children}
         </main>

@@ -19,6 +19,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { bugsApi } from '@/services/bugApi';
 import { BugDialog } from '@/components/dialogs/BugDialog';
+import { BugLinkFeatureDialog } from '@/components/dialogs/BugLinkFeatureDialog';
+import { BugAddToSprintDialog } from '@/components/dialogs/BugAddToSprintDialog';
+import { BugRetestDialog } from '@/components/dialogs/BugRetestDialog';
 import {
   ArrowLeft,
   Clock,
@@ -38,6 +41,7 @@ import {
   Zap,
   Globe,
   Info,
+  Link,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import type { UpdateBugData, BugStatus, BugSeverity, BugPlatform } from '@/types/bug';
@@ -78,6 +82,9 @@ export default function BugDetail() {
   const queryClient = useQueryClient();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [linkFeatureDialogOpen, setLinkFeatureDialogOpen] = useState(false);
+  const [addToSprintDialogOpen, setAddToSprintDialogOpen] = useState(false);
+  const [retestDialogOpen, setRetestDialogOpen] = useState(false);
   const [retestData, setRetestData] = useState({
     status: 'passed' as 'passed' | 'failed',
     notes: '',
@@ -123,7 +130,40 @@ export default function BugDetail() {
       queryClient.invalidateQueries({ queryKey: ['bug', id] });
       queryClient.invalidateQueries({ queryKey: ['bug-retest-history', id] });
       setRetestData({ status: 'passed', notes: '', environment: '' });
+      setRetestDialogOpen(false);
       toast({ title: 'Retest result added' });
+    },
+  });
+
+  const linkFeatureMutation = useMutation({
+    mutationFn: (featureId: string) => bugsApi.linkFeature(id!, featureId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bug', id] });
+      toast({ title: 'Bug linked to feature' });
+    },
+  });
+
+  const unlinkFeatureMutation = useMutation({
+    mutationFn: () => bugsApi.unlinkFeature(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bug', id] });
+      toast({ title: 'Bug unlinked from feature' });
+    },
+  });
+
+  const addToSprintMutation = useMutation({
+    mutationFn: (sprintId: string) => bugsApi.addToSprint(id!, sprintId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bug', id] });
+      toast({ title: 'Bug added to sprint' });
+    },
+  });
+
+  const removeFromSprintMutation = useMutation({
+    mutationFn: () => bugsApi.removeFromSprint(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['bug', id] });
+      toast({ title: 'Bug removed from sprint' });
     },
   });
 
@@ -195,12 +235,12 @@ export default function BugDetail() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Select value={bug.status} onValueChange={(v) => updateStatusMutation.mutate(v as BugStatus)}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="w-32 sm:w-40">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="z-[200]">
                 {ALL_STATUSES.map((s) => (
                   <SelectItem key={s} value={s}>
                     {STATUS_CONFIG[s].label}
@@ -208,6 +248,18 @@ export default function BugDetail() {
                 ))}
               </SelectContent>
             </Select>
+            <Button variant="outline" size="sm" onClick={() => setLinkFeatureDialogOpen(true)}>
+              <Zap className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Link Feature</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setAddToSprintDialogOpen(true)}>
+              <Calendar className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Sprint</span>
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setRetestDialogOpen(true)}>
+              <TestTube className="h-4 w-4 mr-1" />
+              <span className="hidden sm:inline">Retest</span>
+            </Button>
             <Button onClick={() => setEditDialogOpen(true)}>Edit Bug</Button>
           </div>
         </div>
@@ -531,6 +583,44 @@ export default function BugDetail() {
         onOpenChange={setEditDialogOpen}
         bug={bug}
         onSave={handleSaveEdit}
+      />
+
+      {/* Link Feature Dialog */}
+      <BugLinkFeatureDialog
+        open={linkFeatureDialogOpen}
+        onOpenChange={setLinkFeatureDialogOpen}
+        currentFeatureId={bug.featureId}
+        currentFeatureTitle={bug.featureTitle}
+        onLink={async (featureId) => {
+          await linkFeatureMutation.mutateAsync(featureId);
+        }}
+        onUnlink={async () => {
+          await unlinkFeatureMutation.mutateAsync();
+        }}
+      />
+
+      {/* Add to Sprint Dialog */}
+      <BugAddToSprintDialog
+        open={addToSprintDialogOpen}
+        onOpenChange={setAddToSprintDialogOpen}
+        currentSprintId={bug.sprintId}
+        currentSprintName={bug.sprintName}
+        productId={bug.productId}
+        onAddToSprint={async (sprintId) => {
+          await addToSprintMutation.mutateAsync(sprintId);
+        }}
+        onRemoveFromSprint={async () => {
+          await removeFromSprintMutation.mutateAsync();
+        }}
+      />
+
+      {/* Retest Dialog */}
+      <BugRetestDialog
+        open={retestDialogOpen}
+        onOpenChange={setRetestDialogOpen}
+        onSubmit={async (data) => {
+          await addRetestMutation.mutateAsync(data);
+        }}
       />
     </DashboardLayout>
   );

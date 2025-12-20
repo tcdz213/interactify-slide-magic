@@ -20,8 +20,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { 
   Plus, Search, MoreVertical, Sparkles, Edit, Trash2, 
-  ThumbsUp, ArrowRight, Clock, User, Calendar
+  ThumbsUp, ArrowRight, Clock, User, Calendar, Eye
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import { featuresApi } from '@/lib/api';
 import { FeatureDialog } from '@/components/dialogs/FeatureDialog';
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
@@ -51,6 +53,7 @@ const PRIORITY_CONFIG: Record<FeaturePriority, { label: string; color: string }>
 
 export default function Features() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [features, setFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -59,16 +62,24 @@ export default function Features() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingFeature, setEditingFeature] = useState<Feature | null>(null);
   const [deleteFeature, setDeleteFeature] = useState<Feature | null>(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1, hasNext: false, hasPrev: false });
 
   const fetchFeatures = async () => {
     try {
       setLoading(true);
       const response = await featuresApi.list({
+        page,
+        limit,
         search: search || undefined,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         priority: priorityFilter !== 'all' ? priorityFilter : undefined,
       });
       setFeatures(response.data);
+      if (response.pagination) {
+        setPagination(response.pagination);
+      }
     } catch (error) {
       toast.error('Failed to load features');
       console.error(error);
@@ -79,7 +90,7 @@ export default function Features() {
 
   useEffect(() => {
     fetchFeatures();
-  }, [search, statusFilter, priorityFilter]);
+  }, [search, statusFilter, priorityFilter, page]);
 
   const handleCreate = () => {
     setEditingFeature(null);
@@ -221,7 +232,7 @@ export default function Features() {
       ) : (
         <div className="space-y-4">
           {features.map((feature) => (
-            <Card key={feature.id} className="p-6 hover:border-primary/30 transition-colors">
+            <Card key={feature.id} className="p-6 hover:border-primary/30 transition-colors cursor-pointer" onClick={() => navigate(`/dashboard/features/${feature.id}`)}>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
@@ -284,12 +295,16 @@ export default function Features() {
                   </Button>
 
                   <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
+                    <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
+                    <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenuItem onClick={() => navigate(`/dashboard/features/${feature.id}`)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Details
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleEdit(feature)}>
                         <Edit className="h-4 w-4 mr-2" />
                         Edit
@@ -322,6 +337,17 @@ export default function Features() {
             </Card>
           ))}
         </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && features.length > 0 && (
+        <PaginationControls
+          page={page}
+          totalPages={pagination.totalPages}
+          onPageChange={setPage}
+          total={pagination.total}
+          limit={limit}
+        />
       )}
 
       {/* Dialogs */}

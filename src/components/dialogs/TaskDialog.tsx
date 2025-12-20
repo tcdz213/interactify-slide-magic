@@ -168,7 +168,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{task ? 'Edit Task' : 'Create Task'}</DialogTitle>
           <DialogDescription>
@@ -202,7 +202,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label>Type *</Label>
               <Select
@@ -212,7 +212,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-popover">
                   {TASK_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
                       {type.label}
@@ -231,7 +231,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-popover">
                   {PRIORITIES.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
                       {p.label}
@@ -243,7 +243,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
           </div>
 
           {/* Product, Sprint, Feature Selection */}
-          <div className="space-y-4 p-4 rounded-lg border border-border bg-muted/30">
+          <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 rounded-lg border border-border bg-muted/30">
             <div className="space-y-2">
               <Label>Product</Label>
               <Select
@@ -253,7 +253,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
                 <SelectTrigger>
                   <SelectValue placeholder="Select product..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-popover">
                   {products.map((product) => (
                     <SelectItem key={product.id} value={product.id}>
                       {product.name}
@@ -263,7 +263,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label>Sprint</Label>
                 <Select
@@ -273,7 +273,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
                   <SelectTrigger>
                     <SelectValue placeholder="Select sprint..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[100] bg-popover">
                     {sprints.map((sprint) => (
                       <SelectItem key={sprint.id} value={sprint.id}>
                         {sprint.name}
@@ -292,7 +292,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
                   <SelectTrigger>
                     <SelectValue placeholder="Select feature..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[100] bg-popover">
                     {features.map((feature) => (
                       <SelectItem key={feature.id} value={feature.id}>
                         {feature.title}
@@ -304,7 +304,7 @@ export function TaskDialog({ open, onOpenChange, task, onSave }: TaskDialogProps
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="estimatedHours">Estimated Hours</Label>
               <Input

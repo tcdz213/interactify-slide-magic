@@ -18,6 +18,8 @@ import {
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
 import type { Bug, CreateBugData, UpdateBugData, BugSeverity, BugPriority, BugPlatform } from '@/types/bug';
+import type { Product } from '@/types/product';
+import { productsApi } from '@/services/productApi';
 
 interface BugDialogProps {
   open: boolean;
@@ -48,8 +50,17 @@ const PLATFORMS: { value: BugPlatform; label: string }[] = [
   { value: 'desktop', label: 'Desktop' },
 ];
 
+const ENVIRONMENTS = [
+  { value: 'production', label: 'Production' },
+  { value: 'staging', label: 'Staging' },
+  { value: 'development', label: 'Development' },
+  { value: 'testing', label: 'Testing' },
+];
+
 export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -59,11 +70,21 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
     severity: 'medium' as BugSeverity,
     priority: 'medium' as BugPriority,
     platform: 'web' as BugPlatform,
-    environment: '',
+    environment: 'production',
     version: '',
     browserInfo: '',
     productId: '',
   });
+
+  useEffect(() => {
+    if (open && !bug) {
+      setLoadingProducts(true);
+      productsApi.list({ limit: 100 })
+        .then((res) => setProducts(res.data))
+        .catch(() => setProducts([]))
+        .finally(() => setLoadingProducts(false));
+    }
+  }, [open, bug]);
 
   useEffect(() => {
     if (bug) {
@@ -91,7 +112,7 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
         severity: 'medium',
         priority: 'medium',
         platform: 'web',
-        environment: 'Production',
+        environment: 'production',
         version: '',
         browserInfo: '',
         productId: '',
@@ -126,7 +147,7 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{bug ? 'Edit Bug' : 'Report New Bug'}</DialogTitle>
         </DialogHeader>
@@ -167,11 +188,11 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
               placeholder="1. Open the application&#10;2. Navigate to...&#10;3. Click on..."
               required
               minLength={10}
-              rows={4}
+              rows={3}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="expectedBehavior">Expected Behavior *</Label>
               <Textarea
@@ -196,7 +217,7 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label>Severity *</Label>
               <Select
@@ -206,7 +227,7 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-popover">
                   {SEVERITIES.map((s) => (
                     <SelectItem key={s.value} value={s.value}>
                       {s.label}
@@ -224,7 +245,7 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-popover">
                   {PRIORITIES.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
                       {p.label}
@@ -243,7 +264,7 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-popover">
                   {PLATFORMS.map((p) => (
                     <SelectItem key={p.value} value={p.value}>
                       {p.label}
@@ -256,30 +277,47 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
 
           {!bug && (
             <>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="environment">Environment *</Label>
-                  <Input
-                    id="environment"
+                  <Label>Environment *</Label>
+                  <Select
                     value={formData.environment}
-                    onChange={(e) => setFormData({ ...formData, environment: e.target.value })}
-                    placeholder="Production, Staging, Development"
-                    required
-                  />
+                    onValueChange={(v) => setFormData({ ...formData, environment: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select environment" />
+                    </SelectTrigger>
+                    <SelectContent className="z-[100] bg-popover">
+                      {ENVIRONMENTS.map((env) => (
+                        <SelectItem key={env.value} value={env.value}>
+                          {env.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="productId">Product ID *</Label>
-                  <Input
-                    id="productId"
+                  <Label>Product *</Label>
+                  <Select
                     value={formData.productId}
-                    onChange={(e) => setFormData({ ...formData, productId: e.target.value })}
-                    placeholder="Product UUID"
-                    required
-                  />
+                    onValueChange={(v) => setFormData({ ...formData, productId: v })}
+                    disabled={loadingProducts}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={loadingProducts ? "Loading..." : "Select product"} />
+                    </SelectTrigger>
+                    <SelectContent className="z-[100] bg-popover">
+                      {products.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="version">Version</Label>
                   <Input
@@ -295,14 +333,14 @@ export function BugDialog({ open, onOpenChange, bug, onSave }: BugDialogProps) {
                     id="browserInfo"
                     value={formData.browserInfo}
                     onChange={(e) => setFormData({ ...formData, browserInfo: e.target.value })}
-                    placeholder="e.g., Chrome 120 on Windows 11"
+                    placeholder="e.g., Chrome 120"
                   />
                 </div>
               </div>
             </>
           )}
 
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

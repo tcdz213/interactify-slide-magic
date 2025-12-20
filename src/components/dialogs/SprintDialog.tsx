@@ -180,7 +180,7 @@ export function SprintDialog({ open, onOpenChange, sprint, onSave }: SprintDialo
                   <SelectTrigger>
                     <SelectValue placeholder={loadingProducts ? "Loading products..." : "Select a product"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[100] bg-popover">
                     {products.map((product) => (
                       <SelectItem key={product.id} value={product.id}>
                         {product.name}
@@ -197,7 +197,7 @@ export function SprintDialog({ open, onOpenChange, sprint, onSave }: SprintDialo
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-popover">
                   <SelectItem value="1week">1 Week</SelectItem>
                   <SelectItem value="2weeks">2 Weeks</SelectItem>
                   <SelectItem value="manual">Manual</SelectItem>
@@ -205,7 +205,7 @@ export function SprintDialog({ open, onOpenChange, sprint, onSave }: SprintDialo
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="grid gap-2">
                 <Label>Start Date</Label>
                 <Popover>
@@ -221,7 +221,7 @@ export function SprintDialog({ open, onOpenChange, sprint, onSave }: SprintDialo
                       {startDate ? format(startDate, "MMM d, yyyy") : "Pick date"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 z-[100]" align="start">
                     <Calendar
                       mode="single"
                       selected={startDate}
@@ -249,7 +249,7 @@ export function SprintDialog({ open, onOpenChange, sprint, onSave }: SprintDialo
                       {endDate ? format(endDate, "MMM d, yyyy") : "Pick date"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
+                  <PopoverContent className="w-auto p-0 z-[100]" align="start">
                     <Calendar
                       mode="single"
                       selected={endDate}

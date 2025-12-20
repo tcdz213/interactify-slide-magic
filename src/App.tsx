@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
 import Features from "./pages/Features";
+import FeatureDetail from "./pages/FeatureDetail";
 import Sprints from "./pages/Sprints";
 import SprintDetail from "./pages/SprintDetail";
 import Tasks from "./pages/Tasks";
@@ -89,6 +90,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Features />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/features/:id"
+              element={
+                <ProtectedRoute>
+                  <FeatureDetail />
                 </ProtectedRoute>
               }
             />

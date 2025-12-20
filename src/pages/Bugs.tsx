@@ -28,6 +28,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus,
   Search,
@@ -45,10 +46,12 @@ import {
   XCircle,
   Clock,
   Eye,
+  BarChart3,
 } from 'lucide-react';
 import { bugsApi } from '@/services/bugApi';
 import { BugDialog } from '@/components/dialogs/BugDialog';
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
+import { BugStatistics } from '@/components/bugs/BugStatistics';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { Bug as BugType, BugStatus, BugSeverity, BugPlatform, CreateBugData, UpdateBugData } from '@/types/bug';
@@ -113,6 +116,7 @@ export default function Bugs() {
   const [editingBug, setEditingBug] = useState<BugType | null>(null);
   const [deleteBug, setDeleteBug] = useState<BugType | null>(null);
   const [pagination, setPagination] = useState({ page: 1, totalPages: 1, total: 0 });
+  const [activeTab, setActiveTab] = useState<'list' | 'statistics'>('list');
 
   const fetchBugs = async () => {
     try {
@@ -218,81 +222,97 @@ export default function Bugs() {
         </Button>
       }
     >
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 mb-6">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search bugs..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'list' | 'statistics')} className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <TabsList>
+            <TabsTrigger value="list" className="gap-2">
+              <Bug className="h-4 w-4" />
+              Bug List
+            </TabsTrigger>
+            <TabsTrigger value="statistics" className="gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Statistics
+            </TabsTrigger>
+          </TabsList>
         </div>
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as BugStatus | 'all')}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            {ALL_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {STATUS_LABELS[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v as BugSeverity | 'all')}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Severity" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Severity</SelectItem>
-            {ALL_SEVERITIES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {SEVERITY_LABELS[s]}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
-      {/* Bugs List */}
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="p-4 animate-pulse">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 bg-secondary rounded-lg" />
-                <div className="flex-1">
-                  <div className="h-5 bg-secondary rounded w-1/3 mb-2" />
-                  <div className="h-4 bg-secondary rounded w-1/2" />
-                </div>
-              </div>
+        <TabsContent value="list" className="mt-6">
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search bugs..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as BugStatus | 'all')}>
+              <SelectTrigger className="w-36">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent className="z-[200]">
+                <SelectItem value="all">All Status</SelectItem>
+                {ALL_STATUSES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {STATUS_LABELS[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={severityFilter} onValueChange={(v) => setSeverityFilter(v as BugSeverity | 'all')}>
+              <SelectTrigger className="w-36">
+                <SelectValue placeholder="Severity" />
+              </SelectTrigger>
+              <SelectContent className="z-[200]">
+                <SelectItem value="all">All Severity</SelectItem>
+                {ALL_SEVERITIES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {SEVERITY_LABELS[s]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Bugs List */}
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3, 4].map((i) => (
+                <Card key={i} className="p-4 animate-pulse">
+                  <div className="flex items-center gap-4">
+                    <div className="h-10 w-10 bg-secondary rounded-lg" />
+                    <div className="flex-1">
+                      <div className="h-5 bg-secondary rounded w-1/3 mb-2" />
+                      <div className="h-4 bg-secondary rounded w-1/2" />
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : bugs.length === 0 ? (
+            <Card className="p-12 text-center">
+              <Bug className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No bugs found</h3>
+              <p className="text-muted-foreground mb-4">
+                {search || statusFilter !== 'all' || severityFilter !== 'all'
+                  ? 'Try adjusting your filters'
+                  : 'No bugs reported yet - great job!'}
+              </p>
+              {!search && statusFilter === 'all' && severityFilter === 'all' && (
+                <Button onClick={handleCreate}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Report Bug
+                </Button>
+              )}
             </Card>
-          ))}
-        </div>
-      ) : bugs.length === 0 ? (
-        <Card className="p-12 text-center">
-          <Bug className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-          <h3 className="text-lg font-medium mb-2">No bugs found</h3>
-          <p className="text-muted-foreground mb-4">
-            {search || statusFilter !== 'all' || severityFilter !== 'all'
-              ? 'Try adjusting your filters'
-              : 'No bugs reported yet - great job!'}
-          </p>
-          {!search && statusFilter === 'all' && severityFilter === 'all' && (
-            <Button onClick={handleCreate}>
-              <Plus className="h-4 w-4 mr-2" />
-              Report Bug
-            </Button>
-          )}
-        </Card>
-      ) : (
-        <div className="space-y-3">
-          {bugs.map((bug) => {
-            const PlatformIcon = PLATFORM_ICONS[bug.platform];
-            const retestStatus = getRetestStatus(bug);
+          ) : (
+            <div className="space-y-3">
+              {bugs.map((bug) => {
+                const PlatformIcon = PLATFORM_ICONS[bug.platform];
+                const retestStatus = getRetestStatus(bug);
 
             return (
               <Card 
@@ -484,6 +504,12 @@ export default function Bugs() {
           )}
         </div>
       )}
+        </TabsContent>
+
+        <TabsContent value="statistics" className="mt-6">
+          <BugStatistics />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialogs */}
       <BugDialog open={dialogOpen} onOpenChange={setDialogOpen} bug={editingBug} onSave={handleSave} />

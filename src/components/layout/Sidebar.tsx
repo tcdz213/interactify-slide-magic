@@ -16,7 +16,9 @@ import {
   LogOut,
   FileText,
   CreditCard,
-  Shield
+  Shield,
+  Menu,
+  X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -27,6 +29,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/dashboard' },
@@ -45,23 +49,26 @@ const navItems = [
 
 const adminNavItem = { icon: Shield, label: 'Admin Panel', path: '/admin' };
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+function SidebarContent({ collapsed, setCollapsed, onNavigate }: { 
+  collapsed: boolean; 
+  setCollapsed?: (val: boolean) => void;
+  onNavigate?: () => void;
+}) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
     navigate('/auth');
+    onNavigate?.();
+  };
+
+  const handleNavClick = () => {
+    onNavigate?.();
   };
 
   return (
-    <aside 
-      className={cn(
-        "flex flex-col h-screen bg-gradient-to-b from-card to-card/95 border-r border-border/50 transition-all duration-300 ease-in-out shadow-lg",
-        collapsed ? "w-[72px]" : "w-64"
-      )}
-    >
+    <>
       {/* Logo */}
       <div className="flex items-center justify-between h-16 px-4 border-b border-border/50 bg-card/50 backdrop-blur-sm">
         {!collapsed && (
@@ -69,17 +76,19 @@ export function Sidebar() {
             DevCycle
           </span>
         )}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            "h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200",
-            collapsed && "mx-auto"
-          )}
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-        </Button>
+        {setCollapsed && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => setCollapsed(!collapsed)}
+            className={cn(
+              "h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary transition-all duration-200",
+              collapsed && "mx-auto"
+            )}
+          >
+            {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -92,6 +101,7 @@ export function Sidebar() {
                   <NavLink
                     to={item.path}
                     end={item.path === '/dashboard'}
+                    onClick={handleNavClick}
                     className={({ isActive }) =>
                       cn(
                         "group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
@@ -137,6 +147,7 @@ export function Sidebar() {
                 <TooltipTrigger asChild>
                   <NavLink
                     to={adminNavItem.path}
+                    onClick={handleNavClick}
                     className={({ isActive }) =>
                       cn(
                         "group flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200",
@@ -218,6 +229,43 @@ export function Sidebar() {
           )}
         </div>
       </div>
+    </>
+  );
+}
+
+export function MobileSidebar() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-5 w-5" />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0 w-72 bg-card border-border/50">
+        <SidebarContent collapsed={false} onNavigate={() => setOpen(false)} />
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+export function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const isMobile = useIsMobile();
+
+  if (isMobile) {
+    return null;
+  }
+
+  return (
+    <aside 
+      className={cn(
+        "hidden md:flex flex-col h-screen bg-gradient-to-b from-card to-card/95 border-r border-border/50 transition-all duration-300 ease-in-out shadow-lg",
+        collapsed ? "w-[72px]" : "w-64"
+      )}
+    >
+      <SidebarContent collapsed={collapsed} setCollapsed={setCollapsed} />
     </aside>
   );
 }

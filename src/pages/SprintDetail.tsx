@@ -37,6 +37,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import { SprintRetrospective } from '@/components/sprint/SprintRetrospective';
 import {
   DndContext,
   DragEndEvent,
@@ -460,6 +461,7 @@ export default function SprintDetail() {
           <TabsTrigger value="board">Task Board</TabsTrigger>
           <TabsTrigger value="burndown">Burndown Chart</TabsTrigger>
           <TabsTrigger value="backlog">Backlog</TabsTrigger>
+          <TabsTrigger value="retrospective">Retrospective</TabsTrigger>
         </TabsList>
 
         {/* Kanban Board */}
@@ -804,6 +806,11 @@ export default function SprintDetail() {
               <strong>Note:</strong> Adding items to the sprint is only available during the planning phase.
             </div>
           )}
+        </TabsContent>
+
+        {/* Retrospective */}
+        <TabsContent value="retrospective" className="mt-6">
+          <SprintRetrospective sprintId={id!} sprintStatus={sprint.status} />
         </TabsContent>
       </Tabs>
     </DashboardLayout>

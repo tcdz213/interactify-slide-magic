@@ -136,12 +136,12 @@ export function FeatureDialog({ open, onOpenChange, feature, onSave }: FeatureDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Edit Feature' : 'Create Feature'}</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -161,13 +161,13 @@ export function FeatureDialog({ open, onOpenChange, feature, onSave }: FeatureDi
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe the feature in detail"
-              rows={4}
+              rows={3}
               className={errors.description ? 'border-destructive' : ''}
             />
             {errors.description && <p className="text-sm text-destructive">{errors.description}</p>}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {!isEditing && (
               <div className="space-y-2">
                 <Label>Product</Label>
@@ -175,7 +175,7 @@ export function FeatureDialog({ open, onOpenChange, feature, onSave }: FeatureDi
                   <SelectTrigger className={errors.productId ? 'border-destructive' : ''}>
                     <SelectValue placeholder="Select product" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[100] bg-popover">
                     {products.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                     ))}
@@ -191,7 +191,7 @@ export function FeatureDialog({ open, onOpenChange, feature, onSave }: FeatureDi
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[100] bg-popover">
                   {PRIORITIES.map((p) => (
                     <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
                   ))}
@@ -200,7 +200,7 @@ export function FeatureDialog({ open, onOpenChange, feature, onSave }: FeatureDi
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-2">
               <Label htmlFor="dueDate">Due Date</Label>
               <Input

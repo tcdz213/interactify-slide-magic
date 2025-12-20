@@ -21,6 +21,8 @@ import {
 import { Plus, Search, MoreVertical, Package, Edit, Trash2, BarChart3, Users } from 'lucide-react';
 import { productsApi } from '@/lib/api';
 import { ProductDialog } from '@/components/dialogs/ProductDialog';
+import { ProductStatsDialog } from '@/components/dialogs/ProductStatsDialog';
+import { ProductTeamDialog } from '@/components/dialogs/ProductTeamDialog';
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
 import { toast } from 'sonner';
 import type { Product, ProductPlatform, ProductStatus, CreateProductRequest, UpdateProductRequest } from '@/types/product';
@@ -42,6 +44,8 @@ export default function Products() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deleteProduct, setDeleteProduct] = useState<Product | null>(null);
+  const [statsProduct, setStatsProduct] = useState<Product | null>(null);
+  const [teamProduct, setTeamProduct] = useState<Product | null>(null);
 
   const fetchProducts = async () => {
     try {
@@ -201,11 +205,11 @@ export default function Products() {
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setStatsProduct(product)}>
                       <BarChart3 className="h-4 w-4 mr-2" />
                       View Stats
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTeamProduct(product)}>
                       <Users className="h-4 w-4 mr-2" />
                       Manage Team
                     </DropdownMenuItem>
@@ -263,6 +267,20 @@ export default function Products() {
         confirmLabel="Archive"
         variant="destructive"
         onConfirm={handleDelete}
+      />
+
+      <ProductStatsDialog
+        open={!!statsProduct}
+        onOpenChange={(open) => !open && setStatsProduct(null)}
+        productId={statsProduct?.id || null}
+        productName={statsProduct?.name || ''}
+      />
+
+      <ProductTeamDialog
+        open={!!teamProduct}
+        onOpenChange={(open) => !open && setTeamProduct(null)}
+        productId={teamProduct?.id || null}
+        productName={teamProduct?.name || ''}
       />
     </DashboardLayout>
   );

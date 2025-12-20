@@ -18,8 +18,12 @@ import { toast } from 'sonner';
 import { 
   ArrowLeft, Rocket, Play, RotateCcw, CheckCircle, XCircle, Clock, 
   AlertTriangle, RefreshCw, Send, FileText, Link2, Unlink, Bug, 
-  Sparkles, Download, Edit, Save, X, Users, MessageSquare
+  Sparkles, Download, Edit, Save, X, Users, MessageSquare, CalendarIcon, Pencil
 } from 'lucide-react';
+import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import type { Release, ReleaseStatus, PipelineStep, Approver } from '@/types/release';
 
 const statusColors: Record<ReleaseStatus, string> = {
@@ -60,6 +64,7 @@ export default function ReleaseDetail() {
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false);
   const [isLinkFeatureDialogOpen, setIsLinkFeatureDialogOpen] = useState(false);
   const [isLinkBugDialogOpen, setIsLinkBugDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deployEnvironment, setDeployEnvironment] = useState<'staging' | 'production'>('staging');
   const [rollbackReason, setRollbackReason] = useState('');
   const [rollbackVersion, setRollbackVersion] = useState('');
@@ -67,6 +72,9 @@ export default function ReleaseDetail() {
   const [newFeatureId, setNewFeatureId] = useState('');
   const [newBugId, setNewBugId] = useState('');
   const [approverIds, setApproverIds] = useState('');
+  const [editVersion, setEditVersion] = useState('');
+  const [editBuildId, setEditBuildId] = useState('');
+  const [editPlannedDate, setEditPlannedDate] = useState<Date | undefined>(undefined);
 
   const { data: release, isLoading, error } = useQuery({
     queryKey: ['release', id],
@@ -217,6 +225,43 @@ export default function ReleaseDetail() {
     onError: () => toast.error('Failed to export release notes'),
   });
 
+  const updateReleaseMutation = useMutation({
+    mutationFn: (data: { version?: string; buildId?: string; plannedDate?: string }) => 
+      releaseApi.update(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['release', id] });
+      setIsEditDialogOpen(false);
+      toast.success('Release updated');
+    },
+    onError: () => toast.error('Failed to update release'),
+  });
+
+  const updateStatusMutation = useMutation({
+    mutationFn: (status: string) => releaseApi.updateStatus(id!, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['release', id] });
+      toast.success('Status updated');
+    },
+    onError: () => toast.error('Failed to update status'),
+  });
+
+  const handleOpenEditDialog = () => {
+    if (release) {
+      setEditVersion(release.version);
+      setEditBuildId(release.buildId);
+      setEditPlannedDate(release.plannedDate ? new Date(release.plannedDate) : undefined);
+      setIsEditDialogOpen(true);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    updateReleaseMutation.mutate({
+      version: editVersion,
+      buildId: editBuildId,
+      plannedDate: editPlannedDate ? editPlannedDate.toISOString() : undefined,
+    });
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout title="Loading..." description="">
@@ -269,16 +314,41 @@ export default function ReleaseDetail() {
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{platformIcons[release.platform]}</span>
                 <h1 className="text-2xl font-bold">v{release.version}</h1>
-                <Badge className={statusColors[release.status]}>
-                  {release.status.replace('_', ' ')}
-                </Badge>
+                <Select
+                  value={release.status}
+                  onValueChange={(value) => updateStatusMutation.mutate(value)}
+                  disabled={updateStatusMutation.isPending}
+                >
+                  <SelectTrigger className={cn("w-auto gap-2", statusColors[release.status])}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="planning">Planning</SelectItem>
+                    <SelectItem value="scheduled">Scheduled</SelectItem>
+                    <SelectItem value="in_development">In Development</SelectItem>
+                    <SelectItem value="testing">Testing</SelectItem>
+                    <SelectItem value="staged">Staged</SelectItem>
+                    <SelectItem value="released">Released</SelectItem>
+                    <SelectItem value="rolled_back">Rolled Back</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <p className="text-muted-foreground mt-1">
                 Build: {release.buildId} • {release.productName}
+                {release.plannedDate && (
+                  <span> • Planned: {format(new Date(release.plannedDate), 'PPP')}</span>
+                )}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleOpenEditDialog}
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
             <Button 
               variant="outline" 
               onClick={() => setIsDeployDialogOpen(true)}
@@ -1012,6 +1082,75 @@ export default function ReleaseDetail() {
                 disabled={linkBugMutation.isPending}
               >
                 {linkBugMutation.isPending ? 'Linking...' : 'Link Bug Fix'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Release Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Edit Release</DialogTitle>
+              <DialogDescription>
+                Update release details
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Version</Label>
+                  <Input
+                    placeholder="1.0.0"
+                    value={editVersion}
+                    onChange={(e) => setEditVersion(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Build ID</Label>
+                  <Input
+                    placeholder="build-2025-01-01"
+                    value={editBuildId}
+                    onChange={(e) => setEditBuildId(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Planned Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !editPlannedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {editPlannedDate ? format(editPlannedDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={editPlannedDate}
+                      onSelect={setEditPlannedDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveEdit}
+                disabled={updateReleaseMutation.isPending}
+              >
+                {updateReleaseMutation.isPending ? 'Saving...' : 'Save Changes'}
               </Button>
             </DialogFooter>
           </DialogContent>

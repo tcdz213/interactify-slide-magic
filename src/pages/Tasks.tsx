@@ -36,13 +36,17 @@ import {
   AlertCircle,
   ArrowRight,
   Eye,
+  UserPlus,
+  UserMinus,
 } from 'lucide-react';
 import { tasksApi } from '@/services/taskApi';
+import { teamApi } from '@/services/teamApi';
 import { TaskDialog } from '@/components/dialogs/TaskDialog';
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { Task, TaskStatus, TaskType, TaskPriority, CreateTaskData, UpdateTaskData } from '@/types/task';
+import type { TeamMember } from '@/types/team';
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
   backlog: 'bg-gray-500/20 text-gray-400 border-gray-500/30',
@@ -89,6 +93,7 @@ const ALL_STATUSES: TaskStatus[] = ['backlog', 'todo', 'in_progress', 'in_review
 export default function Tasks() {
   const navigate = useNavigate();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
@@ -124,6 +129,19 @@ export default function Tasks() {
   useEffect(() => {
     fetchTasks();
   }, [statusFilter, typeFilter, pagination.page]);
+
+  // Fetch team members for quick assign
+  useEffect(() => {
+    const fetchTeamMembers = async () => {
+      try {
+        const response = await teamApi.list({ limit: 100 });
+        setTeamMembers(response.data);
+      } catch (error) {
+        console.error('Failed to load team members');
+      }
+    };
+    fetchTeamMembers();
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -182,6 +200,26 @@ export default function Tasks() {
       fetchTasks();
     } catch (error: any) {
       toast.error(error.message || 'Failed to update status');
+    }
+  };
+
+  const handleQuickAssign = async (task: Task, assigneeId: string) => {
+    try {
+      await tasksApi.assign(task.id, assigneeId);
+      toast.success('Task assigned');
+      fetchTasks();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to assign task');
+    }
+  };
+
+  const handleUnassign = async (task: Task) => {
+    try {
+      await tasksApi.unassign(task.id);
+      toast.success('Task unassigned');
+      fetchTasks();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to unassign task');
     }
   };
 
@@ -382,6 +420,48 @@ export default function Tasks() {
                             </Badge>
                           </DropdownMenuItem>
                         ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <UserPlus className="h-4 w-4 mr-2" />
+                        Quick Assign
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        {task.assigneeId && (
+                          <>
+                            <DropdownMenuItem onClick={() => handleUnassign(task)}>
+                              <UserMinus className="h-4 w-4 mr-2" />
+                              Unassign
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                          </>
+                        )}
+                        {teamMembers.length === 0 ? (
+                          <DropdownMenuItem disabled>
+                            No team members
+                          </DropdownMenuItem>
+                        ) : (
+                          teamMembers.map((member) => (
+                            <DropdownMenuItem
+                              key={member.id}
+                              onClick={() => handleQuickAssign(task, member.userId)}
+                              disabled={task.assigneeId === member.userId}
+                            >
+                              <Avatar className="h-5 w-5 mr-2">
+                                <AvatarImage src={member.avatar} />
+                                <AvatarFallback className="text-xs">
+                                  {member.name.charAt(0)}
+                                </AvatarFallback>
+                              </Avatar>
+                              {member.name}
+                              {task.assigneeId === member.userId && (
+                                <span className="ml-auto text-xs text-muted-foreground">Assigned</span>
+                              )}
+                            </DropdownMenuItem>
+                          ))
+                        )}
                       </DropdownMenuSubContent>
                     </DropdownMenuSub>
                     

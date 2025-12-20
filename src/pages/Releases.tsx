@@ -13,7 +13,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { releaseApi } from '@/services/releaseApi';
 import { productsApi } from '@/services/productApi';
 import { toast } from 'sonner';
-import { Plus, Search, Rocket, CheckCircle, XCircle, Clock, AlertTriangle, Play, RotateCcw } from 'lucide-react';
+import { Plus, Search, Rocket, CheckCircle, XCircle, Clock, AlertTriangle, Play, RotateCcw, CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 import type { Release, ReleaseStatus, ReleasePlatform, CreateReleaseRequest } from '@/types/release';
 
 const statusColors: Record<ReleaseStatus, string> = {
@@ -55,7 +59,9 @@ export default function Releases() {
     productId: '',
     platform: 'web',
     releaseNotes: '',
+    plannedDate: undefined,
   });
+  const [plannedDate, setPlannedDate] = useState<Date | undefined>(undefined);
 
   const { data: releasesData, isLoading } = useQuery({
     queryKey: ['releases', statusFilter, platformFilter],
@@ -77,7 +83,7 @@ export default function Releases() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['releases'] });
       setIsCreateDialogOpen(false);
-      setNewRelease({ version: '', buildId: '', productId: '', platform: 'web', releaseNotes: '' });
+      resetCreateForm();
       toast.success('Release created successfully');
     },
     onError: () => toast.error('Failed to create release'),
@@ -103,7 +109,16 @@ export default function Releases() {
       toast.error('Please fill in all required fields');
       return;
     }
-    createMutation.mutate(newRelease);
+    const payload = {
+      ...newRelease,
+      plannedDate: plannedDate ? plannedDate.toISOString() : undefined,
+    };
+    createMutation.mutate(payload);
+  };
+
+  const resetCreateForm = () => {
+    setNewRelease({ version: '', buildId: '', productId: '', platform: 'web', releaseNotes: '' });
+    setPlannedDate(undefined);
   };
 
   return (
@@ -319,6 +334,32 @@ export default function Releases() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Planned Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !plannedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {plannedDate ? format(plannedDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={plannedDate}
+                      onSelect={setPlannedDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div className="space-y-2">
                 <Label>Release Notes</Label>
