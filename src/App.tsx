@@ -12,6 +12,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Products from "./pages/Products";
+import ProductDetail from "./pages/ProductDetail";
 import Features from "./pages/Features";
 import FeatureDetail from "./pages/FeatureDetail";
 import Sprints from "./pages/Sprints";
@@ -22,6 +23,7 @@ import Bugs from "./pages/Bugs";
 import BugDetail from "./pages/BugDetail";
 import ApiDocs from "./pages/ApiDocs";
 import Team from "./pages/Team";
+import TeamMemberDetail from "./pages/TeamMemberDetail";
 import Settings from "./pages/Settings";
 import Releases from "./pages/Releases";
 import ReleaseDetail from "./pages/ReleaseDetail";
@@ -33,6 +35,7 @@ import VerifyEmail from "./pages/VerifyEmail";
 // Admin Pages
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
+import AdminUserDetail from "./pages/admin/AdminUserDetail";
 import AdminBilling from "./pages/admin/AdminBilling";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
@@ -86,6 +89,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Products />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/products/:id"
+              element={
+                <ProtectedRoute>
+                  <ProductDetail />
                 </ProtectedRoute>
               }
             />
@@ -170,6 +181,14 @@ const App = () => (
               }
             />
             <Route
+              path="/dashboard/team/:id"
+              element={
+                <ProtectedRoute>
+                  <TeamMemberDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/dashboard/settings"
               element={
                 <ProtectedRoute>
@@ -223,6 +242,14 @@ const App = () => (
               element={
                 <AdminProtectedRoute>
                   <AdminUsers />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users/:id"
+              element={
+                <AdminProtectedRoute>
+                  <AdminUserDetail />
                 </AdminProtectedRoute>
               }
             />
