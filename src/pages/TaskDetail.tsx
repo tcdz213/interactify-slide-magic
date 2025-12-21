@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { tasksApi } from '@/services/taskApi';
 import { TaskDialog } from '@/components/dialogs/TaskDialog';
+import { TaskDependencyDialog } from '@/components/dialogs/TaskDependencyDialog';
 import {
   ArrowLeft,
   Clock,
@@ -26,6 +27,7 @@ import {
   Circle,
   AlertCircle,
   Loader2,
+  Link2,
 } from 'lucide-react';
 import type { UpdateTaskData } from '@/types/task';
 
@@ -53,6 +55,7 @@ export default function TaskDetail() {
   const queryClient = useQueryClient();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [dependencyDialogOpen, setDependencyDialogOpen] = useState(false);
   const [newSubtask, setNewSubtask] = useState('');
   const [newComment, setNewComment] = useState('');
   const [timeLogData, setTimeLogData] = useState({ hours: '', date: '', description: '' });
@@ -212,7 +215,13 @@ export default function TaskDetail() {
               </div>
             </div>
           </div>
-          <Button onClick={() => setEditDialogOpen(true)}>Edit Task</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setDependencyDialogOpen(true)}>
+              <Link2 className="h-4 w-4 mr-2" />
+              Dependencies ({task.dependencies?.length || 0})
+            </Button>
+            <Button onClick={() => setEditDialogOpen(true)}>Edit Task</Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -474,6 +483,12 @@ export default function TaskDetail() {
         onSave={async (data) => {
           await updateTaskMutation.mutateAsync(data as UpdateTaskData);
         }}
+      />
+
+      <TaskDependencyDialog
+        open={dependencyDialogOpen}
+        onOpenChange={setDependencyDialogOpen}
+        task={task}
       />
     </DashboardLayout>
   );

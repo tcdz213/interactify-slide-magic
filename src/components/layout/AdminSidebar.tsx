@@ -11,7 +11,9 @@ import {
   LogOut,
   Shield,
   ArrowLeft,
-  Globe
+  Globe,
+  Activity,
+  HeartPulse
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,6 +28,8 @@ import {
 const navItems = [
   { icon: LayoutDashboard, label: 'Overview', path: '/admin' },
   { icon: Users, label: 'Users', path: '/admin/users' },
+  { icon: Activity, label: 'Activity Logs', path: '/admin/activity' },
+  { icon: HeartPulse, label: 'System Health', path: '/admin/health' },
   { icon: CreditCard, label: 'Billing', path: '/admin/billing' },
   { icon: MessageSquare, label: 'Reports', path: '/admin/reports' },
   { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },

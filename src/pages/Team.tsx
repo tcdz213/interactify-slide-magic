@@ -45,12 +45,14 @@ const StatusBadge = ({ status }: { status: TeamMemberStatus }) => {
   const styles: Record<TeamMemberStatus, string> = {
     active: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
     away: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-    offline: 'bg-muted text-muted-foreground border-border'
+    offline: 'bg-muted text-muted-foreground border-border',
+    pending: 'bg-blue-500/20 text-blue-400 border-blue-500/30'
   };
   const dotStyles: Record<TeamMemberStatus, string> = {
     active: 'bg-emerald-400',
     away: 'bg-amber-400',
-    offline: 'bg-muted-foreground'
+    offline: 'bg-muted-foreground',
+    pending: 'bg-blue-400'
   };
   return (
     <Badge variant="outline" className={styles[status]}>
@@ -73,11 +75,15 @@ const roleLabels: Record<TeamRole, string> = {
 const TeamMemberCard = ({ 
   member, 
   onRemove,
-  onUpdateStatus 
+  onUpdateStatus,
+  onResendInvite,
+  isResending
 }: { 
   member: TeamMember; 
   onRemove: (id: string) => void;
   onUpdateStatus: (id: string, status: TeamMemberStatus) => void;
+  onResendInvite: (id: string) => void;
+  isResending: boolean;
 }) => (
   <Card className="p-5 hover:border-primary/30 transition-colors">
     <div className="flex items-start justify-between mb-4">
@@ -98,15 +104,27 @@ const TeamMemberCard = ({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => onUpdateStatus(member.id, 'active')}>
-            Set Active
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(member.id, 'away')}>
-            Set Away
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onUpdateStatus(member.id, 'offline')}>
-            Set Offline
-          </DropdownMenuItem>
+          {member.status === 'pending' ? (
+            <DropdownMenuItem 
+              onClick={() => onResendInvite(member.id)}
+              disabled={isResending}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isResending ? 'animate-spin' : ''}`} />
+              Resend Invitation
+            </DropdownMenuItem>
+          ) : (
+            <>
+              <DropdownMenuItem onClick={() => onUpdateStatus(member.id, 'active')}>
+                Set Active
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onUpdateStatus(member.id, 'away')}>
+                Set Away
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onUpdateStatus(member.id, 'offline')}>
+                Set Offline
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem 
             className="text-destructive focus:text-destructive"
@@ -243,6 +261,17 @@ export default function Team() {
     },
   });
 
+  // Resend invite mutation
+  const resendInviteMutation = useMutation({
+    mutationFn: (id: string) => teamApi.resendInvite(id),
+    onSuccess: () => {
+      toast({ title: 'Invitation resent', description: 'A new invitation email has been sent.' });
+    },
+    onError: (error: Error) => {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    },
+  });
+
   const handleRemove = (id: string) => {
     setMemberToRemove(id);
     setRemoveDialogOpen(true);
@@ -250,6 +279,10 @@ export default function Team() {
 
   const handleUpdateStatus = (id: string, status: TeamMemberStatus) => {
     updateMutation.mutate({ id, status });
+  };
+
+  const handleResendInvite = (id: string) => {
+    resendInviteMutation.mutate(id);
   };
 
   const teamMembers = data?.data || [];
@@ -281,6 +314,7 @@ export default function Team() {
               <SelectItem value="active">Active</SelectItem>
               <SelectItem value="away">Away</SelectItem>
               <SelectItem value="offline">Offline</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
             </SelectContent>
           </Select>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -405,6 +439,8 @@ export default function Team() {
               member={member}
               onRemove={handleRemove}
               onUpdateStatus={handleUpdateStatus}
+              onResendInvite={handleResendInvite}
+              isResending={resendInviteMutation.isPending}
             />
           ))}
         </div>

@@ -1,6 +1,6 @@
 // Team member types matching the API
 
-export type TeamMemberStatus = 'active' | 'away' | 'offline';
+export type TeamMemberStatus = 'active' | 'away' | 'offline' | 'pending';
 export type TeamRole = 'admin' | 'tech_lead' | 'senior_developer' | 'developer' | 'junior_developer' | 'devops' | 'qa';
 
 export interface TeamMember {

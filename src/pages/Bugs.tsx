@@ -49,12 +49,14 @@ import {
   BarChart3,
 } from 'lucide-react';
 import { bugsApi } from '@/services/bugApi';
+import { productsApi } from '@/services/productApi';
 import { BugDialog } from '@/components/dialogs/BugDialog';
 import { ConfirmDialog } from '@/components/dialogs/ConfirmDialog';
 import { BugStatistics } from '@/components/bugs/BugStatistics';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import type { Bug as BugType, BugStatus, BugSeverity, BugPlatform, CreateBugData, UpdateBugData } from '@/types/bug';
+import type { Product } from '@/types/product';
 
 const STATUS_COLORS: Record<BugStatus, string> = {
   new: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
@@ -104,6 +106,15 @@ const PLATFORM_ICONS: Record<BugPlatform, typeof Monitor> = {
 
 const ALL_STATUSES: BugStatus[] = ['new', 'confirmed', 'in_progress', 'fixed', 'verified', 'closed', 'reopened', 'wont_fix', 'duplicate'];
 const ALL_SEVERITIES: BugSeverity[] = ['low', 'medium', 'high', 'critical'];
+const ALL_PLATFORMS: BugPlatform[] = ['web', 'android', 'ios', 'api', 'desktop'];
+
+const PLATFORM_LABELS: Record<BugPlatform, string> = {
+  web: 'Web',
+  android: 'Android',
+  ios: 'iOS',
+  api: 'API',
+  desktop: 'Desktop',
+};
 
 export default function Bugs() {
   const navigate = useNavigate();
@@ -112,6 +123,9 @@ export default function Bugs() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<BugStatus | 'all'>('all');
   const [severityFilter, setSeverityFilter] = useState<BugSeverity | 'all'>('all');
+  const [platformFilter, setPlatformFilter] = useState<BugPlatform | 'all'>('all');
+  const [productFilter, setProductFilter] = useState<string>('all');
+  const [products, setProducts] = useState<Product[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingBug, setEditingBug] = useState<BugType | null>(null);
   const [deleteBug, setDeleteBug] = useState<BugType | null>(null);
@@ -125,6 +139,8 @@ export default function Bugs() {
         page: pagination.page,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         severity: severityFilter !== 'all' ? severityFilter : undefined,
+        platform: platformFilter !== 'all' ? platformFilter : undefined,
+        productId: productFilter !== 'all' ? productFilter : undefined,
         search: search || undefined,
       });
       setBugs(response.data);
@@ -141,9 +157,22 @@ export default function Bugs() {
     }
   };
 
+  // Fetch products for filter
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await productsApi.list({ limit: 100 });
+        setProducts(response.data);
+      } catch (error) {
+        console.error('Failed to load products', error);
+      }
+    };
+    fetchProducts();
+  }, []);
+
   useEffect(() => {
     fetchBugs();
-  }, [statusFilter, severityFilter, pagination.page]);
+  }, [statusFilter, severityFilter, platformFilter, productFilter, pagination.page]);
 
   // Debounce search
   useEffect(() => {
@@ -275,6 +304,32 @@ export default function Bugs() {
                 ))}
               </SelectContent>
             </Select>
+            <Select value={platformFilter} onValueChange={(v) => setPlatformFilter(v as BugPlatform | 'all')}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Platform" />
+              </SelectTrigger>
+              <SelectContent className="z-[200]">
+                <SelectItem value="all">All Platforms</SelectItem>
+                {ALL_PLATFORMS.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {PLATFORM_LABELS[p]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={productFilter} onValueChange={setProductFilter}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Product" />
+              </SelectTrigger>
+              <SelectContent className="z-[200]">
+                <SelectItem value="all">All Products</SelectItem>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>
+                    {product.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Bugs List */}
@@ -297,11 +352,11 @@ export default function Bugs() {
               <Bug className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
               <h3 className="text-lg font-medium mb-2">No bugs found</h3>
               <p className="text-muted-foreground mb-4">
-                {search || statusFilter !== 'all' || severityFilter !== 'all'
+                {search || statusFilter !== 'all' || severityFilter !== 'all' || platformFilter !== 'all' || productFilter !== 'all'
                   ? 'Try adjusting your filters'
                   : 'No bugs reported yet - great job!'}
               </p>
-              {!search && statusFilter === 'all' && severityFilter === 'all' && (
+              {!search && statusFilter === 'all' && severityFilter === 'all' && platformFilter === 'all' && productFilter === 'all' && (
                 <Button onClick={handleCreate}>
                   <Plus className="h-4 w-4 mr-2" />
                   Report Bug

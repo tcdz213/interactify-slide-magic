@@ -98,6 +98,8 @@ export default function Tasks() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [typeFilter, setTypeFilter] = useState<TaskType | 'all'>('all');
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | 'all'>('all');
+  const [assigneeFilter, setAssigneeFilter] = useState<string>('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deleteTask, setDeleteTask] = useState<Task | null>(null);
@@ -110,6 +112,8 @@ export default function Tasks() {
         page: pagination.page,
         status: statusFilter !== 'all' ? statusFilter : undefined,
         type: typeFilter !== 'all' ? typeFilter : undefined,
+        priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+        assigneeId: assigneeFilter !== 'all' ? assigneeFilter : undefined,
         search: search || undefined,
       });
       setTasks(response.data);
@@ -128,7 +132,7 @@ export default function Tasks() {
 
   useEffect(() => {
     fetchTasks();
-  }, [statusFilter, typeFilter, pagination.page]);
+  }, [statusFilter, typeFilter, priorityFilter, assigneeFilter, pagination.page]);
 
   // Fetch team members for quick assign
   useEffect(() => {
@@ -270,6 +274,31 @@ export default function Tasks() {
             <SelectItem value="devops">DevOps</SelectItem>
             <SelectItem value="documentation">Docs</SelectItem>
             <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={priorityFilter} onValueChange={(v) => setPriorityFilter(v as TaskPriority | 'all')}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Priority" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Priorities</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="critical">Critical</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="Assignee" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Assignees</SelectItem>
+            {teamMembers.map((member) => (
+              <SelectItem key={member.userId} value={member.userId}>
+                {member.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

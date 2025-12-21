@@ -37,6 +37,8 @@ import AdminBilling from "./pages/admin/AdminBilling";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminCors from "./pages/admin/AdminCors";
+import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
+import AdminHealth from "./pages/admin/AdminHealth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -253,6 +255,22 @@ const App = () => (
               element={
                 <AdminProtectedRoute>
                   <AdminCors />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/activity"
+              element={
+                <AdminProtectedRoute>
+                  <AdminActivityLogs />
+                </AdminProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/health"
+              element={
+                <AdminProtectedRoute>
+                  <AdminHealth />
                 </AdminProtectedRoute>
               }
             />

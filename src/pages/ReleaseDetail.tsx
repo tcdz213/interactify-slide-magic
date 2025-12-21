@@ -65,6 +65,9 @@ export default function ReleaseDetail() {
   const [isLinkFeatureDialogOpen, setIsLinkFeatureDialogOpen] = useState(false);
   const [isLinkBugDialogOpen, setIsLinkBugDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isCompleteStageDialogOpen, setIsCompleteStageDialogOpen] = useState(false);
+  const [selectedStage, setSelectedStage] = useState<string>('');
+  const [stageNotes, setStageNotes] = useState('');
   const [deployEnvironment, setDeployEnvironment] = useState<'staging' | 'production'>('staging');
   const [rollbackReason, setRollbackReason] = useState('');
   const [rollbackVersion, setRollbackVersion] = useState('');
@@ -144,6 +147,19 @@ export default function ReleaseDetail() {
       toast.success('Pipeline stage retried');
     },
     onError: () => toast.error('Failed to retry pipeline stage'),
+  });
+
+  const completePipelineMutation = useMutation({
+    mutationFn: ({ stage, success, notes }: { stage: string; success: boolean; notes?: string }) => 
+      releaseApi.completePipelineStage(id!, stage, success, notes),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['release', id] });
+      setIsCompleteStageDialogOpen(false);
+      setSelectedStage('');
+      setStageNotes('');
+      toast.success('Pipeline stage completed');
+    },
+    onError: () => toast.error('Failed to complete pipeline stage'),
   });
 
   const requestApprovalMutation = useMutation({
@@ -421,6 +437,34 @@ export default function ReleaseDetail() {
                                     <Play className="h-3 w-3 mr-1" />
                                     Start
                                   </Button>
+                                )}
+                                {step.status === 'running' && (
+                                  <>
+                                    <Button 
+                                      size="sm" 
+                                      variant="default"
+                                      onClick={() => {
+                                        setSelectedStage(step.stage);
+                                        setIsCompleteStageDialogOpen(true);
+                                      }}
+                                    >
+                                      <CheckCircle className="h-3 w-3 mr-1" />
+                                      Complete
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="destructive"
+                                      onClick={() => completePipelineMutation.mutate({ 
+                                        stage: step.stage, 
+                                        success: false,
+                                        notes: 'Manually marked as failed'
+                                      })}
+                                      disabled={completePipelineMutation.isPending}
+                                    >
+                                      <XCircle className="h-3 w-3 mr-1" />
+                                      Fail
+                                    </Button>
+                                  </>
                                 )}
                                 {step.status === 'failed' && (
                                   <Button 
@@ -1151,6 +1195,44 @@ export default function ReleaseDetail() {
                 disabled={updateReleaseMutation.isPending}
               >
                 {updateReleaseMutation.isPending ? 'Saving...' : 'Save Changes'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Complete Pipeline Stage Dialog */}
+        <Dialog open={isCompleteStageDialogOpen} onOpenChange={setIsCompleteStageDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Complete Pipeline Stage</DialogTitle>
+              <DialogDescription>
+                Mark the "{selectedStage}" stage as completed
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Notes (optional)</Label>
+                <Textarea
+                  placeholder="Add any notes about this stage..."
+                  value={stageNotes}
+                  onChange={(e) => setStageNotes(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCompleteStageDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => completePipelineMutation.mutate({ 
+                  stage: selectedStage, 
+                  success: true, 
+                  notes: stageNotes || undefined 
+                })}
+                disabled={completePipelineMutation.isPending}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                {completePipelineMutation.isPending ? 'Completing...' : 'Mark as Passed'}
               </Button>
             </DialogFooter>
           </DialogContent>

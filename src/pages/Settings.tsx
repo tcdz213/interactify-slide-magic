@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, User, Bell, Shield, Palette, Eye, EyeOff } from 'lucide-react';
+import { TwoFactorAuth } from '@/components/settings/TwoFactorAuth';
 import type { 
   UserSettings, 
   UserProfile, 
@@ -667,18 +668,7 @@ function SecurityTab({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Two-Factor Authentication</CardTitle>
-          <CardDescription>Add an extra layer of security to your account.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground mb-4">
-            Two-factor authentication adds an additional layer of security to your account by requiring more than just a password to sign in.
-          </p>
-          <Button variant="outline">Enable 2FA</Button>
-        </CardContent>
-      </Card>
+      <TwoFactorAuth />
     </div>
   );
 }
