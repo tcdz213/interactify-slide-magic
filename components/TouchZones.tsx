@@ -6,8 +6,20 @@ interface TouchZonesProps {
   disabled?: boolean;
 }
 
+/**
+ * TouchZones component for mobile game controls
+ * 
+ * - Left 50%: Movement zone (drag to move)
+ * - Right 50%: Fire zone (tap/hold to fire)
+ * 
+ * Features:
+ * - True multitouch support (move + fire simultaneously)
+ * - Touch identifier tracking to prevent cross-zone interference
+ * - No speed stacking - only updates direction state
+ * - touch-action: none to disable browser gestures
+ */
 const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled = false }) => {
-  // Separate refs for each zone's active touch
+  // Track move touch separately from fire touch using identifiers
   const moveTouchRef = useRef<{
     id: number | null;
     origin: { x: number; y: number };
@@ -16,36 +28,40 @@ const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled 
   const fireTouchRef = useRef<number | null>(null);
   const fireIntervalRef = useRef<number | null>(null);
   
-  const maxDistance = 50;
+  const maxDistance = 60; // Max drag distance for full speed
 
-  // Calculate movement from touch position
+  // Calculate normalized movement direction from touch position
   const calculateMove = useCallback((touchX: number, touchY: number) => {
     const origin = moveTouchRef.current.origin;
     let dx = touchX - origin.x;
     let dy = touchY - origin.y;
     
     const distance = Math.sqrt(dx * dx + dy * dy);
-    if (distance > maxDistance) {
-      dx = (dx / distance) * maxDistance;
-      dy = (dy / distance) * maxDistance;
-    }
     
+    // Normalize to -1 to 1 range, capped at maxDistance
+    const normalizedX = Math.max(-1, Math.min(1, dx / maxDistance));
+    const normalizedY = Math.max(-1, Math.min(1, dy / maxDistance));
+    
+    // Only update state - game loop handles actual movement
     onMoveChange({
-      x: dx / maxDistance,
-      y: dy / maxDistance
+      x: normalizedX,
+      y: normalizedY
     });
   }, [onMoveChange, maxDistance]);
 
-  // Start continuous firing
+  // Start continuous firing while touch is held
   const startFiring = useCallback(() => {
-    if (fireIntervalRef.current) return;
-    onFire(); // Fire immediately
+    if (fireIntervalRef.current) return; // Prevent duplicate intervals
+    
+    onFire(); // Fire immediately on touch
+    
+    // Continue firing at fixed interval while held
     fireIntervalRef.current = window.setInterval(() => {
       onFire();
-    }, 150); // Fire every 150ms while held
+    }, 150); // 150ms = ~6.67 shots per second
   }, [onFire]);
 
-  // Stop continuous firing
+  // Stop firing when touch ends
   const stopFiring = useCallback(() => {
     if (fireIntervalRef.current) {
       clearInterval(fireIntervalRef.current);
@@ -53,34 +69,39 @@ const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled 
     }
   }, []);
 
-  // Global touch handlers
+  // Global touch event handlers for move and end events
   useEffect(() => {
-    if (disabled) return;
+    if (disabled) {
+      // Clean up when disabled
+      stopFiring();
+      return;
+    }
 
     const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
+      // Only prevent default if we have an active move touch
+      if (moveTouchRef.current.id !== null) {
+        e.preventDefault();
+      }
       
-      // Only process movement if we have an active move touch
-      if (moveTouchRef.current.id === null) return;
-      
-      // Find our tracked move touch
+      // Find our tracked move touch by identifier
       for (let i = 0; i < e.touches.length; i++) {
-        if (e.touches[i].identifier === moveTouchRef.current.id) {
-          calculateMove(e.touches[i].clientX, e.touches[i].clientY);
+        const touch = e.touches[i];
+        if (touch.identifier === moveTouchRef.current.id) {
+          calculateMove(touch.clientX, touch.clientY);
           break;
         }
       }
     };
 
     const handleTouchEnd = (e: TouchEvent) => {
-      // Check each ended touch
+      // Check each ended touch against our tracked touches
       for (let i = 0; i < e.changedTouches.length; i++) {
         const touch = e.changedTouches[i];
         
         // If this was our movement touch, stop moving
         if (touch.identifier === moveTouchRef.current.id) {
           moveTouchRef.current.id = null;
-          onMoveChange({ x: 0, y: 0 });
+          onMoveChange({ x: 0, y: 0 }); // Reset to idle
         }
         
         // If this was our fire touch, stop firing
@@ -91,6 +112,7 @@ const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled 
       }
     };
 
+    // Add listeners with passive: false to allow preventDefault
     window.addEventListener('touchmove', handleTouchMove, { passive: false });
     window.addEventListener('touchend', handleTouchEnd);
     window.addEventListener('touchcancel', handleTouchEnd);
@@ -107,6 +129,7 @@ const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled 
   const handleMoveZoneTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled) return;
     e.preventDefault();
+    e.stopPropagation();
     
     // Only track if we don't already have a move touch
     if (moveTouchRef.current.id !== null) return;
@@ -122,6 +145,7 @@ const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled 
   const handleFireZoneTouchStart = useCallback((e: React.TouchEvent) => {
     if (disabled) return;
     e.preventDefault();
+    e.stopPropagation();
     
     // Only track if we don't already have a fire touch
     if (fireTouchRef.current !== null) return;
@@ -137,7 +161,13 @@ const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled 
   return (
     <div 
       className="fixed inset-0 z-40"
-      style={{ touchAction: 'none' }}
+      style={{ 
+        touchAction: 'none',
+        // Disable all browser touch behaviors
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
+        WebkitTouchCallout: 'none',
+      }}
     >
       {/* Left Zone - Movement (50%) */}
       <div 
@@ -145,7 +175,7 @@ const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled 
         className="absolute left-0 top-0 h-full"
         style={{ 
           width: '50%',
-          touchAction: 'none'
+          touchAction: 'none',
         }}
       />
 
@@ -155,7 +185,7 @@ const TouchZones: React.FC<TouchZonesProps> = ({ onMoveChange, onFire, disabled 
         className="absolute right-0 top-0 h-full"
         style={{ 
           width: '50%',
-          touchAction: 'none'
+          touchAction: 'none',
         }}
       />
     </div>
