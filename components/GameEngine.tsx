@@ -1,13 +1,12 @@
 
-import React, { useRef, useEffect, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import { 
   GameState, Sphere, Player, Projectile, Particle, Planet, SphereSize, Vector, PowerUp, PowerUpType, FloatingText, Boss, BossProjectile, Obstacle 
 } from '../types';
 import { 
-  GRAVITY, PLAYER_SPEED, 
+  CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, PLAYER_SPEED, 
   PROJECTILE_SPEED, SPHERE_RADII, BOUNCE_HEIGHTS, POWERUP_SPAWN_CHANCE, POWERUP_LIFE, FREEZE_DURATION, RAPID_FIRE_DURATION, SHIELD_DURATION
 } from '../constants';
-import { BASE_WIDTH, BASE_HEIGHT } from '../hooks/useGameDimensions';
 
 interface GameEngineProps {
   gameState: GameState;
@@ -18,17 +17,14 @@ interface GameEngineProps {
   setScore: React.Dispatch<React.SetStateAction<number>>;
   onLevelComplete: () => void;
   onGameOver: () => void;
-  canvasWidth: number;
-  canvasHeight: number;
+  virtualControlsRef?: React.RefObject<{
+    moveDirection: { x: number; y: number };
+    blasterPressed: boolean;
+    dodgePressed: boolean;
+  }>;
 }
 
-export interface GameEngineRef {
-  moveLeft: (active: boolean) => void;
-  moveRight: (active: boolean) => void;
-  fire: () => void;
-}
-
-const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
+const GameEngine: React.FC<GameEngineProps> = ({
   gameState,
   planet,
   lives,
@@ -37,15 +33,10 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
   setScore,
   onLevelComplete,
   onGameOver,
-  canvasWidth,
-  canvasHeight
-}, ref) => {
+  virtualControlsRef
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>(0);
-  
-  // Scale factor for rendering
-  const scaleX = canvasWidth / BASE_WIDTH;
-  const scaleY = canvasHeight / BASE_HEIGHT;
   
   // Audio State
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -62,24 +53,24 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
   const starsRef = useRef<{x: number, y: number, s: number, o: number}[]>([]);
   if (starsRef.current.length === 0) {
     for(let i=0; i<120; i++) starsRef.current.push({
-      x: Math.random() * BASE_WIDTH,
-      y: Math.random() * BASE_HEIGHT,
+      x: Math.random() * CANVAS_WIDTH,
+      y: Math.random() * CANVAS_HEIGHT,
       s: 0.5 + Math.random() * 2,
       o: 0.1 + Math.random() * 0.8
     });
   }
 
-  // GROUND_Y is where feet touch (in base coordinates)
-  const GROUND_Y = BASE_HEIGHT - 10;
+  // GROUND_Y is where feet touch
+  const GROUND_Y = CANVAS_HEIGHT - 10;
 
-  // Game Objects
+  // Game Objects - Player Y is now exactly on the floor line
   const playerRef = useRef<Player>({
     id: 'player',
-    pos: { x: BASE_WIDTH / 2, y: GROUND_Y },
+    pos: { x: CANVAS_WIDTH / 2, y: GROUND_Y },
     vel: { x: 0, y: 0 },
     radius: 14,
     width: 36,
-    height: 54,
+    height: 54, // Total visual height
     isInvulnerable: false,
     invulnerabilityTimer: 0,
     shieldTimer: 0,
@@ -107,35 +98,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
   const frameCountRef = useRef<number>(0);
   const shakeAmountRef = useRef<number>(0);
   const keys = useRef<{ [key: string]: boolean }>({});
-
-  // Expose touch control methods
-  useImperativeHandle(ref, () => ({
-    moveLeft: (active: boolean) => {
-      keys.current['ArrowLeft'] = active;
-    },
-    moveRight: (active: boolean) => {
-      keys.current['ArrowRight'] = active;
-    },
-    fire: () => {
-      if (gameState === GameState.PLAYING) {
-        const limit = rapidFireTimerRef.current > 0 ? 3 : 1;
-        if (projectilesRef.current.filter(p => p.active).length < limit) {
-          projectilesRef.current.push({ id: `p-${Date.now()}`, x: playerRef.current.pos.x, currentHeight: 0, active: true });
-          playerAnim.current.shootingTimer = 10;
-          if (audioCtxRef.current) {
-            const osc = audioCtxRef.current.createOscillator();
-            const g = audioCtxRef.current.createGain();
-            osc.frequency.setValueAtTime(1500, audioCtxRef.current.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(300, audioCtxRef.current.currentTime + 0.12);
-            g.gain.setValueAtTime(0.08, audioCtxRef.current.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current.currentTime + 0.12);
-            osc.connect(g); g.connect(audioCtxRef.current.destination);
-            osc.start(); osc.stop(audioCtxRef.current.currentTime + 0.12);
-          }
-        }
-      }
-    }
-  }), [gameState]);
+  const lastBlasterState = useRef<boolean>(false);
 
   const spawnParticles = useCallback((pos: Vector, color: string, count: number, velRange = 5) => {
     for (let i = 0; i < count; i++) {
@@ -208,6 +171,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     if (frameCountRef.current % Math.floor(stepTime * 60) === 0) {
       sequencerRef.current = (sequencerRef.current + 1) % 16;
       
+      // Cyber-Pop Beat
       if (sequencerRef.current % 4 === 0) {
         const k = ctx.createOscillator();
         const kg = ctx.createGain();
@@ -231,6 +195,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
         noise.start();
       }
 
+      // Neon Synth Hook (Major Pentatonic variations)
       const scale = [61, 63, 66, 68, 70, 73];
       const melodyIdx = [0, 2, 1, 3, 2, 4, 3, 5, 4, 2, 0, 1, 2, 4, 5, 0];
       const midi = scale[melodyIdx[sequencerRef.current]] + (planet.id * 2);
@@ -244,6 +209,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
       sOsc.connect(sG); sG.connect(synth);
       sOsc.start(); sOsc.stop(ctx.currentTime + 0.2);
 
+      // Pumping Bassline
       if (sequencerRef.current % 2 === 0) {
         const bOsc = ctx.createOscillator();
         const bG = ctx.createGain();
@@ -260,7 +226,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
   }, [planet, gameState]);
 
   const initLevel = useCallback(() => {
-    playerRef.current.pos = { x: BASE_WIDTH / 2, y: GROUND_Y };
+    playerRef.current.pos = { x: CANVAS_WIDTH / 2, y: GROUND_Y };
     playerRef.current.isInvulnerable = true;
     playerRef.current.invulnerabilityTimer = 180;
     playerRef.current.shieldTimer = 0;
@@ -268,7 +234,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     const newSpheres: Sphere[] = [];
     if (planet.id === 5) {
       bossRef.current = {
-        health: 200, maxHealth: 200, pos: { x: BASE_WIDTH / 2, y: -100 }, vel: { x: 2.5, y: 1 },
+        health: 200, maxHealth: 200, pos: { x: CANVAS_WIDTH / 2, y: -100 }, vel: { x: 2.5, y: 1 },
         phase: 1, attackTimer: 100, isVulnerable: true, shieldRotation: 0
       };
     } else {
@@ -278,7 +244,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
         const radius = SPHERE_RADII[size];
         newSpheres.push({
           id: `s-${Date.now()}-${i}`,
-          pos: { x: radius + Math.random() * (BASE_WIDTH - radius * 2), y: 150 + Math.random() * 80 },
+          pos: { x: radius + Math.random() * (CANVAS_WIDTH - radius * 2), y: 150 + Math.random() * 80 },
           vel: { x: (i % 2 === 0 ? 2.2 : -2.2), y: 0 },
           radius, size, color: planet.sphereColor, bounceHeight: BOUNCE_HEIGHTS[size], trail: []
         });
@@ -297,23 +263,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       keys.current[e.code] = true;
-      if (e.code === 'Space' && gameState === GameState.PLAYING) {
-        const limit = rapidFireTimerRef.current > 0 ? 3 : 1;
-        if (projectilesRef.current.filter(p=>p.active).length < limit) {
-          projectilesRef.current.push({ id: `p-${Date.now()}`, x: playerRef.current.pos.x, currentHeight: 0, active: true });
-          playerAnim.current.shootingTimer = 10;
-          if (audioCtxRef.current) {
-            const osc = audioCtxRef.current.createOscillator();
-            const g = audioCtxRef.current.createGain();
-            osc.frequency.setValueAtTime(1500, audioCtxRef.current.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(300, audioCtxRef.current.currentTime + 0.12);
-            g.gain.setValueAtTime(0.08, audioCtxRef.current.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current.currentTime + 0.12);
-            osc.connect(g); g.connect(audioCtxRef.current.destination);
-            osc.start(); osc.stop(audioCtxRef.current.currentTime + 0.12);
-          }
-        }
-      }
+      // Space key will be handled in update loop now for consistency
     };
     const handleKeyUp = (e: KeyboardEvent) => keys.current[e.code] = false;
     window.addEventListener('keydown', handleKeyDown);
@@ -322,6 +272,24 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
   }, [gameState]);
 
   useEffect(() => { if (gameState === GameState.PLANET_INTRO) initLevel(); }, [gameState, initLevel]);
+
+  const fireProjectile = useCallback(() => {
+    const limit = rapidFireTimerRef.current > 0 ? 3 : 1;
+    if (projectilesRef.current.filter(p=>p.active).length < limit) {
+      projectilesRef.current.push({ id: `p-${Date.now()}`, x: playerRef.current.pos.x, currentHeight: 0, active: true });
+      playerAnim.current.shootingTimer = 10;
+      if (audioCtxRef.current) {
+        const osc = audioCtxRef.current.createOscillator();
+        const g = audioCtxRef.current.createGain();
+        osc.frequency.setValueAtTime(1500, audioCtxRef.current.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, audioCtxRef.current.currentTime + 0.12);
+        g.gain.setValueAtTime(0.08, audioCtxRef.current.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtxRef.current.currentTime + 0.12);
+        osc.connect(g); g.connect(audioCtxRef.current.destination);
+        osc.start(); osc.stop(audioCtxRef.current.currentTime + 0.12);
+      }
+    }
+  }, []);
 
   const update = useCallback(() => {
     if (gameState !== GameState.PLAYING) return;
@@ -335,20 +303,44 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     
     const anim = playerAnim.current;
     anim.isMoving = false;
-    if (keys.current['ArrowLeft'] || keys.current['KeyA']) { 
-      player.pos.x -= PLAYER_SPEED; 
-      anim.isMoving = true; 
-      anim.facing = -1; 
+    
+    // Calculate movement from ONE source only (touch OR keyboard, not both)
+    let moveX = 0;
+    
+    // Check virtual/touch controls first (priority for mobile)
+    const virtualDir = virtualControlsRef?.current?.moveDirection;
+    const hasVirtualInput = virtualDir && Math.abs(virtualDir.x) > 0.1;
+    
+    if (hasVirtualInput) {
+      // Touch input: use normalized value (-1 to 1) * speed
+      moveX = virtualDir.x * PLAYER_SPEED;
+    } else {
+      // Keyboard fallback (only when no touch input)
+      if (keys.current['ArrowLeft'] || keys.current['KeyA']) { 
+        moveX = -PLAYER_SPEED;
+      }
+      if (keys.current['ArrowRight'] || keys.current['KeyD']) { 
+        moveX = PLAYER_SPEED;
+      }
     }
-    if (keys.current['ArrowRight'] || keys.current['KeyD']) { 
-      player.pos.x += PLAYER_SPEED; 
-      anim.isMoving = true; 
-      anim.facing = 1; 
+    
+    // Apply movement once
+    if (moveX !== 0) {
+      player.pos.x += moveX;
+      anim.isMoving = true;
+      anim.facing = moveX > 0 ? 1 : -1;
     }
+    
+    // Virtual button firing
+    if (virtualControlsRef?.current?.blasterPressed && !lastBlasterState.current) {
+      fireProjectile();
+    }
+    lastBlasterState.current = virtualControlsRef?.current?.blasterPressed || false;
     
     if (anim.isMoving) {
       anim.walkFrame += 0.3;
       if (frameCountRef.current % 3 === 0) {
+        // Magnetic boot sparks
         spawnParticles({ x: player.pos.x, y: GROUND_Y }, planet.sphereColor, 1, 2);
       }
     } else {
@@ -356,10 +348,21 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
       if (anim.walkFrame < 0.01) anim.walkFrame = 0;
     }
     
+    // Body sway based on movement
     anim.legSway = Math.sin(anim.walkFrame) * 4;
 
     if (anim.shootingTimer > 0) anim.shootingTimer--;
-    player.pos.x = Math.max(player.width / 2, Math.min(BASE_WIDTH - player.width / 2, player.pos.x));
+    
+    // Space key firing (keyboard support)
+    if (keys.current['Space'] && !keys.current['_spaceFired']) {
+      fireProjectile();
+      keys.current['_spaceFired'] = true;
+    }
+    if (!keys.current['Space']) {
+      keys.current['_spaceFired'] = false;
+    }
+    
+    player.pos.x = Math.max(player.width / 2, Math.min(CANVAS_WIDTH - player.width / 2, player.pos.x));
 
     if (player.isInvulnerable) {
       player.invulnerabilityTimer--;
@@ -369,7 +372,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     projectilesRef.current.forEach(proj => {
       if (proj.active) {
         proj.currentHeight += PROJECTILE_SPEED;
-        const py = BASE_HEIGHT - proj.currentHeight;
+        const py = CANVAS_HEIGHT - proj.currentHeight;
         planet.obstacles.forEach(obs => {
           if (proj.x > obs.x && proj.x < obs.x + obs.width && py < obs.y + obs.height && py > obs.y) {
             proj.active = false;
@@ -383,7 +386,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     spheresRef.current.forEach(sphere => {
       if (freezeTimerRef.current <= 0) {
         sphere.pos.x += sphere.vel.x; sphere.vel.y += GRAVITY; sphere.pos.y += sphere.vel.y;
-        if (sphere.pos.x - sphere.radius <= 0 || sphere.pos.x + sphere.radius >= BASE_WIDTH) { sphere.vel.x *= -1; }
+        if (sphere.pos.x - sphere.radius <= 0 || sphere.pos.x + sphere.radius >= CANVAS_WIDTH) { sphere.vel.x *= -1; }
         const floorY = GROUND_Y;
         if (sphere.pos.y + sphere.radius >= floorY) { sphere.pos.y = floorY - sphere.radius; sphere.vel.y = -Math.sqrt(2 * GRAVITY * sphere.bounceHeight); }
         
@@ -400,7 +403,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
       
       projectilesRef.current.forEach(proj => {
         if (!proj.active) return;
-        const py = BASE_HEIGHT - proj.currentHeight;
+        const py = CANVAS_HEIGHT - proj.currentHeight;
         if (Math.abs(sphere.pos.x - proj.x) < sphere.radius && sphere.pos.y + sphere.radius >= py) {
           proj.active = false; shakeAmountRef.current = 10;
           playPopSFX(sphere.size);
@@ -423,6 +426,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
         }
       });
 
+      // Player Collision - Visual offset 25 is approx center of body
       if (!player.isInvulnerable && Math.sqrt((player.pos.x - sphere.pos.x)**2 + (player.pos.y - 30 - sphere.pos.y)**2) < player.radius + sphere.radius) {
         if (player.shieldTimer > 0) {
           player.shieldTimer = 0; player.isInvulnerable = true; player.invulnerabilityTimer = 60;
@@ -451,27 +455,23 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     particlesRef.current = particlesRef.current.filter(p => p.life > 0);
 
     if (spheresRef.current.length === 0 && !bossRef.current) onLevelComplete();
-  }, [gameState, planet, lives, onGameOver, onLevelComplete, setScore, playPopSFX, playMusicStep, spawnParticles, GROUND_Y, setLives]);
+  }, [gameState, planet, lives, onGameOver, onLevelComplete, setScore, playPopSFX, playMusicStep, spawnParticles, GROUND_Y, fireProjectile, virtualControlsRef]);
 
   const draw = useCallback((ctx: CanvasRenderingContext2D) => {
     ctx.save();
-    
-    // Apply scaling for different screen sizes
-    ctx.scale(scaleX, scaleY);
-    
     if (shakeAmountRef.current > 0) {
       ctx.translate((Math.random()-0.5)*shakeAmountRef.current, (Math.random()-0.5)*shakeAmountRef.current);
     }
-    ctx.clearRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
     // COSMIC BACKGROUND
-    const g = ctx.createLinearGradient(0, 0, 0, BASE_HEIGHT);
+    const g = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
     g.addColorStop(0, planet.bgColor); g.addColorStop(0.7, '#000'); g.addColorStop(1, '#050512');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     
     // PARALLAX STARS
     starsRef.current.forEach(s => {
-      s.y += (s.s * 0.12); if (s.y > BASE_HEIGHT) s.y = 0;
+      s.y += (s.s * 0.12); if (s.y > CANVAS_HEIGHT) s.y = 0;
       ctx.globalAlpha = s.o; ctx.fillStyle = "#fff";
       ctx.fillRect(s.x, s.y, s.s, s.s);
     });
@@ -480,7 +480,7 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     // GROUND GLOW
     const horizon = ctx.createLinearGradient(0, GROUND_Y - 100, 0, GROUND_Y);
     horizon.addColorStop(0, 'rgba(0,0,0,0)'); horizon.addColorStop(1, planet.sphereColor + '22');
-    ctx.fillStyle = horizon; ctx.fillRect(0, GROUND_Y - 100, BASE_WIDTH, 100);
+    ctx.fillStyle = horizon; ctx.fillRect(0, GROUND_Y - 100, CANVAS_WIDTH, 100);
 
     // OBSTACLES
     planet.obstacles.forEach(obs => {
@@ -493,21 +493,23 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     // PROJECTILES
     projectilesRef.current.forEach(p => {
       if (!p.active) return;
-      const py = BASE_HEIGHT - p.currentHeight;
-      const lg = ctx.createLinearGradient(p.x, BASE_HEIGHT, p.x, py);
+      const py = CANVAS_HEIGHT - p.currentHeight;
+      const lg = ctx.createLinearGradient(p.x, CANVAS_HEIGHT, p.x, py);
       lg.addColorStop(0, 'transparent'); lg.addColorStop(0.5, '#0ff4'); lg.addColorStop(1, '#fff');
-      ctx.strokeStyle = lg; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(p.x, BASE_HEIGHT); ctx.lineTo(p.x, py); ctx.stroke();
+      ctx.strokeStyle = lg; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(p.x, CANVAS_HEIGHT); ctx.lineTo(p.x, py); ctx.stroke();
       ctx.shadowBlur = 10; ctx.shadowColor = "#0ff"; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(p.x, py, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
     });
 
-    // PLAYER
+    // PLAYER - GROUNDED LOGIC
     const p = playerRef.current;
     const a = playerAnim.current;
     if (!p.isInvulnerable || frameCountRef.current % 10 < 6) {
       ctx.save();
+      // Translate to floor position at player's feet
       ctx.translate(p.pos.x, p.pos.y);
       ctx.scale(a.facing, 1);
       
+      // PROCEDURAL LEGS - Ensuring feet touch GROUND_Y
       ctx.fillStyle = "#334155";
       const walkCycle = a.walkFrame;
       const leg1Sway = Math.sin(walkCycle) * 12;
@@ -515,30 +517,39 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
       const leg1Depth = Math.max(0, Math.cos(walkCycle) * 6);
       const leg2Depth = Math.max(0, Math.cos(walkCycle + Math.PI) * 6);
 
+      // Draw Legs starting from body height up to ground
+      // Body base is approx 18px above ground
       const bodyBaseY = -18;
       
+      // Leg 1
       ctx.fillRect(-10, bodyBaseY, 8, 18 - leg1Depth);
-      ctx.fillStyle = "#1e293b";
+      ctx.fillStyle = "#1e293b"; // Boot
       ctx.fillRect(-12, -leg1Depth - 4, 12, 4);
 
+      // Leg 2
       ctx.fillStyle = "#334155";
       ctx.fillRect(2, bodyBaseY, 8, 18 - leg2Depth);
-      ctx.fillStyle = "#1e293b";
+      ctx.fillStyle = "#1e293b"; // Boot
       ctx.fillRect(1, -leg2Depth - 4, 12, 4);
       
+      // Body Bobbing - calculated to keep legs connected
       const bodyBob = -Math.max(leg1Depth, leg2Depth);
       
+      // Cyber Suit Body
       ctx.translate(0, bodyBob);
       ctx.fillStyle = "#1e293b"; ctx.fillRect(-16, bodyBaseY - 32, 32, 32);
       ctx.strokeStyle = "#3b82f6"; ctx.lineWidth = 2; ctx.strokeRect(-16, bodyBaseY - 32, 32, 32);
       
+      // Neon Core
       ctx.fillStyle = "#00f2ff"; ctx.globalAlpha = 0.5 + Math.sin(frameCountRef.current*0.15)*0.3;
       ctx.fillRect(-8, bodyBaseY - 25, 16, 4); ctx.globalAlpha = 1;
 
+      // Helmet
       ctx.fillStyle = "#0f172a"; ctx.beginPath(); ctx.roundRect(-13, bodyBaseY - 50, 26, 20, 6); ctx.fill();
       ctx.fillStyle = "#00f2ff"; ctx.shadowBlur = 15; ctx.shadowColor = "#00f2ff";
       ctx.fillRect(-9, bodyBaseY - 45, 18, 6); ctx.shadowBlur = 0;
       
+      // Shoulder Blaster
       ctx.fillStyle = "#475569"; ctx.fillRect(8, bodyBaseY - 40, 15, 9);
       if (a.shootingTimer > 0) {
         ctx.fillStyle = "#fff"; ctx.shadowBlur = 10; ctx.shadowColor = "#0ff";
@@ -581,14 +592,15 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
     ctx.globalAlpha = 1;
 
     // FLOOR LINE
-    ctx.fillStyle = "#111"; ctx.fillRect(0, GROUND_Y, BASE_WIDTH, 10);
+    ctx.fillStyle = "#111"; ctx.fillRect(0, GROUND_Y, CANVAS_WIDTH, 10);
     ctx.strokeStyle = planet.sphereColor + 'aa'; ctx.lineWidth = 3; 
-    ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(BASE_WIDTH, GROUND_Y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, GROUND_Y); ctx.lineTo(CANVAS_WIDTH, GROUND_Y); ctx.stroke();
+    // Floor highlights
     ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, GROUND_Y + 4); ctx.lineTo(BASE_WIDTH, GROUND_Y + 4); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, GROUND_Y + 4); ctx.lineTo(CANVAS_WIDTH, GROUND_Y + 4); ctx.stroke();
 
     ctx.restore();
-  }, [planet, GROUND_Y, scaleX, scaleY]);
+  }, [planet, GROUND_Y]);
 
   const loop = useCallback(() => {
     update();
@@ -605,13 +617,16 @@ const GameEngine = forwardRef<GameEngineRef, GameEngineProps>(({
   return (
     <canvas 
       ref={canvasRef} 
-      width={canvasWidth} 
-      height={canvasHeight} 
-      className="bg-black w-full h-full touch-none" 
+      width={CANVAS_WIDTH} 
+      height={CANVAS_HEIGHT} 
+      className="bg-black"
+      style={{
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
+      }}
     />
   );
-});
-
-GameEngine.displayName = 'GameEngine';
+};
 
 export default GameEngine;

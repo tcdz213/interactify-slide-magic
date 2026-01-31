@@ -1,21 +1,12 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.c9b61c208edc4705bde89d099024f5b5',
-  appName: 'interactify-slide-magic',
+  appId: 'app.lovable.d0dcc0ecdec24cefb92b7bc8b7d852d2',
+  appName: 'neon-pang-2077',
   webDir: 'dist',
   server: {
-    url: 'https://c9b61c20-8edc-4705-bde8-9d099024f5b5.lovableproject.com?forceHideBadge=true',
+    url: 'https://d0dcc0ec-dec2-4cef-b92b-7bc8b7d852d2.lovableproject.com?forceHideBadge=true',
     cleartext: true
-  },
-  plugins: {
-    StatusBar: {
-      style: 'dark',
-      backgroundColor: '#020205'
-    },
-    ScreenOrientation: {
-      orientation: 'portrait'
-    }
   }
 };
 
