@@ -38,6 +38,16 @@ const GameEngine: React.FC<GameEngineProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const requestRef = useRef<number>(0);
   
+  // Delta time tracking for consistent speed across devices
+  const lastTimeRef = useRef<number>(0);
+  const targetFPS = 60;
+  const targetFrameTime = 1000 / targetFPS;
+  
+  // Speed multiplier: x1 idle, x2-3 when moving
+  const BASE_SPEED_MULTIPLIER = 1.0;
+  const MOVING_SPEED_MULTIPLIER = 2.0;
+  const currentSpeedMultiplier = useRef<number>(BASE_SPEED_MULTIPLIER);
+  
   // Audio State
   const audioCtxRef = useRef<AudioContext | null>(null);
   const musicRef = useRef<{
@@ -291,69 +301,89 @@ const GameEngine: React.FC<GameEngineProps> = ({
     }
   }, []);
 
-  const update = useCallback(() => {
+  const update = useCallback((deltaTime: number) => {
     if (gameState !== GameState.PLAYING) return;
+    
+    // Normalize delta time (1.0 = normal speed at 60fps)
+    const dt = Math.min(deltaTime / targetFrameTime, 3); // Cap at 3x to prevent huge jumps
+    
     playMusicStep();
     frameCountRef.current++;
     shakeAmountRef.current *= 0.9;
 
     const player = playerRef.current;
-    if (freezeTimerRef.current > 0) freezeTimerRef.current--;
-    if (rapidFireTimerRef.current > 0) rapidFireTimerRef.current--;
+    if (freezeTimerRef.current > 0) freezeTimerRef.current -= dt;
+    if (rapidFireTimerRef.current > 0) rapidFireTimerRef.current -= dt;
     
     const anim = playerAnim.current;
-    anim.isMoving = false;
     
-    // Calculate movement from ONE source only (touch OR keyboard, not both)
-    let moveX = 0;
+    // Determine movement intent from input (only update state, no direct position change yet)
+    let moveIntent = 0; // -1 to 1 normalized
     
     // Check virtual/touch controls first (priority for mobile)
     const virtualDir = virtualControlsRef?.current?.moveDirection;
     const hasVirtualInput = virtualDir && Math.abs(virtualDir.x) > 0.1;
     
     if (hasVirtualInput) {
-      // Touch input: use normalized value (-1 to 1) * speed
-      moveX = virtualDir.x * PLAYER_SPEED;
+      // Touch input: already normalized (-1 to 1)
+      moveIntent = virtualDir.x;
     } else {
       // Keyboard fallback (only when no touch input)
       if (keys.current['ArrowLeft'] || keys.current['KeyA']) { 
-        moveX = -PLAYER_SPEED;
+        moveIntent = -1;
       }
       if (keys.current['ArrowRight'] || keys.current['KeyD']) { 
-        moveX = PLAYER_SPEED;
+        moveIntent = 1;
       }
     }
     
-    // Apply movement once
-    if (moveX !== 0) {
-      player.pos.x += moveX;
-      anim.isMoving = true;
-      anim.facing = moveX > 0 ? 1 : -1;
+    // Update speed multiplier based on movement intent
+    const isMoving = Math.abs(moveIntent) > 0.1;
+    if (isMoving) {
+      // Smoothly transition to moving speed
+      currentSpeedMultiplier.current = Math.min(
+        currentSpeedMultiplier.current + 0.1 * dt,
+        MOVING_SPEED_MULTIPLIER
+      );
+    } else {
+      // Smoothly return to base speed
+      currentSpeedMultiplier.current = Math.max(
+        currentSpeedMultiplier.current - 0.05 * dt,
+        BASE_SPEED_MULTIPLIER
+      );
     }
     
-    // Virtual button firing
+    // Apply movement ONCE per frame using delta time
+    anim.isMoving = isMoving;
+    if (isMoving) {
+      const moveX = moveIntent * PLAYER_SPEED * dt;
+      player.pos.x += moveX;
+      anim.facing = moveIntent > 0 ? 1 : -1;
+    }
+    
+    // Virtual button firing (edge detection)
     if (virtualControlsRef?.current?.blasterPressed && !lastBlasterState.current) {
       fireProjectile();
     }
     lastBlasterState.current = virtualControlsRef?.current?.blasterPressed || false;
     
     if (anim.isMoving) {
-      anim.walkFrame += 0.3;
+      anim.walkFrame += 0.3 * dt;
       if (frameCountRef.current % 3 === 0) {
         // Magnetic boot sparks
         spawnParticles({ x: player.pos.x, y: GROUND_Y }, planet.sphereColor, 1, 2);
       }
     } else {
-      anim.walkFrame *= 0.85;
+      anim.walkFrame *= Math.pow(0.85, dt);
       if (anim.walkFrame < 0.01) anim.walkFrame = 0;
     }
     
     // Body sway based on movement
     anim.legSway = Math.sin(anim.walkFrame) * 4;
 
-    if (anim.shootingTimer > 0) anim.shootingTimer--;
+    if (anim.shootingTimer > 0) anim.shootingTimer -= dt;
     
-    // Space key firing (keyboard support)
+    // Space key firing (keyboard support with edge detection)
     if (keys.current['Space'] && !keys.current['_spaceFired']) {
       fireProjectile();
       keys.current['_spaceFired'] = true;
@@ -365,13 +395,16 @@ const GameEngine: React.FC<GameEngineProps> = ({
     player.pos.x = Math.max(player.width / 2, Math.min(CANVAS_WIDTH - player.width / 2, player.pos.x));
 
     if (player.isInvulnerable) {
-      player.invulnerabilityTimer--;
+      player.invulnerabilityTimer -= dt;
       if (player.invulnerabilityTimer <= 0) player.isInvulnerable = false;
     }
 
+    // Apply speed multiplier to game physics (spheres, projectiles, etc.)
+    const gameSpeed = currentSpeedMultiplier.current * dt;
+    
     projectilesRef.current.forEach(proj => {
       if (proj.active) {
-        proj.currentHeight += PROJECTILE_SPEED;
+        proj.currentHeight += PROJECTILE_SPEED * gameSpeed;
         const py = CANVAS_HEIGHT - proj.currentHeight;
         planet.obstacles.forEach(obs => {
           if (proj.x > obs.x && proj.x < obs.x + obs.width && py < obs.y + obs.height && py > obs.y) {
@@ -385,7 +418,9 @@ const GameEngine: React.FC<GameEngineProps> = ({
 
     spheresRef.current.forEach(sphere => {
       if (freezeTimerRef.current <= 0) {
-        sphere.pos.x += sphere.vel.x; sphere.vel.y += GRAVITY; sphere.pos.y += sphere.vel.y;
+        sphere.pos.x += sphere.vel.x * gameSpeed; 
+        sphere.vel.y += GRAVITY * gameSpeed; 
+        sphere.pos.y += sphere.vel.y * gameSpeed;
         if (sphere.pos.x - sphere.radius <= 0 || sphere.pos.x + sphere.radius >= CANVAS_WIDTH) { sphere.vel.x *= -1; }
         const floorY = GROUND_Y;
         if (sphere.pos.y + sphere.radius >= floorY) { sphere.pos.y = floorY - sphere.radius; sphere.vel.y = -Math.sqrt(2 * GRAVITY * sphere.bounceHeight); }
@@ -602,14 +637,22 @@ const GameEngine: React.FC<GameEngineProps> = ({
     ctx.restore();
   }, [planet, GROUND_Y]);
 
-  const loop = useCallback(() => {
-    update();
+  const loop = useCallback((timestamp: number) => {
+    // Calculate delta time
+    if (lastTimeRef.current === 0) {
+      lastTimeRef.current = timestamp;
+    }
+    const deltaTime = timestamp - lastTimeRef.current;
+    lastTimeRef.current = timestamp;
+    
+    update(deltaTime);
     const ctx = canvasRef.current?.getContext('2d');
     if (ctx) draw(ctx);
     requestRef.current = requestAnimationFrame(loop);
   }, [update, draw]);
 
   useEffect(() => {
+    lastTimeRef.current = 0; // Reset on mount
     requestRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(requestRef.current);
   }, [loop]);
