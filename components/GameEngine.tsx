@@ -43,10 +43,9 @@ const GameEngine: React.FC<GameEngineProps> = ({
   const targetFPS = 60;
   const targetFrameTime = 1000 / targetFPS;
   
-  // Speed multiplier: x1 idle, x2-3 when moving
-  const BASE_SPEED_MULTIPLIER = 1.0;
-  const MOVING_SPEED_MULTIPLIER = 2.0;
-  const currentSpeedMultiplier = useRef<number>(BASE_SPEED_MULTIPLIER);
+  // Speed multiplier: always x1 (constant speed)
+  const SPEED_MULTIPLIER = 1.0;
+  const currentSpeedMultiplier = useRef<number>(SPEED_MULTIPLIER);
   
   // Audio State
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -337,21 +336,9 @@ const GameEngine: React.FC<GameEngineProps> = ({
       }
     }
     
-    // Update speed multiplier based on movement intent
+    // Speed multiplier stays constant at 1x
     const isMoving = Math.abs(moveIntent) > 0.1;
-    if (isMoving) {
-      // Smoothly transition to moving speed
-      currentSpeedMultiplier.current = Math.min(
-        currentSpeedMultiplier.current + 0.1 * dt,
-        MOVING_SPEED_MULTIPLIER
-      );
-    } else {
-      // Smoothly return to base speed
-      currentSpeedMultiplier.current = Math.max(
-        currentSpeedMultiplier.current - 0.05 * dt,
-        BASE_SPEED_MULTIPLIER
-      );
-    }
+    currentSpeedMultiplier.current = SPEED_MULTIPLIER;
     
     // Apply movement ONCE per frame using delta time
     anim.isMoving = isMoving;
