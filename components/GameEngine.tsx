@@ -621,43 +621,6 @@ const GameEngine: React.FC<GameEngineProps> = ({
     ctx.strokeStyle = "rgba(255,255,255,0.1)"; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.moveTo(0, GROUND_Y + 4); ctx.lineTo(CANVAS_WIDTH, GROUND_Y + 4); ctx.stroke();
 
-    // SPEED MULTIPLIER INDICATOR
-    const speedMult = currentSpeedMultiplier.current;
-    const isAccelerated = speedMult > 1.1;
-    
-    // Position: bottom-center of screen
-    const indicatorX = CANVAS_WIDTH / 2;
-    const indicatorY = GROUND_Y - 30;
-    
-    // Background pill
-    ctx.save();
-    ctx.globalAlpha = 0.7;
-    ctx.fillStyle = isAccelerated ? '#0ff' : '#333';
-    ctx.beginPath();
-    ctx.roundRect(indicatorX - 35, indicatorY - 10, 70, 20, 10);
-    ctx.fill();
-    
-    // Speed text
-    ctx.globalAlpha = 1;
-    ctx.fillStyle = isAccelerated ? '#000' : '#888';
-    ctx.font = 'bold 12px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const speedText = `x${speedMult.toFixed(1)}`;
-    ctx.fillText(speedText, indicatorX, indicatorY);
-    
-    // Glow effect when accelerated
-    if (isAccelerated) {
-      ctx.shadowBlur = 15;
-      ctx.shadowColor = '#0ff';
-      ctx.strokeStyle = '#0ff';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(indicatorX - 35, indicatorY - 10, 70, 20, 10);
-      ctx.stroke();
-      ctx.shadowBlur = 0;
-    }
-    ctx.restore();
 
     ctx.restore();
   }, [planet, GROUND_Y]);
