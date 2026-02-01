@@ -5,7 +5,7 @@ import {
 } from '../types';
 import { 
   CANVAS_WIDTH, CANVAS_HEIGHT, GRAVITY, PLAYER_SPEED, 
-  PROJECTILE_SPEED, SPHERE_RADII, BOUNCE_HEIGHTS, POWERUP_SPAWN_CHANCE, POWERUP_LIFE, FREEZE_DURATION, RAPID_FIRE_DURATION, SHIELD_DURATION
+  PROJECTILE_SPEED, SPHERE_RADII, BOUNCE_HEIGHTS, POWERUP_SPAWN_CHANCE, POWERUP_LIFE, FREEZE_DURATION, RAPID_FIRE_DURATION, SHIELD_DURATION, FINAL_BOSS_STAGE
 } from '../constants';
 
 interface GameEngineProps {
@@ -241,10 +241,10 @@ const GameEngine: React.FC<GameEngineProps> = ({
     playerRef.current.shieldTimer = 0;
     
     const newSpheres: Sphere[] = [];
-    if (planet.id === 5) {
+    if (planet.id === FINAL_BOSS_STAGE) {
       bossRef.current = {
-        health: 200, maxHealth: 200, pos: { x: CANVAS_WIDTH / 2, y: -100 }, vel: { x: 2.5, y: 1 },
-        phase: 1, attackTimer: 100, isVulnerable: true, shieldRotation: 0
+        health: 300, maxHealth: 300, pos: { x: CANVAS_WIDTH / 2, y: -100 }, vel: { x: 3, y: 1.2 },
+        phase: 1, attackTimer: 80, isVulnerable: true, shieldRotation: 0
       };
     } else {
       bossRef.current = null;
