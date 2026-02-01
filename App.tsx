@@ -1,19 +1,26 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { GameState, Planet } from './types';
 import { PLANETS, CANVAS_WIDTH, CANVAS_HEIGHT } from './constants';
 import GameEngine from './components/GameEngine';
 import MobileGameLayout from './components/MobileGameLayout';
+import GameOverScreen from './components/GameOverScreen';
+import { adMobService } from './services/AdMobService';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.START_SCREEN);
   const [currentPlanetIndex, setCurrentPlanetIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [lives, setLives] = useState(5);
+  const [continueData, setContinueData] = useState<{ planetIndex: number; score: number } | null>(null);
   const [highScore, setHighScore] = useState(() => {
     const saved = localStorage.getItem('pang_high_score_v3');
     return saved ? parseInt(saved, 10) : 0;
   });
+
+  // Initialize AdMob on mount
+  useEffect(() => {
+    adMobService.initialize();
+  }, []);
 
   // Virtual control states - shared with GameEngine
   const virtualControlsRef = useRef<{
@@ -39,8 +46,23 @@ const App: React.FC = () => {
     setScore(0);
     setLives(5);
     setCurrentPlanetIndex(0);
+    setContinueData(null);
     setGameState(GameState.PLANET_INTRO);
   };
+
+  // Handle game over - save continue data
+  const handleGameOver = useCallback(() => {
+    setContinueData({ planetIndex: currentPlanetIndex, score });
+    setGameState(GameState.GAME_OVER);
+  }, [currentPlanetIndex, score]);
+
+  // Continue after watching ad
+  const handleContinue = useCallback(() => {
+    if (continueData) {
+      setLives(3); // Give 3 lives on continue
+      setGameState(GameState.PLAYING); // Resume from where they died
+    }
+  }, [continueData]);
 
   const handleNextPlanet = () => {
     if (currentPlanetIndex < PLANETS.length - 1) {
@@ -91,7 +113,7 @@ const App: React.FC = () => {
           score={score}
           setScore={setScore}
           onLevelComplete={() => setGameState(GameState.LEVEL_COMPLETE)}
-          onGameOver={() => setGameState(GameState.GAME_OVER)}
+          onGameOver={handleGameOver}
           virtualControlsRef={virtualControlsRef}
         />
 
@@ -173,17 +195,11 @@ const App: React.FC = () => {
         )}
 
         {gameState === GameState.GAME_OVER && (
-          <div className="absolute inset-0 bg-rose-950/90 backdrop-blur-2xl flex flex-col items-center justify-center text-center z-20">
-            <div className="text-rose-500 text-4xl mb-4">⚠</div>
-            <h2 className="text-5xl font-black text-white mb-3 italic uppercase tracking-tighter">System Critical</h2>
-            <p className="text-rose-400 text-sm font-bold tracking-[0.3em] mb-8 uppercase opacity-80">Terminated</p>
-            <button 
-              onClick={startGame}
-              className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all text-lg font-black uppercase tracking-widest"
-            >
-              Retry
-            </button>
-          </div>
+          <GameOverScreen
+            onRestart={startGame}
+            onContinue={handleContinue}
+            score={score}
+          />
         )}
 
         {gameState === GameState.VICTORY && (
