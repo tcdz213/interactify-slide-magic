@@ -1,0 +1,226 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 25% 97%;
+    --foreground: 222 45% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 45% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 45% 10%;
+
+    /* Corporate teal-green (deeper, more professional) */
+    --primary: 160 82% 34%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 16% 91%;
+    --secondary-foreground: 222 45% 10%;
+
+    --muted: 220 18% 94%;
+    --muted-foreground: 220 10% 44%;
+
+    --accent: 160 82% 34%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 2 74% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 16% 88%;
+    --input: 220 16% 88%;
+    --ring: 160 82% 34%;
+
+    --radius: 0.75rem;
+
+    /* Custom semantic tokens */
+    --warning: 38 95% 48%;
+    --warning-foreground: 0 0% 100%;
+    --success: 160 82% 34%;
+    --success-foreground: 0 0% 100%;
+    --info: 217 90% 58%;
+    --info-foreground: 0 0% 100%;
+
+    --kpi-up: 160 82% 34%;
+    --kpi-down: 2 74% 50%;
+
+    --chart-1: 160 82% 34%;
+    --chart-2: 217 90% 58%;
+    --chart-3: 38 95% 48%;
+    --chart-4: 280 65% 58%;
+    --chart-5: 340 75% 53%;
+
+    /* Sidebar */
+    --sidebar-bg: 224 35% 9%;
+    --sidebar-fg: 220 20% 78%;
+    --sidebar-fg-active: 0 0% 100%;
+    --sidebar-accent: 160 82% 34%;
+    --sidebar-hover: 224 28% 14%;
+    --sidebar-border: 224 22% 17%;
+
+    --sidebar-background: 224 35% 9%;
+    --sidebar-foreground: 220 20% 78%;
+    --sidebar-primary: 160 82% 34%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 224 28% 14%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 224 22% 17%;
+    --sidebar-ring: 160 82% 34%;
+
+    /* Dialog-specific */
+    --dialog-shadow: 0 25px 60px -12px rgb(0 0 0 / 0.25);
+  }
+
+  .dark {
+    --background: 224 35% 7%;
+    --foreground: 220 20% 91%;
+    --card: 224 30% 11%;
+    --card-foreground: 220 20% 91%;
+    --popover: 224 30% 11%;
+    --popover-foreground: 220 20% 91%;
+    --primary: 160 82% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 224 26% 17%;
+    --secondary-foreground: 220 20% 91%;
+    --muted: 224 26% 14%;
+    --muted-foreground: 220 10% 55%;
+    --accent: 160 82% 40%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 2 74% 52%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 224 22% 17%;
+    --input: 224 22% 17%;
+    --ring: 160 82% 40%;
+    --sidebar-background: 224 38% 5%;
+    --sidebar-foreground: 220 15% 78%;
+    --sidebar-primary: 160 82% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 224 28% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 224 22% 15%;
+    --sidebar-ring: 160 82% 45%;
+    --dialog-shadow: 0 25px 60px -12px rgb(0 0 0 / 0.55);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer utilities {
+  /* D6 — Print styles */
+  @media print {
+    .no-print, nav, header, .sidebar, [data-sidebar] {
+      display: none !important;
+    }
+    body {
+      background: white;
+      color: black;
+    }
+    .glass-card {
+      border: 1px solid #ddd;
+      box-shadow: none;
+      background: white;
+    }
+  }
+
+  /* D9 — Consistent icon sizes */
+  .icon-sm { @apply h-3.5 w-3.5; }
+  .icon-md { @apply h-4 w-4; }
+  .icon-lg { @apply h-5 w-5; }
+  .icon-xl { @apply h-6 w-6; }
+  /* Glass card utility */
+  .glass-card {
+    @apply bg-card/90 backdrop-blur-sm border border-border/50 shadow-sm;
+  }
+
+  /* KPI card glow */
+  .kpi-glow {
+    box-shadow: 0 0 24px -5px hsl(var(--primary) / 0.18);
+  }
+
+  /* Dialog hero headers */
+  .dialog-header-primary {
+    @apply flex items-center gap-3 px-6 py-4 -mx-6 -mt-2 mb-4 rounded-t-xl border-b border-primary/20;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.10) 0%, hsl(var(--primary) / 0.04) 100%);
+  }
+
+  .dialog-header-destructive {
+    @apply flex items-center gap-3 px-6 py-4 -mx-6 -mt-2 mb-4 rounded-t-xl border-b border-destructive/20;
+    background: linear-gradient(135deg, hsl(var(--destructive) / 0.10) 0%, hsl(var(--destructive) / 0.03) 100%);
+  }
+
+  .dialog-header-warning {
+    @apply flex items-center gap-3 px-6 py-4 -mx-6 -mt-2 mb-4 rounded-t-xl border-b border-warning/20;
+    background: linear-gradient(135deg, hsl(var(--warning) / 0.10) 0%, hsl(var(--warning) / 0.03) 100%);
+  }
+
+  /* Icon box in dialog headers */
+  .dialog-icon-primary {
+    @apply flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20;
+  }
+
+  .dialog-icon-destructive {
+    @apply flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-destructive/10 text-destructive ring-1 ring-destructive/20;
+  }
+
+  .dialog-icon-warning {
+    @apply flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-600 ring-1 ring-yellow-500/20;
+  }
+
+  /* C1 — Mobile table improvements */
+  @media (max-width: 768px) {
+    .responsive-table table {
+      font-size: 0.75rem;
+    }
+    .responsive-table th,
+    .responsive-table td {
+      padding: 0.5rem 0.625rem;
+    }
+  }
+
+  /* C3 — KPI grid: 2x2 on mobile instead of vertical stack */
+  .kpi-grid {
+    @apply grid gap-4;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (min-width: 768px) {
+    .kpi-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  /* C4 — Touch target minimum 44px on mobile */
+  @media (max-width: 768px) {
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    button[data-mobile-action],
+    .mobile-action-btn {
+      min-height: 44px;
+      min-width: 44px;
+      @apply px-3;
+    }
+  }
+
+  /* Safe area for PWA bottom nav (iPhone notch) */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

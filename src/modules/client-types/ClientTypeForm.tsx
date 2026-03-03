@@ -1,0 +1,89 @@
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { clientTypeSchema, type ClientTypeFormValues, type ClientType } from "./clientType.schema";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface ClientTypeFormProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  clientType?: ClientType | null;
+  onSave: (values: ClientTypeFormValues) => void;
+}
+
+export function ClientTypeForm({ open, onOpenChange, clientType, onSave }: ClientTypeFormProps) {
+  const form = useForm<ClientTypeFormValues>({
+    resolver: zodResolver(clientTypeSchema),
+    defaultValues: {
+      name: clientType?.name ?? "",
+      description: clientType?.description ?? "",
+      isDefault: clientType?.isDefault ?? false,
+      status: clientType?.status ?? "active",
+    },
+  });
+
+  const handleSubmit = (values: ClientTypeFormValues) => {
+    onSave(values);
+    form.reset();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[480px]">
+        <DialogHeader>
+          <DialogTitle>{clientType ? "Modifier le type client" : "Nouveau type client"}</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+            <FormField control={form.control} name="name" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nom *</FormLabel>
+                <FormControl><Input placeholder="Ex: Grossiste" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl><Textarea placeholder="Description du type client..." {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+            <div className="flex items-center gap-6">
+              <FormField control={form.control} name="isDefault" render={({ field }) => (
+                <FormItem className="flex items-center gap-2 space-y-0">
+                  <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
+                  <FormLabel className="cursor-pointer">Type par défaut</FormLabel>
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="status" render={({ field }) => (
+                <FormItem className="flex-1">
+                  <FormLabel>Statut</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="active">Actif</SelectItem>
+                      <SelectItem value="inactive">Inactif</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
+              <Button type="submit">{clientType ? "Enregistrer" : "Créer"}</Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
