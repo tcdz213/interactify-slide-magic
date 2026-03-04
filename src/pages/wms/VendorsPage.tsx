@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Eye, Plus, Star, Search, Phone, Mail, MapPin, Building2 } from "lucide-react";
+import { Users, Eye, Plus, Star, Search, Phone, Mail, MapPin, Building2, CreditCard, Landmark, ShieldAlert } from "lucide-react";
 import { currency } from "@/data/mockData";
 import type { Vendor } from "@/data/mockData";
 import StatusBadge from "@/components/StatusBadge";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { FormField, formInputClass } from "@/components/ui/form-field";
+import { FormField, formInputClass, formSelectClass } from "@/components/ui/form-field";
 import { getRoleLevel } from "@/lib/rbac";
 
 function nextVendorId(vendors: Vendor[]): string {
@@ -27,7 +27,7 @@ export default function VendorsPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  const [form, setForm] = useState({ name: "", contact: "", phone: "", email: "", city: "" });
+  const [form, setForm] = useState({ name: "", contact: "", phone: "", email: "", city: "", taxId: "", bankAccount: "", paymentTerms: "Net_30" as string });
 
   const filtered = vendors.filter(v => {
     if (filterStatus !== "all" && v.status !== filterStatus) return false;
@@ -35,20 +35,30 @@ export default function VendorsPage() {
     return true;
   });
 
+  const NIF_REGEX = /^\d{15}$/;
+  const nifError = form.taxId && !NIF_REGEX.test(form.taxId)
+    ? "Le NIF doit contenir exactement 15 chiffres (ex: 000216045678901)"
+    : "";
+
   const handleCreate = () => {
     if (!form.name || !form.contact) return;
+    if (!form.taxId) { toast({ title: "NIF requis", description: "Le numéro d'identification fiscale est obligatoire.", variant: "destructive" }); return; }
+    if (!NIF_REGEX.test(form.taxId)) { toast({ title: "NIF invalide", description: "Le NIF algérien doit contenir exactement 15 chiffres.", variant: "destructive" }); return; }
     const newVendor: Vendor = {
       id: nextVendorId(vendors),
-      ...form, rating: 0, status: "Active", totalPOs: 0, totalValue: 0, avgLeadDays: 0, lastDelivery: "—",
+      name: form.name, contact: form.contact, phone: form.phone, email: form.email, city: form.city,
+      rating: 0, status: "Active", totalPOs: 0, totalValue: 0, avgLeadDays: 0, lastDelivery: "—",
+      taxId: form.taxId, bankAccount: form.bankAccount, currencyId: "DZD",
+      paymentTerms: form.paymentTerms as Vendor["paymentTerms"],
     };
     setVendors(prev => [newVendor, ...prev]);
     setShowCreate(false);
-    setForm({ name: "", contact: "", phone: "", email: "", city: "" });
+    setForm({ name: "", contact: "", phone: "", email: "", city: "", taxId: "", bankAccount: "", paymentTerms: "Net_30" });
     toast({ title: "Fournisseur créé", description: form.name });
   };
 
   const toggleStatus = (id: string) => {
-    setVendors(prev => prev.map(v => v.id === id ? { ...v, status: v.status === "Active" ? "Suspended" as const : "Active" as const } : v));
+    setVendors(prev => prev.map(v => v.id === id ? { ...v, status: (v.status === "Active" ? "On Hold" : "Active") as Vendor["status"] } : v));
   };
 
   return (
@@ -78,8 +88,8 @@ export default function VendorsPage() {
           className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
           <option value="all">Tous</option>
           <option value="Active">Actifs</option>
-          <option value="Inactive">Inactifs</option>
-          <option value="Suspended">Suspendus</option>
+          <option value="On Hold">En attente</option>
+          <option value="Blocked">Bloqués</option>
         </select>
       </div>
 
@@ -114,6 +124,11 @@ export default function VendorsPage() {
                 {v.status === "Active" ? "Suspendre" : "Activer"}
               </Button>
             </div>
+            {v.isBlacklisted && (
+              <div className="flex items-center gap-1 text-[10px] text-destructive font-medium mt-1">
+                <ShieldAlert className="h-3 w-3" /> Liste noire
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -153,6 +168,10 @@ export default function VendorsPage() {
                   { label: "Email", value: selectedVendor.email },
                   { label: "Téléphone", value: selectedVendor.phone },
                   { label: "Ville", value: selectedVendor.city },
+                  { label: "NIF", value: selectedVendor.taxId || "—" },
+                  { label: "Devise", value: selectedVendor.currencyId || "DZD" },
+                  { label: "Compte bancaire", value: selectedVendor.bankAccount ? `...${selectedVendor.bankAccount.slice(-8)}` : "—" },
+                  { label: "Conditions paiement", value: selectedVendor.paymentTerms?.replace(/_/g, " ") || "—" },
                   { label: "Total POs", value: String(selectedVendor.totalPOs) },
                   { label: "Délai moyen", value: `${selectedVendor.avgLeadDays} j` },
                   { label: "CA total", value: currency(selectedVendor.totalValue) },
@@ -190,6 +209,11 @@ export default function VendorsPage() {
               <input value={form.contact} onChange={e => setForm({ ...form, contact: e.target.value })}
                 placeholder="Nom du contact principal" className={formInputClass} />
             </FormField>
+            <FormField label="NIF (Numéro d'Identification Fiscale)" required hint="Format: 15 chiffres"
+              error={nifError || undefined}>
+              <input value={form.taxId} onChange={e => setForm({ ...form, taxId: e.target.value.replace(/\D/g, "").slice(0, 15) })}
+                placeholder="000216045678901" className={`${formInputClass} ${nifError ? "border-destructive" : ""}`} maxLength={15} />
+            </FormField>
             <div className="grid grid-cols-2 gap-3">
               <FormField label="Téléphone">
                 <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
@@ -204,11 +228,26 @@ export default function VendorsPage() {
               <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
                 placeholder="contact@fournisseur.dz" className={formInputClass} />
             </FormField>
+            <FormField label="Compte bancaire (IBAN)" hint="Format: DZ58...">
+              <input value={form.bankAccount} onChange={e => setForm({ ...form, bankAccount: e.target.value })}
+                placeholder="DZ580002100000000123456789" className={formInputClass} />
+            </FormField>
+            <FormField label="Conditions de paiement">
+              <select value={form.paymentTerms} onChange={e => setForm({ ...form, paymentTerms: e.target.value })}
+                className={formSelectClass}>
+                <option value="Comptant">Comptant</option>
+                <option value="Net_15">Net 15</option>
+                <option value="Net_30">Net 30</option>
+                <option value="Net_45">Net 45</option>
+                <option value="Net_60">Net 60</option>
+                <option value="30_jours_fin_mois">30j fin de mois</option>
+              </select>
+            </FormField>
           </div>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
-            <Button onClick={handleCreate} disabled={!form.name || !form.contact}>
+            <Button onClick={handleCreate} disabled={!form.name || !form.contact || !!nifError}>
               <Plus className="h-4 w-4" /> Créer fournisseur
             </Button>
           </DialogFooter>

@@ -31,6 +31,7 @@ const COLUMNS: ColumnDef[] = [
   { key: "sku", label: "SKU", alwaysVisible: true },
   { key: "name", label: "Nom", alwaysVisible: true },
   { key: "category", label: "Catégorie" },
+  { key: "subcategory", label: "Sous-catégorie" },
   { key: "uom", label: "Unité base" },
   { key: "conversions", label: "Conversions" },
   { key: "stock", label: "Stock Total" },
@@ -46,28 +47,25 @@ const EXPORT_COLUMNS: ExportColumn<Product>[] = [
 ];
 
 export default function ProductsPage() {
-  const { products, setProducts, productCategories, unitsOfMeasure, warehouses, inventory, purchaseOrders, salesOrders } = useWMSData();
+  const { products, setProducts, productCategories, subCategories, sectors, unitsOfMeasure, warehouses, inventory, purchaseOrders, salesOrders, productHistory, setProductHistory } = useWMSData();
   const { currentUser } = useAuth();
   const { onProductCostChanged } = useFinancialTracking();
   const showFinancials = currentUser ? canViewFinancials(currentUser) : false;
 
-  // Filters & computed KPIs
-  const filters = useProductFilters({ products, inventory });
-  const { filtered, categories, activeCount, criticalStockCount, avgCost, avgPrice, stockTotals } = filters;
+  const filters = useProductFilters({ products, inventory, productCategories, subCategories, sectors });
+  const { filtered, categories, activeCount, criticalStockCount, avgCost, avgPrice, stockTotals, subCatMap } = filters;
 
-  // Sorting, column visibility, pagination
   const { sorted, sortKey, sortDir, onSort } = useSortableTable(filtered);
   const { visible, toggle, isVisible } = useColumnVisibility(COLUMNS);
   const { paginatedItems, currentPage, totalPages, setCurrentPage, pageSize, setPageSize, totalItems } = usePagination(sorted, 10);
 
-  // CRUD operations
   const crud = useProductCRUD({
     products, setProducts, stockTotals, purchaseOrders, salesOrders,
     onCostChanged: onProductCostChanged,
     currentUserName: currentUser?.name,
+    productHistory, setProductHistory,
   });
 
-  // Modal states
   const [exportOpen, setExportOpen] = useState(false);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [pricingProduct, setPricingProduct] = useState<Product | null>(null);
@@ -77,7 +75,6 @@ export default function ProductsPage() {
     <div className="space-y-6 animate-fade-in">
       <WarehouseScopeBanner />
 
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
@@ -101,7 +98,6 @@ export default function ProductsPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
       <ProductKPICards
         totalProducts={filtered.length}
         categoriesCount={categories.length}
@@ -111,17 +107,18 @@ export default function ProductsPage() {
         avgPrice={avgPrice}
       />
 
-      {/* Filters */}
       <ProductFilterBar
         search={filters.search} onSearchChange={filters.setSearch}
+        filterSector={filters.filterSector} onFilterSectorChange={filters.setFilterSector}
         filterWh={filters.filterWh} onFilterWhChange={filters.setFilterWh}
         filterCat={filters.filterCat} onFilterCatChange={filters.setFilterCat}
+        filterSubCat={filters.filterSubCat} onFilterSubCatChange={filters.setFilterSubCat}
         filterStatus={filters.filterStatus} onFilterStatusChange={filters.setFilterStatus}
         warehouses={warehouses} categories={categories}
+        sectors={filters.sectors} subCategories={filters.subCategoriesForCat}
         columns={COLUMNS} visible={visible} onToggle={toggle}
       />
 
-      {/* Table */}
       <div className="glass-card rounded-xl overflow-hidden">
         <ProductTable
           items={paginatedItems}
@@ -133,6 +130,8 @@ export default function ProductsPage() {
           onToggle={crud.handleToggleActive}
           onDelete={crud.setDeleteConfirm}
           onUnits={setUnitsProduct}
+           onClone={crud.handleClone}
+           subCatMap={subCatMap}
         />
         {filtered.length === 0 && (
           <EmptyState
@@ -149,7 +148,6 @@ export default function ProductsPage() {
         />
       </div>
 
-      {/* Modals */}
       <ProductDetailDrawer product={detailProduct} open={!!detailProduct} onOpenChange={(open) => !open && setDetailProduct(null)} />
       <ProductPricingDialog product={pricingProduct} open={!!pricingProduct} onOpenChange={(open) => !open && setPricingProduct(null)} />
       <ProductUnitsDialog product={unitsProduct} open={!!unitsProduct} onOpenChange={(open) => !open && setUnitsProduct(null)} />

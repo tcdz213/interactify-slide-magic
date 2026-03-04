@@ -6,8 +6,8 @@
 
 // Master Data
 export { currency, pct } from "./masterData";
-export type { Product, Vendor, VendorPaymentTerms, Warehouse, WarehouseType, WarehouseStatus, WarehouseLocation, ProductCategory, UnitOfMeasure, UnitKind, Carrier, BarcodeType, Barcode } from "./masterData";
-export { products, vendors, warehouses, warehouseLocations, productCategories, unitsOfMeasure, carriers, barcodes } from "./masterData";
+export type { Product, ProductType, CostMethod, Vendor, VendorPaymentTerms, VendorStatus, Warehouse, WarehouseType, WarehouseStatus, WarehouseLocation, Sector, ProductCategory, SubCategory, UnitOfMeasure, UnitKind, Carrier, BarcodeType, Barcode, PaymentTerm } from "./masterData";
+export { products, vendors, warehouses, warehouseLocations, sectors, productCategories, subCategories, unitsOfMeasure, carriers, barcodes, paymentTerms } from "./masterData";
 
 // Users & Governance
 export type { UserRole, GovernancePermission, User } from "./userData";

@@ -430,6 +430,18 @@ export default function WarehousesPage() {
                       className={formInputClass} />
                   </FormField>
                 </div>
+                <FormField label="Emplacement de réception" hint="Localisation par défaut pour les entrées de stock (GRN)">
+                  <select
+                    value={(whDialog.data as Record<string, unknown>)["inputLocationId"] as string ?? ""}
+                    onChange={e => setWhDialog(prev => prev ? { ...prev, data: { ...prev.data, inputLocationId: e.target.value || undefined } } : null)}
+                    className={formSelectClass}
+                  >
+                    <option value="">— Aucun (racine) —</option>
+                    {warehouseLocations.filter(l => l.warehouseId === (whDialog.data as Record<string, unknown>)["id"]).map(l => (
+                      <option key={l.id} value={l.id}>{l.zone}-{l.aisle}-{l.rack} ({l.type})</option>
+                    ))}
+                  </select>
+                </FormField>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setWhDialog(null)}>{t("common.cancel")}</Button>

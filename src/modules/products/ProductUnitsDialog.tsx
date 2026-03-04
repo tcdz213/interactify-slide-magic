@@ -1,15 +1,18 @@
 import { useState, useMemo } from "react";
 import UnitTimelineDrawer from "./UnitTimelineDrawer";
-import { Plus, Trash2, Package, ArrowRightLeft, Ruler, Square, Lock, History, ShieldAlert } from "lucide-react";
+import { Plus, Trash2, Package, ArrowRightLeft, Ruler, Square, Lock, History, ShieldAlert, Check, ChevronsUpDown } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FormField, formInputClass, formSelectClass } from "@/components/ui/form-field";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { toast } from "@/hooks/use-toast";
 import { generateId } from "@/services/crudService";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { ProductUnitConversion, ProductDimensions } from "@/lib/unitConversion";
+import { cn } from "@/lib/utils";
 import { canEditFactor } from "@/lib/unitConversion";
 import type { ProductBaseUnit } from "@/data/productUnitConversions";
 import type { Product } from "@/data/mockData";
@@ -22,10 +25,10 @@ interface ProductUnitsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const emptyConv = { unitName: "", unitAbbreviation: "", conversionFactor: 1, allowBuy: true, allowSell: true };
+const emptyConv = { unitName: "", unitAbbreviation: "", conversionFactor: 1, allowBuy: true, allowSell: true, selectedUomId: "" };
 
 export default function ProductUnitsDialog({ product, open, onOpenChange }: ProductUnitsDialogProps) {
-  const { productUnitConversions, setProductUnitConversions, productBaseUnits, setProductBaseUnits, productDimensions, setProductDimensions, inventory } = useWMSData();
+  const { productUnitConversions, setProductUnitConversions, productBaseUnits, setProductBaseUnits, productDimensions, setProductDimensions, inventory, unitsOfMeasure } = useWMSData();
   const { currentUser } = useAuth();
 
   // Sprint 6.3: Check product stock for base unit change protection
@@ -37,6 +40,8 @@ export default function ProductUnitsDialog({ product, open, onOpenChange }: Prod
   const [showAddForm, setShowAddForm] = useState(false);
   const [form, setForm] = useState(emptyConv);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [uomComboOpen, setUomComboOpen] = useState(false);
+  const [useCustomUnit, setUseCustomUnit] = useState(false);
   // Phase 3 — Task 3.5: Timeline drawer state
   const [timelineUnit, setTimelineUnit] = useState<string | null>(null);
 
@@ -63,6 +68,15 @@ export default function ProductUnitsDialog({ product, open, onOpenChange }: Prod
     () => product ? productDimensions.find(d => d.productId === product.id) : undefined,
     [product, productDimensions]
   );
+
+  // Available UoMs not yet added as conversions for this product
+  const availableUoms = useMemo(() => {
+    if (!product) return [];
+    const usedAbbrs = new Set(conversions.map(c => c.unitAbbreviation.toLowerCase()));
+    return unitsOfMeasure
+      .filter(u => !(u as any).isDeleted && !usedAbbrs.has(u.abbreviation.toLowerCase()))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [product, unitsOfMeasure, conversions]);
 
   const breakdownResult = useMemo(() => {
     if (!breakdownQty || breakdownQty <= 0 || conversions.length === 0) return null;
@@ -407,16 +421,110 @@ export default function ProductUnitsDialog({ product, open, onOpenChange }: Prod
 
         {/* Add Form */}
         {showAddForm ? (
-          <div className="rounded-lg border p-4 space-y-3 bg-muted/20">
-            <h4 className="text-sm font-semibold">Ajouter une unité</h4>
-            <div className="grid grid-cols-2 gap-3">
-              <FormField label="Nom de l'unité" required error={formErrors.unitName}>
-                <input className={formInputClass} value={form.unitName} onChange={e => setForm({ ...form, unitName: e.target.value })} placeholder="ex: Carton" />
-              </FormField>
-              <FormField label="Abréviation" required error={formErrors.unitAbbreviation}>
-                <input className={formInputClass} value={form.unitAbbreviation} onChange={e => setForm({ ...form, unitAbbreviation: e.target.value })} placeholder="ex: Ctn" maxLength={10} />
-              </FormField>
+          <div className="rounded-lg border p-4 space-y-4 bg-muted/20">
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-semibold">Ajouter une unité de conversion</h4>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setUseCustomUnit(false); setForm({ ...emptyConv }); }}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-xs font-medium transition-colors",
+                    !useCustomUnit ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  )}
+                >
+                  Choisir existante
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setUseCustomUnit(true); setForm({ ...emptyConv }); }}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-xs font-medium transition-colors",
+                    useCustomUnit ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  )}
+                >
+                  Personnalisée
+                </button>
+              </div>
             </div>
+
+            {!useCustomUnit ? (
+              /* ── Selector from existing UoMs ── */
+              <div className="space-y-3">
+                <FormField label="Sélectionner une unité" required error={formErrors.unitName}>
+                  <Popover open={uomComboOpen} onOpenChange={setUomComboOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={uomComboOpen}
+                        className="w-full justify-between font-normal"
+                      >
+                        {form.selectedUomId
+                          ? (() => {
+                              const u = unitsOfMeasure.find(u => u.id === form.selectedUomId);
+                              return u ? `${u.name} (${u.abbreviation})` : "Sélectionner…";
+                            })()
+                          : "Sélectionner une unité…"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Rechercher une unité…" />
+                        <CommandList>
+                          <CommandEmpty>Aucune unité trouvée.</CommandEmpty>
+                          <CommandGroup heading="Unités disponibles">
+                            {availableUoms.map(u => (
+                              <CommandItem
+                                key={u.id}
+                                value={`${u.name} ${u.abbreviation}`}
+                                onSelect={() => {
+                                  const factor = u.conversionFactor ?? 1;
+                                  setForm({
+                                    ...form,
+                                    selectedUomId: u.id,
+                                    unitName: u.name,
+                                    unitAbbreviation: u.abbreviation,
+                                    conversionFactor: factor,
+                                  });
+                                  setUomComboOpen(false);
+                                }}
+                              >
+                                <Check className={cn("mr-2 h-4 w-4", form.selectedUomId === u.id ? "opacity-100" : "opacity-0")} />
+                                <div className="flex items-center gap-2 flex-1">
+                                  <span className="font-medium">{u.name}</span>
+                                  <span className="font-mono text-xs text-muted-foreground">({u.abbreviation})</span>
+                                  <span className="ml-auto text-xs px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{u.type}</span>
+                                </div>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                          <CommandSeparator />
+                          <CommandGroup>
+                            <CommandItem onSelect={() => { setUseCustomUnit(true); setUomComboOpen(false); }}>
+                              <Plus className="mr-2 h-4 w-4" />
+                              <span className="text-primary font-medium">Créer une unité personnalisée</span>
+                            </CommandItem>
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                </FormField>
+              </div>
+            ) : (
+              /* ── Custom unit inputs ── */
+              <div className="grid grid-cols-2 gap-3">
+                <FormField label="Nom de l'unité" required error={formErrors.unitName}>
+                  <input className={formInputClass} value={form.unitName} onChange={e => setForm({ ...form, unitName: e.target.value })} placeholder="ex: Carton" />
+                </FormField>
+                <FormField label="Abréviation" required error={formErrors.unitAbbreviation}>
+                  <input className={formInputClass} value={form.unitAbbreviation} onChange={e => setForm({ ...form, unitAbbreviation: e.target.value })} placeholder="ex: Ctn" maxLength={10} />
+                </FormField>
+              </div>
+            )}
+
             <FormField label={`Facteur de conversion (1 unité = X ${baseUnit?.baseUnitAbbreviation ?? "base"})`} required error={formErrors.conversionFactor}>
               <input type="number" step="0.001" min="0.001" className={formInputClass} value={form.conversionFactor} onChange={e => setForm({ ...form, conversionFactor: +e.target.value })} />
             </FormField>
@@ -431,12 +539,12 @@ export default function ProductUnitsDialog({ product, open, onOpenChange }: Prod
               </label>
             </div>
             <div className="flex gap-2 justify-end">
-              <Button variant="outline" size="sm" onClick={() => { setShowAddForm(false); setFormErrors({}); }}>Annuler</Button>
+              <Button variant="outline" size="sm" onClick={() => { setShowAddForm(false); setFormErrors({}); setUseCustomUnit(false); }}>Annuler</Button>
               <Button size="sm" onClick={handleAddConversion}>Ajouter</Button>
             </div>
           </div>
         ) : (
-          <Button variant="outline" className="gap-2 w-full" onClick={() => setShowAddForm(true)}>
+          <Button variant="outline" className="gap-2 w-full" onClick={() => { setShowAddForm(true); setUseCustomUnit(false); setForm(emptyConv); }}>
             <Plus className="h-4 w-4" /> Ajouter une unité de conversion
           </Button>
         )}

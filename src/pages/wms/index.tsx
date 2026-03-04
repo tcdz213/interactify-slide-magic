@@ -23,6 +23,7 @@ import ExportDialog from "@/components/ExportDialog";
 import type { ExportColumn } from "@/lib/exportUtils";
 import { useUnitConversion } from "@/hooks/useUnitConversion";
 import { toBaseUnits } from "@/lib/unitConversion";
+import ThreeWayMatchPanel from "@/components/ThreeWayMatchPanel";
 
 const CURRENT_USER_RECEIVING = users.find(u => u.role === "Operator")?.name ?? "Tarek Daoui";
 const CURRENT_USER_QC = users.find(u => u.role === "QCOfficer")?.name ?? "Sara Khalil";
@@ -70,7 +71,7 @@ function getGrnWarehouseId(grn: Grn): string {
 }
 
 export function GrnPage() {
-  const { grns: data, setGrns: setData, purchaseOrders, setPurchaseOrders, inventory, setInventory, warehouses: warehousesList, products: productsList, setProducts } = useWMSData();
+  const { grns: data, setGrns: setData, purchaseOrders, setPurchaseOrders, inventory, setInventory, warehouses: warehousesList, products: productsList, setProducts, productUnitConversions, invoices } = useWMSData();
   const { canOperateOn, operationalWarehouses, operationalWarehouseIds, isOperationalRole } = useWarehouseScope();
   const { getUnitsForProduct, getBaseUnitAbbr } = useUnitConversion();
 
@@ -728,6 +729,18 @@ export function GrnPage() {
                   </tbody>
                 </table>
               </div>
+
+              {/* 3-Way Match Panel */}
+              {selectedGrn.status !== "Draft" && (
+                <div className="mt-4 pt-4 border-t border-border/50">
+                  <ThreeWayMatchPanel
+                    grn={selectedGrn}
+                    purchaseOrder={purchaseOrders.find((p: PurchaseOrder) => p.id === selectedGrn.poId)}
+                    invoice={invoices.find((inv: any) => inv.orderId === selectedGrn.poId)}
+                    conversions={productUnitConversions}
+                  />
+                </div>
+              )}
             </>
           )}
         </DialogContent>

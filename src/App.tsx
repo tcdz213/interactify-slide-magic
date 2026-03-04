@@ -28,6 +28,7 @@ const StockTransfersPage = lazy(() => import("./pages/wms/StockTransfersPage"));
 const ProductsPage = lazy(() => import("./pages/wms/ProductsPage"));
 const CategoriesPage = lazy(() => import("./pages/wms/CategoriesPage"));
 const UomPage = lazy(() => import("./pages/wms/UomPage"));
+const PaymentTermsPage = lazy(() => import("./pages/wms/PaymentTermsPage"));
 const CarriersPage = lazy(() => import("./pages/wms/CarriersPage"));
 const BarcodesPage = lazy(() => import("./pages/wms/BarcodesPage"));
 const LocationsPage = lazy(() => import("./pages/wms/LocationsPage"));
@@ -80,7 +81,12 @@ const ClientTypesPage = lazy(() => import("./modules/client-types/ClientTypesPag
 const PricingPage = lazy(() => import("./modules/pricing/PricingPage"));
 const MarginHistoryPage = lazy(() => import("./pages/reports/MarginHistoryPage"));
 const ProfitabilityDashboard = lazy(() => import("./pages/bi/ProfitabilityDashboard"));
+const CategoryDistributionPage = lazy(() => import("./pages/bi/CategoryDistributionPage"));
 const RoutePlanPage = lazy(() => import("./pages/sales/RoutePlanPage"));
+const CurrencyRatesPage = lazy(() => import("./pages/settings/CurrencyRatesPage"));
+const TaxConfigPage = lazy(() => import("./pages/settings/TaxConfigPage"));
+const ChartOfAccountsPage = lazy(() => import("./pages/accounting/ChartOfAccountsPage"));
+const BudgetCostCentersPage = lazy(() => import("./pages/accounting/BudgetCostCentersPage"));
 
 // Mobile Sales App screens
 const MobileLayout = lazy(() => import("./mobile/components/MobileLayout"));
@@ -210,6 +216,7 @@ const App = () => (
                       <Route path="/wms/products" element={<ProductsPage />} />
                       <Route path="/wms/categories" element={<CategoriesPage />} />
                       <Route path="/wms/uom" element={<UomPage />} />
+                      <Route path="/wms/payment-terms" element={<PaymentTermsPage />} />
                       <Route path="/wms/carriers" element={<CarriersPage />} />
                       <Route path="/wms/barcodes" element={<BarcodesPage />} />
                       <Route path="/wms/locations" element={<LocationsPage />} />
@@ -252,6 +259,8 @@ const App = () => (
                         <Route path="/accounting/invoices" element={<InvoicesPage />} />
                         <Route path="/accounting/payments" element={<PaymentsPage />} />
                         <Route path="/accounting/reports" element={<AccountingReportsPage />} />
+                        <Route path="/accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
+                        <Route path="/accounting/budgets" element={<BudgetCostCentersPage />} />
                       </Route>
                       <Route path="/bi/performance" element={<PerformancePage />} />
                       <Route path="/bi/alerts" element={<AlertsPage />} />
@@ -267,7 +276,10 @@ const App = () => (
                       <Route path="/pricing/prices" element={<PricingPage />} />
                       <Route path="/reports/margin-history" element={<MarginHistoryPage />} />
                       <Route path="/bi/profitability" element={<ProfitabilityDashboard />} />
+                      <Route path="/bi/categories" element={<CategoryDistributionPage />} />
                       <Route path="/sales/route-plan" element={<RoutePlanPage />} />
+                      <Route path="/settings/currencies" element={<CurrencyRatesPage />} />
+                      <Route path="/settings/tax-config" element={<TaxConfigPage />} />
                     </Route>
                   </Route>
                   <Route path="*" element={<NotFound />} />

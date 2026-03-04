@@ -18,9 +18,12 @@ import {
   warehouseLocations as initialWarehouseLocations,
   products as initialProducts,
   productCategories as initialCategories,
+  sectors as initialSectors,
+  subCategories as initialSubCategories,
   unitsOfMeasure as initialUOM,
   carriers as initialCarriers,
   barcodes as initialBarcodes,
+  paymentTerms as initialPaymentTerms,
   qcInspections as initialQCInspections,
   putawayTasks as initialPutawayTasks,
   stockMovements as initialStockMovements,
@@ -35,10 +38,10 @@ import {
 import type {
   Grn, PurchaseOrder, StockAdjustment, StockTransfer, CycleCount, ReturnOrder,
   SalesOrder, Customer, Invoice, Payment, DeliveryTrip, Alert, Vendor, Warehouse,
-  WarehouseLocation, Product, ProductCategory, UnitOfMeasure, Carrier, Barcode,
+  WarehouseLocation, Product, Sector, ProductCategory, SubCategory, UnitOfMeasure, Carrier, Barcode,
   QCInspection, PutawayTask, StockMovement,
   CrossDock, KitRecipe, KitOrder, StockBlock, RepackOrder,
-  LotBatch, SerialNumber,
+  LotBatch, SerialNumber, PaymentTerm,
 } from "@/data/mockData";
 import type { InventoryItem } from "@/data/mockData";
 import {
@@ -59,6 +62,7 @@ import type {
 import { productUnitConversions as initialPUC, productBaseUnits as initialPBU, productDimensions as initialPDim, warehouseProducts as initialWHP } from "@/data/productUnitConversions";
 import type { ProductUnitConversion, ProductDimensions, WarehouseProduct } from "@/lib/unitConversion";
 import type { ProductBaseUnit } from "@/data/productUnitConversions";
+import type { ProductHistory } from "@/types/productHistory";
 import { loadPersistedState, savePersistedState, type PersistedWMSState } from "@/lib/wmsStorage";
 
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
@@ -79,10 +83,13 @@ function getDefaultPersistedState(): PersistedWMSState {
     deliveryTrips: [...initialDeliveryTrips],
     alerts: [...initialAlerts],
     vendors: [...initialVendors],
+    paymentTerms: [...initialPaymentTerms],
     warehouses: [...initialWarehouses],
     warehouseLocations: [...initialWarehouseLocations],
     products: [...initialProducts],
     productCategories: [...initialCategories],
+    sectors: [...initialSectors],
+    subCategories: [...initialSubCategories],
     unitsOfMeasure: [...initialUOM],
     carriers: [...initialCarriers],
     barcodes: [...initialBarcodes],
@@ -110,6 +117,7 @@ function getDefaultPersistedState(): PersistedWMSState {
     productBaseUnits: [...initialPBU],
     productDimensions: [...initialPDim],
     warehouseProducts: [...initialWHP],
+    productHistory: [],
   };
 }
 
@@ -128,10 +136,13 @@ interface WMSDataContextValue {
   deliveryTrips: DeliveryTrip[]; setDeliveryTrips: SetState<DeliveryTrip[]>;
   alerts: Alert[]; setAlerts: SetState<Alert[]>;
   vendors: Vendor[]; setVendors: SetState<Vendor[]>;
+  paymentTerms: PaymentTerm[]; setPaymentTerms: SetState<PaymentTerm[]>;
   warehouses: Warehouse[]; setWarehouses: SetState<Warehouse[]>;
   warehouseLocations: WarehouseLocation[]; setWarehouseLocations: SetState<WarehouseLocation[]>;
   products: Product[]; setProducts: SetState<Product[]>;
+  sectors: Sector[]; setSectors: SetState<Sector[]>;
   productCategories: ProductCategory[]; setProductCategories: SetState<ProductCategory[]>;
+  subCategories: SubCategory[]; setSubCategories: SetState<SubCategory[]>;
   unitsOfMeasure: UnitOfMeasure[]; setUnitsOfMeasure: SetState<UnitOfMeasure[]>;
   carriers: Carrier[]; setCarriers: SetState<Carrier[]>;
   barcodes: Barcode[]; setBarcodes: SetState<Barcode[]>;
@@ -159,6 +170,7 @@ interface WMSDataContextValue {
   productBaseUnits: ProductBaseUnit[]; setProductBaseUnits: SetState<ProductBaseUnit[]>;
   productDimensions: ProductDimensions[]; setProductDimensions: SetState<ProductDimensions[]>;
   warehouseProducts: WarehouseProduct[]; setWarehouseProducts: SetState<WarehouseProduct[]>;
+  productHistory: ProductHistory[]; setProductHistory: SetState<ProductHistory[]>;
   resetData: () => void;
 }
 
@@ -185,6 +197,8 @@ export function WMSDataProvider({ children }: { children: ReactNode }) {
       if (!loaded.warehouseLocations) loaded.warehouseLocations = [...initialWarehouseLocations];
       if (!loaded.products) loaded.products = [...initialProducts];
       if (!loaded.productCategories) loaded.productCategories = [...initialCategories];
+      if (!loaded.sectors) loaded.sectors = [...initialSectors];
+      if (!loaded.subCategories) loaded.subCategories = [...initialSubCategories];
       if (!loaded.unitsOfMeasure) loaded.unitsOfMeasure = [...initialUOM];
       if (!loaded.carriers) loaded.carriers = [...initialCarriers];
       if (!loaded.barcodes) loaded.barcodes = [...initialBarcodes];
@@ -214,6 +228,9 @@ export function WMSDataProvider({ children }: { children: ReactNode }) {
       if (!loaded.productBaseUnits) loaded.productBaseUnits = [...initialPBU];
       if (!loaded.productDimensions) loaded.productDimensions = [...initialPDim];
       if (!loaded.warehouseProducts) loaded.warehouseProducts = [...initialWHP];
+      if (!loaded.productHistory) loaded.productHistory = [];
+      // ERP Payment Terms migration
+      if (!loaded.paymentTerms) loaded.paymentTerms = [...initialPaymentTerms];
       return loaded;
     }
     return getDefaultPersistedState();
@@ -244,10 +261,13 @@ export function WMSDataProvider({ children }: { children: ReactNode }) {
         deliveryTrips: state.deliveryTrips as DeliveryTrip[], setDeliveryTrips: makeSetter<DeliveryTrip>(setState, "deliveryTrips"),
         alerts: state.alerts as Alert[], setAlerts: makeSetter<Alert>(setState, "alerts"),
         vendors: state.vendors as Vendor[], setVendors: makeSetter<Vendor>(setState, "vendors"),
+        paymentTerms: state.paymentTerms as PaymentTerm[], setPaymentTerms: makeSetter<PaymentTerm>(setState, "paymentTerms"),
         warehouses: state.warehouses as Warehouse[], setWarehouses: makeSetter<Warehouse>(setState, "warehouses"),
         warehouseLocations: state.warehouseLocations as WarehouseLocation[], setWarehouseLocations: makeSetter<WarehouseLocation>(setState, "warehouseLocations"),
         products: state.products as Product[], setProducts: makeSetter<Product>(setState, "products"),
+        sectors: state.sectors as Sector[], setSectors: makeSetter<Sector>(setState, "sectors"),
         productCategories: state.productCategories as ProductCategory[], setProductCategories: makeSetter<ProductCategory>(setState, "productCategories"),
+        subCategories: state.subCategories as SubCategory[], setSubCategories: makeSetter<SubCategory>(setState, "subCategories"),
         unitsOfMeasure: state.unitsOfMeasure as UnitOfMeasure[], setUnitsOfMeasure: makeSetter<UnitOfMeasure>(setState, "unitsOfMeasure"),
         carriers: state.carriers as Carrier[], setCarriers: makeSetter<Carrier>(setState, "carriers"),
         barcodes: state.barcodes as Barcode[], setBarcodes: makeSetter<Barcode>(setState, "barcodes"),
@@ -275,6 +295,7 @@ export function WMSDataProvider({ children }: { children: ReactNode }) {
         productBaseUnits: state.productBaseUnits as ProductBaseUnit[], setProductBaseUnits: makeSetter<ProductBaseUnit>(setState, "productBaseUnits"),
         productDimensions: state.productDimensions as ProductDimensions[], setProductDimensions: makeSetter<ProductDimensions>(setState, "productDimensions"),
         warehouseProducts: state.warehouseProducts as WarehouseProduct[], setWarehouseProducts: makeSetter<WarehouseProduct>(setState, "warehouseProducts"),
+        productHistory: state.productHistory as ProductHistory[], setProductHistory: makeSetter<ProductHistory>(setState, "productHistory"),
         resetData,
       }}
     >

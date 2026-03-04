@@ -10,7 +10,7 @@ import {
   FolderTree, Ruler, ScanBarcode, MapPin, Database, ShieldCheck, ArrowDownToLine, ScrollText, Layers, Hand, Box,
   Lock, RefreshCw, ListTodo, ArrowDownUp, FileCheck, Combine, PackageOpen, ShieldOff, Repeat,
   Fingerprint, DollarSign, Boxes, DoorOpen, Bell, Plug, PackageCheck, History, ClipboardMinus,
-  Tags, BadgeDollarSign,
+  Tags, BadgeDollarSign, Percent, Coins, BookOpen, Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo } from "react";
@@ -155,6 +155,9 @@ export default function AppSidebar() {
         { label: t("nav.barcodes", "Codes-barres"), icon: ScanBarcode, path: "/wms/barcodes" },
         { label: t("nav.vendors"), icon: Users, path: "/wms/vendors" },
         { label: t("nav.carriers", "Transporteurs"), icon: Truck, path: "/wms/carriers" },
+        { label: "Conditions de paiement", icon: CreditCard, path: "/wms/payment-terms" },
+        { label: t("nav.currencies", "Devises & Taux"), icon: Coins, path: "/settings/currencies" },
+        { label: t("nav.taxConfig", "Configuration Fiscale"), icon: Percent, path: "/settings/tax-config" },
         { label: t("nav.warehouses"), icon: Building2, path: "/wms/warehouses" },
         { label: t("nav.locations", "Emplacements"), icon: MapPin, path: "/wms/locations" },
       ],
@@ -191,6 +194,8 @@ export default function AppSidebar() {
       children: [
         { label: t("nav.invoices"), icon: Receipt, path: "/accounting/invoices" },
         { label: t("nav.payments"), icon: CreditCard, path: "/accounting/payments" },
+        { label: "Plan Comptable", icon: BookOpen, path: "/accounting/chart-of-accounts" },
+        { label: "Budget & Centres", icon: Wallet, path: "/accounting/budgets" },
         { label: t("nav.reports"), icon: FileText, path: "/accounting/reports" },
       ],
     }] : []),
@@ -202,6 +207,7 @@ export default function AppSidebar() {
         { label: "Marge Historique", icon: DollarSign, path: "/reports/margin-history" },
         { label: t("nav.performance"), icon: TrendingUp, path: "/bi/performance" },
         { label: "Rentabilité", icon: BarChart3, path: "/bi/profitability" },
+        { label: "Répartition catégories", icon: FolderTree, path: "/bi/categories" },
         { label: t("nav.alerts"), icon: AlertTriangle, path: "/bi/alerts" },
       ],
     },
