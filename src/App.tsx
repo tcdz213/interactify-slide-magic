@@ -42,6 +42,9 @@ const ShippingPage = lazy(() => import("./pages/wms/ShippingPage"));
 const ReplenishmentRulesPage = lazy(() => import("./pages/wms/ReplenishmentRulesPage"));
 const ReservationsPage = lazy(() => import("./pages/wms/ReservationsPage"));
 // SupplierReturnsPage removed — unified into ReturnsPage at /wms/returns
+const CreditNotesPage = lazy(() => import("./pages/wms/CreditNotesPage"));
+const QualityClaimsPage = lazy(() => import("./pages/wms/QualityClaimsPage"));
+const VendorScorecardPage = lazy(() => import("./pages/wms/VendorScorecardPage"));
 const TaskQueuePage = lazy(() => import("./pages/wms/TaskQueuePage"));
 const CrossDockingPage = lazy(() => import("./pages/wms/CrossDockingPage"));
 const KittingPage = lazy(() => import("./pages/wms/KittingPage"));
@@ -230,6 +233,9 @@ const App = () => (
                       <Route path="/wms/replenishment-rules" element={<ReplenishmentRulesPage />} />
                       <Route path="/wms/reservations" element={<ReservationsPage />} />
                       <Route path="/wms/supplier-returns" element={<ReturnsPage />} />
+                      <Route path="/wms/credit-notes" element={<CreditNotesPage />} />
+                      <Route path="/wms/quality-claims" element={<QualityClaimsPage />} />
+                      <Route path="/wms/vendor-scorecard" element={<VendorScorecardPage />} />
                       <Route path="/wms/tasks" element={<TaskQueuePage />} />
                       <Route path="/wms/cross-docking" element={<CrossDockingPage />} />
                       <Route path="/wms/kitting" element={<KittingPage />} />

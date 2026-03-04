@@ -34,6 +34,8 @@ import {
   repackOrders as initialRepackOrders,
   lotBatches as initialLotBatches,
   serialNumbers as initialSerialNumbers,
+  creditNotes as initialCreditNotes,
+  qualityClaims as initialQualityClaims,
 } from "@/data/mockData";
 import type {
   Grn, PurchaseOrder, StockAdjustment, StockTransfer, CycleCount, ReturnOrder,
@@ -42,6 +44,7 @@ import type {
   QCInspection, PutawayTask, StockMovement,
   CrossDock, KitRecipe, KitOrder, StockBlock, RepackOrder,
   LotBatch, SerialNumber, PaymentTerm,
+  CreditNote, QualityClaim,
 } from "@/data/mockData";
 import type { InventoryItem } from "@/data/mockData";
 import {
@@ -118,6 +121,9 @@ function getDefaultPersistedState(): PersistedWMSState {
     productDimensions: [...initialPDim],
     warehouseProducts: [...initialWHP],
     productHistory: [],
+    // ERP Returns & Claims
+    creditNotes: [...initialCreditNotes],
+    qualityClaims: [...initialQualityClaims],
   };
 }
 
@@ -171,6 +177,9 @@ interface WMSDataContextValue {
   productDimensions: ProductDimensions[]; setProductDimensions: SetState<ProductDimensions[]>;
   warehouseProducts: WarehouseProduct[]; setWarehouseProducts: SetState<WarehouseProduct[]>;
   productHistory: ProductHistory[]; setProductHistory: SetState<ProductHistory[]>;
+  // ERP Returns & Claims
+  creditNotes: CreditNote[]; setCreditNotes: SetState<CreditNote[]>;
+  qualityClaims: QualityClaim[]; setQualityClaims: SetState<QualityClaim[]>;
   resetData: () => void;
 }
 
@@ -231,6 +240,9 @@ export function WMSDataProvider({ children }: { children: ReactNode }) {
       if (!loaded.productHistory) loaded.productHistory = [];
       // ERP Payment Terms migration
       if (!loaded.paymentTerms) loaded.paymentTerms = [...initialPaymentTerms];
+      // ERP Returns & Claims migration
+      if (!loaded.creditNotes) loaded.creditNotes = [...initialCreditNotes];
+      if (!loaded.qualityClaims) loaded.qualityClaims = [...initialQualityClaims];
       return loaded;
     }
     return getDefaultPersistedState();
@@ -296,6 +308,9 @@ export function WMSDataProvider({ children }: { children: ReactNode }) {
         productDimensions: state.productDimensions as ProductDimensions[], setProductDimensions: makeSetter<ProductDimensions>(setState, "productDimensions"),
         warehouseProducts: state.warehouseProducts as WarehouseProduct[], setWarehouseProducts: makeSetter<WarehouseProduct>(setState, "warehouseProducts"),
         productHistory: state.productHistory as ProductHistory[], setProductHistory: makeSetter<ProductHistory>(setState, "productHistory"),
+        // ERP Returns & Claims
+        creditNotes: state.creditNotes as CreditNote[], setCreditNotes: makeSetter<CreditNote>(setState, "creditNotes"),
+        qualityClaims: state.qualityClaims as QualityClaim[], setQualityClaims: makeSetter<QualityClaim>(setState, "qualityClaims"),
         resetData,
       }}
     >

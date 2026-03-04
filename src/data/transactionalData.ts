@@ -174,14 +174,178 @@ export const payments: Payment[] = [
 
 // ---------- Returns ----------
 export type ReturnType = "Customer" | "Vendor";
-export type ReturnStatus = "Draft" | "Submitted" | "Pending_QC" | "Approved" | "Rejected" | "Shipped" | "Processed" | "Credited";
-export interface ReturnOrder { id: string; type: ReturnType; referenceId: string; partyName: string; date: string; status: ReturnStatus; reason: string; totalValue: number; items: { productName: string; qty: number; reason: string }[]; processedBy: string; qcBy?: string; }
+export type ReturnStatus = "Draft" | "Submitted" | "Pending_QC" | "Approved" | "Rejected" | "Shipped" | "Processed" | "Credited" | "Cancelled";
+
+export type ReturnReasonCode = "DEFECTIVE" | "DAMAGED" | "DAMAGED_DELIVERY" | "EXPIRED" | "WRONG_ITEM" | "WRONG_PRODUCT" | "WRONG_QTY" | "QUALITY_FAIL" | "QUALITY_COMPLAINT" | "RECALL" | "CONTRACT_BREACH" | "CHANGE_OF_MIND" | "WARRANTY" | "DUPLICATE_ORDER" | "OTHER";
+
+export type DispositionCode = "Restock" | "Restock_Discounted" | "Scrap" | "Quarantine" | "Return_To_Vendor" | "Repair";
+export type RefundMethod = "Credit_Note" | "Cash_Refund" | "Replacement" | "Store_Credit";
+
+export interface ReturnLine {
+  lineId: number;
+  productId: string;
+  productName: string;
+  qty: number;
+  unitCost: number;
+  lineValue: number;
+  reason: string;
+  reasonCode: ReturnReasonCode;
+  disposition?: DispositionCode;
+  qcResult?: "Passed" | "Failed" | "Conditional";
+  batchNumber?: string;
+}
+
+export interface ReturnOrder {
+  id: string;
+  type: ReturnType;
+  referenceId: string;
+  partyName: string;
+  partyId?: string;
+  date: string;
+  status: ReturnStatus;
+  reason: string;
+  reasonCode?: ReturnReasonCode;
+  totalValue: number;
+  items: ReturnLine[];
+  processedBy: string;
+  qcBy?: string;
+  approvedBy?: string;
+  approvedAt?: string;
+  disposition?: DispositionCode;
+  refundMethod?: RefundMethod;
+  restockingFeePct?: number;
+  netCredit?: number;
+  creditNoteId?: string;
+  claimId?: string;
+  notes?: string;
+  shippedAt?: string;
+  carrierName?: string;
+  trackingNumber?: string;
+}
 
 export const returns: ReturnOrder[] = [
-  { id: "RET-001", type: "Customer", referenceId: "INV-20260220-004", partyName: "Promoteur Benhamed", date: "2026-02-22", status: "Pending_QC", reason: "Carrelage fissuré", totalValue: 33000, items: [{ productName: "Carrelage 40x40 (m²)", qty: 15, reason: "Fissures constatées à la pose" }], processedBy: "Karim Ben Ali" },
-  { id: "RET-002", type: "Vendor", referenceId: "GRN-20260218-002", partyName: "Céramique SEROR", date: "2026-02-19", status: "Processed", reason: "Carrelage défectueux", totalValue: 22500, items: [{ productName: "Carrelage 40x40 (m²)", qty: 15, reason: "Fissures — lot défectueux" }], processedBy: "Karim Ben Ali", qcBy: "Sara Khalil" },
-  { id: "RET-003", type: "Customer", referenceId: "INV-20260218-005", partyName: "Université Constantine 3", date: "2026-02-22", status: "Approved", reason: "Laptop défectueux", totalValue: 135000, items: [{ productName: "Laptop HP ProBook 450", qty: 1, reason: "Écran défaillant — garantie" }], processedBy: "Hassan Nour" },
-  { id: "RET-004", type: "Customer", referenceId: "INV-20260223-002", partyName: "Supermarché Uno", date: "2026-02-24", status: "Submitted", reason: "Lait proche péremption", totalValue: 12000, items: [{ productName: "Lait UHT 1L", qty: 20, reason: "DLC trop courte à la livraison" }], processedBy: "Mourad Ziani" },
+  { id: "RET-001", type: "Customer", referenceId: "INV-20260220-004", partyName: "Promoteur Benhamed", date: "2026-02-22", status: "Pending_QC", reason: "Carrelage fissuré", reasonCode: "DEFECTIVE", totalValue: 33000, items: [{ lineId: 1, productId: "TILE-001", productName: "Carrelage 40x40 (m²)", qty: 15, unitCost: 2200, lineValue: 33000, reason: "Fissures constatées à la pose", reasonCode: "DEFECTIVE" }], processedBy: "Karim Ben Ali", refundMethod: "Credit_Note" },
+  { id: "RET-002", type: "Vendor", referenceId: "GRN-20260218-002", partyName: "Céramique SEROR", date: "2026-02-19", status: "Processed", reason: "Carrelage défectueux", reasonCode: "QUALITY_FAIL", totalValue: 22500, items: [{ lineId: 1, productId: "TILE-001", productName: "Carrelage 40x40 (m²)", qty: 15, unitCost: 1500, lineValue: 22500, reason: "Fissures — lot défectueux", reasonCode: "QUALITY_FAIL", disposition: "Return_To_Vendor", qcResult: "Failed" }], processedBy: "Karim Ben Ali", qcBy: "Sara Khalil", disposition: "Return_To_Vendor" },
+  { id: "RET-003", type: "Customer", referenceId: "INV-20260218-005", partyName: "Université Constantine 3", date: "2026-02-22", status: "Approved", reason: "Laptop défectueux", reasonCode: "WARRANTY", totalValue: 135000, items: [{ lineId: 1, productId: "TECH-001", productName: "Laptop HP ProBook 450", qty: 1, unitCost: 135000, lineValue: 135000, reason: "Écran défaillant — garantie", reasonCode: "WARRANTY" }], processedBy: "Hassan Nour", disposition: "Repair", refundMethod: "Replacement" },
+  { id: "RET-004", type: "Customer", referenceId: "INV-20260223-002", partyName: "Supermarché Uno", date: "2026-02-24", status: "Submitted", reason: "Lait proche péremption", reasonCode: "EXPIRED", totalValue: 12000, items: [{ lineId: 1, productId: "FOOD-001", productName: "Lait UHT 1L", qty: 20, unitCost: 600, lineValue: 12000, reason: "DLC trop courte à la livraison", reasonCode: "EXPIRED" }], processedBy: "Mourad Ziani", refundMethod: "Credit_Note" },
+  { id: "RET-005", type: "Vendor", referenceId: "GRN-20260215-001", partyName: "Ciment GICA", date: "2026-02-20", status: "Draft", reason: "Sacs endommagés au transport", reasonCode: "DAMAGED", totalValue: 45000, items: [{ lineId: 1, productId: "CIM-001", productName: "Ciment CPJ 42.5 (50kg)", qty: 50, unitCost: 900, lineValue: 45000, reason: "Sacs déchirés", reasonCode: "DAMAGED" }], processedBy: "Tarek Daoui" },
+  { id: "RET-006", type: "Customer", referenceId: "INV-20260210-003", partyName: "Bâti-Plus Matériaux", date: "2026-02-25", status: "Credited", reason: "Changement d'avis", reasonCode: "CHANGE_OF_MIND", totalValue: 78000, items: [{ lineId: 1, productId: "TILE-002", productName: "Faïence 20x30 (m²)", qty: 30, unitCost: 2600, lineValue: 78000, reason: "Client ne souhaite plus ce modèle", reasonCode: "CHANGE_OF_MIND" }], processedBy: "Omar Fadel", creditNoteId: "CN-001", refundMethod: "Credit_Note", restockingFeePct: 10, netCredit: 70200, disposition: "Restock" },
+];
+
+// ---------- Credit Notes ----------
+export type CreditNoteType = "Vendor_Credit" | "Vendor_Debit" | "Customer_Credit" | "Customer_Debit";
+export type CreditNoteStatus = "Draft" | "Validated" | "Posted" | "Applied" | "Cancelled" | "Refunded";
+export type CreditNoteRefType = "Return" | "Claim" | "Invoice" | "PO" | "SO";
+
+export interface CreditNoteLine {
+  lineId: number;
+  productId?: string;
+  productName: string;
+  qty: number;
+  unitPrice: number;
+  lineTotal: number;
+  taxRate: number;
+  taxAmount: number;
+}
+
+export interface CreditNote {
+  id: string;
+  documentType: CreditNoteType;
+  partyId: string;
+  partyName: string;
+  referenceType: CreditNoteRefType;
+  referenceId: string;
+  date: string;
+  lines: CreditNoteLine[];
+  subtotal: number;
+  taxAmount: number;
+  totalAmount: number;
+  status: CreditNoteStatus;
+  appliedToInvoiceId?: string;
+  createdBy: string;
+  notes?: string;
+}
+
+export const creditNotes: CreditNote[] = [
+  {
+    id: "CN-001", documentType: "Customer_Credit", partyId: "C003", partyName: "Bâti-Plus Matériaux",
+    referenceType: "Return", referenceId: "RET-006", date: "2026-02-26",
+    lines: [{ lineId: 1, productId: "TILE-002", productName: "Faïence 20x30 (m²)", qty: 30, unitPrice: 2600, lineTotal: 70200, taxRate: 19, taxAmount: 13338 }],
+    subtotal: 70200, taxAmount: 13338, totalAmount: 83538, status: "Posted", createdBy: "Nadia Salim", notes: "Retour client avec frais de restockage 10%"
+  },
+  {
+    id: "CN-002", documentType: "Vendor_Credit", partyId: "V002", partyName: "Céramique SEROR",
+    referenceType: "Return", referenceId: "RET-002", date: "2026-02-21",
+    lines: [{ lineId: 1, productId: "TILE-001", productName: "Carrelage 40x40 (m²)", qty: 15, unitPrice: 1500, lineTotal: 22500, taxRate: 19, taxAmount: 4275 }],
+    subtotal: 22500, taxAmount: 4275, totalAmount: 26775, status: "Applied", appliedToInvoiceId: "INV-V-002", createdBy: "Nadia Salim"
+  },
+  {
+    id: "DN-001", documentType: "Vendor_Debit", partyId: "V003", partyName: "Ciment GICA",
+    referenceType: "Claim", referenceId: "CLM-001", date: "2026-02-23",
+    lines: [{ lineId: 1, productName: "Pénalité retard livraison", qty: 1, unitPrice: 50000, lineTotal: 50000, taxRate: 0, taxAmount: 0 }],
+    subtotal: 50000, taxAmount: 0, totalAmount: 50000, status: "Validated", createdBy: "Nadia Salim", notes: "Pénalité contractuelle"
+  },
+];
+
+// ---------- Quality Claims ----------
+export type ClaimType = "Quality" | "Quantity" | "Delivery" | "Contract" | "Pricing";
+export type ClaimStatus = "Opened" | "Under_Review" | "Vendor_Notified" | "Disputed" | "Escalated" | "Resolved" | "Closed" | "Cancelled";
+export type ClaimPriority = "Low" | "Medium" | "High" | "Critical";
+export type SettlementType = "Full_Credit" | "Partial_Credit" | "Replacement" | "Price_Reduction" | "Penalty" | "No_Action" | "Mixed";
+export type RootCauseCode = "MFG_DEFECT" | "RAW_MATERIAL" | "PACKAGING" | "TRANSPORT" | "STORAGE_VENDOR" | "LABELLING" | "SPEC_DEVIATION" | "CONTAMINATION" | "SHELF_LIFE" | "DOCUMENTATION";
+
+export interface QualityClaim {
+  id: string;
+  claimType: ClaimType;
+  vendorId: string;
+  vendorName: string;
+  grnId?: string;
+  poId?: string;
+  returnId?: string;
+  qcInspectionId?: string;
+  openedDate: string;
+  status: ClaimStatus;
+  priority: ClaimPriority;
+  claimedAmount: number;
+  settledAmount?: number;
+  settlementType?: SettlementType;
+  rootCause?: RootCauseCode;
+  correctiveAction?: string;
+  slaDueDate: string;
+  assignedTo: string;
+  escalatedTo?: string;
+  resolutionNotes?: string;
+  resolvedDate?: string;
+}
+
+export const qualityClaims: QualityClaim[] = [
+  {
+    id: "CLM-001", claimType: "Quality", vendorId: "V003", vendorName: "Ciment GICA",
+    grnId: "GRN-20260215-001", returnId: "RET-005", openedDate: "2026-02-20",
+    status: "Vendor_Notified", priority: "High", claimedAmount: 45000,
+    rootCause: "PACKAGING", slaDueDate: "2026-02-27", assignedTo: "Karim Ben Ali",
+    correctiveAction: "Demande d'amélioration emballage"
+  },
+  {
+    id: "CLM-002", claimType: "Quality", vendorId: "V002", vendorName: "Céramique SEROR",
+    grnId: "GRN-20260218-002", returnId: "RET-002", openedDate: "2026-02-19",
+    status: "Resolved", priority: "Medium", claimedAmount: 22500, settledAmount: 22500,
+    settlementType: "Full_Credit", rootCause: "MFG_DEFECT",
+    slaDueDate: "2026-03-05", assignedTo: "Sara Khalil", resolvedDate: "2026-02-25",
+    resolutionNotes: "Avoir intégral émis — lot défectueux confirmé"
+  },
+  {
+    id: "CLM-003", claimType: "Delivery", vendorId: "V004", vendorName: "Bois du Nord",
+    poId: "PO-20260210-003", openedDate: "2026-02-15",
+    status: "Escalated", priority: "Critical", claimedAmount: 180000,
+    rootCause: "TRANSPORT", slaDueDate: "2026-02-18", assignedTo: "Karim Ben Ali",
+    escalatedTo: "Directeur Opérations"
+  },
+  {
+    id: "CLM-004", claimType: "Contract", vendorId: "V001", vendorName: "Acier Mittal Algérie",
+    openedDate: "2026-02-25", status: "Opened", priority: "Low", claimedAmount: 15000,
+    rootCause: "LABELLING", slaDueDate: "2026-03-27", assignedTo: "Mourad Ziani"
+  },
 ];
 
 // ---------- Alerts ----------
