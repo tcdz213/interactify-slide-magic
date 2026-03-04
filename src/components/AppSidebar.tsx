@@ -125,6 +125,9 @@ export default function AppSidebar() {
         { label: t("nav.kitting", "Kitting / Assemblage"), icon: Combine, path: "/wms/kitting" },
         { label: t("nav.repacking", "Reconditionnement"), icon: PackageOpen, path: "/wms/repacking" },
         { label: t("nav.returns"), icon: RotateCcw, path: "/wms/returns" },
+        { label: "Avoirs & Notes de débit", icon: CreditCard, path: "/wms/credit-notes" },
+        { label: "Réclamations qualité", icon: AlertTriangle, path: "/wms/quality-claims" },
+        { label: "Scorecard fournisseurs", icon: BarChart3, path: "/wms/vendor-scorecard" },
       ],
     },
     {

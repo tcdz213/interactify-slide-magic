@@ -15,7 +15,7 @@ const VERSION_KEY = "flow-food-wms-version";
  * When the stored version doesn't match, localStorage is wiped
  * and fresh mock data is loaded.
  */
-export const DATA_VERSION = 8;
+export const DATA_VERSION = 9;
 
 export interface PersistedWMSState {
   grns: unknown[];
@@ -72,6 +72,9 @@ export interface PersistedWMSState {
   productHistory: unknown[];
   // ERP Payment Terms
   paymentTerms: unknown[];
+  // ERP Returns & Claims
+  creditNotes: unknown[];
+  qualityClaims: unknown[];
 }
 
 function isPersistedState(x: unknown): x is PersistedWMSState {

@@ -955,13 +955,13 @@ export function InventoryPage() {
 }
 
 export function ReturnsPage() {
-  const { grns, returns: data, setReturns: setData, setInventory, warehouses } = useWMSData();
+  const { grns, returns: data, setReturns: setData, setInventory, warehouses, creditNotes, setCreditNotes } = useWMSData();
   const [selectedReturn, setSelectedReturn] = useState<ReturnOrder | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [search, setSearch] = useState("");
-  const [newRet, setNewRet] = useState({ type: "Customer" as "Customer" | "Vendor", refId: "", partyName: "", reason: "", items: [{ productId: "", productName: "", qty: 0, reason: "" }] });
+  const [newRet, setNewRet] = useState({ type: "Customer" as "Customer" | "Vendor", refId: "", partyName: "", reason: "", reasonCode: "DEFECTIVE" as ReturnOrder["reasonCode"], disposition: "" as string, refundMethod: "Credit_Note" as ReturnOrder["refundMethod"], restockingFeePct: 0, items: [{ productId: "", productName: "", qty: 0, reason: "", reasonCode: "DEFECTIVE" as string }] });
   const [createAsDraft, setCreateAsDraft] = useState(false);
 
   const filtered = data.filter((r) => {
@@ -973,17 +973,53 @@ export function ReturnsPage() {
 
   const refOptions = newRet.type === "Customer" ? invoices.map(i => ({ id: i.id, name: i.customerName })) : grns.map(g => ({ id: g.id, name: g.vendorName }));
 
+  const REASON_CODES: { value: string; label: string }[] = [
+    { value: "DEFECTIVE", label: "Produit défectueux" },
+    { value: "DAMAGED", label: "Endommagé au transport" },
+    { value: "DAMAGED_DELIVERY", label: "Endommagé à la livraison" },
+    { value: "EXPIRED", label: "Périmé / proche péremption" },
+    { value: "WRONG_ITEM", label: "Mauvais produit livré" },
+    { value: "WRONG_PRODUCT", label: "Mauvais produit" },
+    { value: "WRONG_QTY", label: "Quantité incorrecte" },
+    { value: "QUALITY_FAIL", label: "Échec contrôle qualité" },
+    { value: "QUALITY_COMPLAINT", label: "Plainte qualité" },
+    { value: "RECALL", label: "Rappel fournisseur" },
+    { value: "CONTRACT_BREACH", label: "Non-conformité contractuelle" },
+    { value: "CHANGE_OF_MIND", label: "Changement d'avis" },
+    { value: "WARRANTY", label: "Retour sous garantie" },
+    { value: "DUPLICATE_ORDER", label: "Commande en double" },
+    { value: "OTHER", label: "Autre" },
+  ];
+
+  const DISPOSITION_CODES: { value: string; label: string }[] = [
+    { value: "Restock", label: "Remise en stock" },
+    { value: "Restock_Discounted", label: "Stock démarqué" },
+    { value: "Scrap", label: "Mise au rebut" },
+    { value: "Quarantine", label: "Quarantaine" },
+    { value: "Return_To_Vendor", label: "Retour fournisseur" },
+    { value: "Repair", label: "Réparation" },
+  ];
+
   const handleCreateReturn = (asDraft: boolean) => {
     const validItems = newRet.items.filter(i => i.productId && i.qty > 0);
     if (validItems.length === 0 || !newRet.refId || !newRet.partyName || !newRet.reason) return;
-    const items = validItems.map(i => ({ productName: products.find(p => p.id === i.productId)!.name, qty: i.qty, reason: i.reason || "—" }));
+    const items: ReturnOrder["items"] = validItems.map((i, idx) => {
+      const product = products.find(p => p.id === i.productId);
+      const unitCost = product?.unitCost ?? 0;
+      return { lineId: idx + 1, productId: i.productId, productName: product?.name || i.productName, qty: i.qty, unitCost, lineValue: i.qty * unitCost, reason: i.reason || "—", reasonCode: (i.reasonCode || newRet.reasonCode || "DEFECTIVE") as any };
+    });
     const party = newRet.type === "Customer" ? invoices.find(i => i.id === newRet.refId)?.customerName : grns.find(g => g.id === newRet.refId)?.vendorName;
-    const totalValue = validItems.reduce((s, i) => s + (i.qty * (products.find(p => p.id === i.productId)?.unitCost ?? 0)), 0);
+    const totalValue = items.reduce((s, i) => s + i.lineValue, 0);
+    const netCredit = newRet.restockingFeePct > 0 ? totalValue * (1 - newRet.restockingFeePct / 100) : totalValue;
     const status: ReturnOrder["status"] = asDraft ? "Draft" : "Submitted";
-    const newR: ReturnOrder = { id: `RET-${String(data.length + 1).padStart(3,"0")}`, type: newRet.type, referenceId: newRet.refId, partyName: party || newRet.partyName, date: new Date().toISOString().slice(0,10), status, reason: newRet.reason, totalValue, items, processedBy: CURRENT_USER_APPROVER };
+    const newR: ReturnOrder = {
+      id: `RET-${String(data.length + 1).padStart(3,"0")}`, type: newRet.type, referenceId: newRet.refId, partyName: party || newRet.partyName,
+      date: new Date().toISOString().slice(0,10), status, reason: newRet.reason, reasonCode: newRet.reasonCode as any, totalValue, items, processedBy: CURRENT_USER_APPROVER,
+      disposition: (newRet.disposition || undefined) as any, refundMethod: newRet.refundMethod, restockingFeePct: newRet.restockingFeePct, netCredit,
+    };
     setData([newR, ...data]);
     setShowCreate(false);
-    setNewRet({ type: "Customer", refId: "", partyName: "", reason: "", items: [{ productId: "", productName: "", qty: 0, reason: "" }] });
+    setNewRet({ type: "Customer", refId: "", partyName: "", reason: "", reasonCode: "DEFECTIVE", disposition: "", refundMethod: "Credit_Note", restockingFeePct: 0, items: [{ productId: "", productName: "", qty: 0, reason: "", reasonCode: "DEFECTIVE" }] });
     toast({ title: asDraft ? "Brouillon enregistré" : "Retour soumis", description: newR.id });
   };
 
@@ -1239,24 +1275,57 @@ export function ReturnsPage() {
               <label className="text-sm font-medium text-muted-foreground">Partie</label>
               <input value={newRet.partyName} onChange={e => setNewRet(prev => ({ ...prev, partyName: e.target.value }))} placeholder="Nom client/fournisseur" className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm" />
             </div>
-            <div>
-              <label className="text-sm font-medium text-muted-foreground">Raison</label>
-              <input value={newRet.reason} onChange={e => setNewRet(prev => ({ ...prev, reason: e.target.value }))} placeholder="Raison du retour" className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Code raison</label>
+                <select value={newRet.reasonCode} onChange={e => setNewRet(prev => ({ ...prev, reasonCode: e.target.value as any }))} className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm">
+                  {REASON_CODES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Raison (texte)</label>
+                <input value={newRet.reason} onChange={e => setNewRet(prev => ({ ...prev, reason: e.target.value }))} placeholder="Détails..." className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Disposition</label>
+                <select value={newRet.disposition} onChange={e => setNewRet(prev => ({ ...prev, disposition: e.target.value }))} className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm">
+                  <option value="">Non définie</option>
+                  {DISPOSITION_CODES.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Méthode remboursement</label>
+                <select value={newRet.refundMethod} onChange={e => setNewRet(prev => ({ ...prev, refundMethod: e.target.value as any }))} className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm">
+                  <option value="Credit_Note">Avoir</option>
+                  <option value="Cash_Refund">Remboursement</option>
+                  <option value="Replacement">Remplacement</option>
+                  <option value="Store_Credit">Crédit magasin</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Frais restockage %</label>
+                <input type="number" min={0} max={100} value={newRet.restockingFeePct || ""} onChange={e => setNewRet(prev => ({ ...prev, restockingFeePct: Number(e.target.value) }))} placeholder="0" className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm" />
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium text-muted-foreground">Articles</label>
               {newRet.items.map((it, i) => (
-                <div key={i} className="flex gap-2 mt-1 mb-2">
-                  <select value={it.productId} onChange={e => setNewRet(prev => { const arr = [...prev.items]; arr[i] = { ...arr[i], productId: e.target.value, productName: products.find(p => p.id === e.target.value)?.name || "" }; return { ...prev, items: arr }; })} className="flex-1 h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
+                <div key={i} className="flex gap-2 mt-1 mb-2 flex-wrap">
+                  <select value={it.productId} onChange={e => setNewRet(prev => { const arr = [...prev.items]; arr[i] = { ...arr[i], productId: e.target.value, productName: products.find(p => p.id === e.target.value)?.name || "" }; return { ...prev, items: arr }; })} className="flex-1 min-w-[150px] h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
                     <option value="">Produit...</option>
                     {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                   <input type="number" placeholder="Qté" value={it.qty || ""} onChange={e => setNewRet(prev => { const arr = [...prev.items]; arr[i] = { ...arr[i], qty: Number(e.target.value) }; return { ...prev, items: arr }; })} className="w-16 h-9 rounded-lg border border-input px-2 text-sm" />
-                  <input placeholder="Raison" value={it.reason} onChange={e => setNewRet(prev => { const arr = [...prev.items]; arr[i] = { ...arr[i], reason: e.target.value }; return { ...prev, items: arr }; })} className="flex-1 h-9 rounded-lg border border-input px-3 text-sm" />
+                  <select value={it.reasonCode} onChange={e => setNewRet(prev => { const arr = [...prev.items]; arr[i] = { ...arr[i], reasonCode: e.target.value }; return { ...prev, items: arr }; })} className="w-40 h-9 rounded-lg border border-input bg-muted/50 px-2 text-xs">
+                    {REASON_CODES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </select>
+                  <input placeholder="Détail raison" value={it.reason} onChange={e => setNewRet(prev => { const arr = [...prev.items]; arr[i] = { ...arr[i], reason: e.target.value }; return { ...prev, items: arr }; })} className="flex-1 min-w-[120px] h-9 rounded-lg border border-input px-3 text-sm" />
                   {newRet.items.length > 1 && <Button variant="ghost" size="sm" className="h-9 px-2" onClick={() => setNewRet(prev => ({ ...prev, items: prev.items.filter((_, j) => j !== i) }))}><XCircle className="h-3.5 w-3.5" /></Button>}
                 </div>
               ))}
-              <Button variant="outline" size="sm" className="mt-1" onClick={() => setNewRet(prev => ({ ...prev, items: [...prev.items, { productId: "", productName: "", qty: 0, reason: "" }] }))}><Plus className="h-3 w-3 mr-1" /> Ligne</Button>
+              <Button variant="outline" size="sm" className="mt-1" onClick={() => setNewRet(prev => ({ ...prev, items: [...prev.items, { productId: "", productName: "", qty: 0, reason: "", reasonCode: "DEFECTIVE" }] }))}><Plus className="h-3 w-3 mr-1" /> Ligne</Button>
             </div>
           </div>
           <DialogFooter className="gap-2">
@@ -1284,10 +1353,17 @@ export function ReturnsPage() {
                 <div><span className="text-muted-foreground">Référence :</span> <span className="font-mono">{selectedReturn.referenceId}</span></div>
                 <div><span className="text-muted-foreground">Partie :</span> <span className="font-medium">{selectedReturn.partyName}</span></div>
                 <div><span className="text-muted-foreground">Date :</span> {selectedReturn.date}</div>
-                <div><span className="text-muted-foreground">Valeur :</span> <span className="font-medium">{currency(selectedReturn.totalValue)}</span></div>
+                <div><span className="text-muted-foreground">Valeur brute :</span> <span className="font-medium">{currency(selectedReturn.totalValue)}</span></div>
+                {selectedReturn.netCredit !== undefined && <div><span className="text-muted-foreground">Crédit net :</span> <span className="font-medium text-primary">{currency(selectedReturn.netCredit)}</span></div>}
+                {selectedReturn.restockingFeePct ? <div><span className="text-muted-foreground">Frais restockage :</span> {selectedReturn.restockingFeePct}%</div> : null}
                 <div><span className="text-muted-foreground">Traité par :</span> {selectedReturn.processedBy}</div>
                 {selectedReturn.qcBy && <div><span className="text-muted-foreground">QC par :</span> {selectedReturn.qcBy}</div>}
+                {selectedReturn.disposition && <div><span className="text-muted-foreground">Disposition :</span> <StatusBadge status={selectedReturn.disposition} /></div>}
+                {selectedReturn.refundMethod && <div><span className="text-muted-foreground">Méthode remb. :</span> {selectedReturn.refundMethod.replace(/_/g, " ")}</div>}
+                {selectedReturn.creditNoteId && <div><span className="text-muted-foreground">N° avoir :</span> <span className="font-mono text-primary">{selectedReturn.creditNoteId}</span></div>}
+                {selectedReturn.reasonCode && <div><span className="text-muted-foreground">Code raison :</span> {selectedReturn.reasonCode}</div>}
                 <div className="col-span-2"><span className="text-muted-foreground">Raison :</span> {selectedReturn.reason}</div>
+                {selectedReturn.notes && <div className="col-span-2"><span className="text-muted-foreground">Notes :</span> {selectedReturn.notes}</div>}
               </div>
 
               {/* Workflow actions in detail */}
@@ -1311,7 +1387,11 @@ export function ReturnsPage() {
                     <tr className="border-b border-border">
                       <th className="text-left py-2 px-2 text-muted-foreground">Produit</th>
                       <th className="text-right py-2 px-2 text-muted-foreground">Qté</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">Coût unit.</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">Valeur</th>
                       <th className="text-left py-2 px-2 text-muted-foreground">Raison</th>
+                      <th className="text-left py-2 px-2 text-muted-foreground">Disposition</th>
+                      <th className="text-left py-2 px-2 text-muted-foreground">QC</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1319,7 +1399,11 @@ export function ReturnsPage() {
                       <tr key={idx} className="border-b border-border/50">
                         <td className="py-2 px-2 font-medium">{item.productName}</td>
                         <td className="py-2 px-2 text-right">{item.qty}</td>
-                        <td className="py-2 px-2">{item.reason}</td>
+                        <td className="py-2 px-2 text-right">{item.unitCost ? currency(item.unitCost) : "—"}</td>
+                        <td className="py-2 px-2 text-right font-medium">{item.lineValue ? currency(item.lineValue) : "—"}</td>
+                        <td className="py-2 px-2 text-xs">{item.reason}</td>
+                        <td className="py-2 px-2 text-xs">{item.disposition || "—"}</td>
+                        <td className="py-2 px-2 text-xs">{item.qcResult ? <StatusBadge status={item.qcResult} /> : "—"}</td>
                       </tr>
                     ))}
                   </tbody>
