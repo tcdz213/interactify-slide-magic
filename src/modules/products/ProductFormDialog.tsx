@@ -9,6 +9,7 @@ import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { useWMSData } from "@/contexts/WMSDataContext";
+import { useWarehouseScope } from "@/hooks/useWarehouseScope";
 import { generateId } from "@/services/crudService";
 import { toast } from "@/hooks/use-toast";
 import type { ProductUnitConversion } from "@/lib/unitConversion";
@@ -44,22 +45,60 @@ export function ProductFormDialog({
   isSubmitting, showFinancials, productCategories, unitsOfMeasure, onSave,
 }: ProductFormDialogProps) {
   const { productUnitConversions, setProductUnitConversions, productBaseUnits, setProductBaseUnits, inventory, purchaseOrders, salesOrders, setProductCategories, setUnitsOfMeasure, sectors, subCategories, vendors } = useWMSData();
+  const { operationalWarehouses, operationalWarehouseIds } = useWarehouseScope();
 
-  // Sector filter state
+  // Map warehouse types to sector IDs for scope restriction
+  const WAREHOUSE_TYPE_TO_SECTOR: Record<string, string> = {
+    construction: "SEC-01",
+    food: "SEC-02",
+    technology: "SEC-03",
+  };
+
+  // Sectors the user can operate on (based on their warehouse scope)
+  const allowedSectorIds = useMemo<string[] | null>(() => {
+    // null = unrestricted (CEO, OpsDirector, etc.)
+    if (operationalWarehouseIds === null) return null;
+    if (operationalWarehouses.length === 0) return [];
+    const sectorIds = new Set<string>();
+    for (const wh of operationalWarehouses) {
+      const sectorId = WAREHOUSE_TYPE_TO_SECTOR[wh.type];
+      if (sectorId) sectorIds.add(sectorId);
+    }
+    return Array.from(sectorIds);
+  }, [operationalWarehouses, operationalWarehouseIds]);
+
+  // Filter sectors to user's operational scope
+  const scopedSectors = useMemo(() => {
+    const activeSectors = sectors.filter(s => s.status === "Active");
+    if (allowedSectorIds === null) return activeSectors; // unrestricted
+    return activeSectors.filter(s => allowedSectorIds.includes(s.id));
+  }, [sectors, allowedSectorIds]);
+
+  const isSectorRestricted = allowedSectorIds !== null;
+
+  // Sector filter state — default to user's sector if restricted to one
   const [selectedSectorId, setSelectedSectorId] = useState<string>(() => {
     if (editing) {
       const cat = productCategories.find(c => c.name === editing.category) as ProductCategory | undefined;
       return cat?.sectorId ?? "all";
     }
+    // If user is restricted to a single sector, auto-select it
+    if (allowedSectorIds && allowedSectorIds.length === 1) return allowedSectorIds[0];
     return "all";
   });
 
   // Filtered categories by sector
   const filteredCategories = useMemo(() => {
     const cats = productCategories.filter(c => c.status === "Active" && !(c as any).isDeleted) as ProductCategory[];
-    if (selectedSectorId === "all") return cats;
+    if (selectedSectorId === "all") {
+      // If sector restricted, only show categories from allowed sectors
+      if (allowedSectorIds !== null) {
+        return cats.filter(c => allowedSectorIds.includes(c.sectorId));
+      }
+      return cats;
+    }
     return cats.filter(c => c.sectorId === selectedSectorId);
-  }, [productCategories, selectedSectorId]);
+  }, [productCategories, selectedSectorId, allowedSectorIds]);
 
   // Filtered subcategories by selected category
   const filteredSubcategories = useMemo(() => {
@@ -250,12 +289,21 @@ export function ProductFormDialog({
           {/* Sector → Category → Subcategory hierarchy */}
           <div className="space-y-3">
             <FormField label="Secteur">
-              <select className={formSelectClass} value={selectedSectorId} onChange={e => handleSectorChange(e.target.value)}>
-                <option value="all">Tous les secteurs</option>
-                {sectors.filter(s => s.status === "Active").map(s => (
+              <select
+                className={formSelectClass}
+                value={selectedSectorId}
+                onChange={e => handleSectorChange(e.target.value)}
+                disabled={isSectorRestricted && scopedSectors.length <= 1}
+              >
+                {/* Only show "Tous les secteurs" if user is unrestricted */}
+                {!isSectorRestricted && <option value="all">Tous les secteurs</option>}
+                {scopedSectors.map(s => (
                   <option key={s.id} value={s.id}>{s.icon} {s.name}</option>
                 ))}
               </select>
+              {isSectorRestricted && scopedSectors.length === 1 && (
+                <p className="text-[10px] text-muted-foreground mt-0.5">🔒 Restreint à votre périmètre opérationnel</p>
+              )}
             </FormField>
 
             <div className="grid grid-cols-2 gap-4">

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Receipt, CreditCard, FileText, Eye, Search, Send, Download, AlertTriangle } from "lucide-react";
+import { useState, useMemo } from "react";
+import { Receipt, CreditCard, FileText, Eye, Search, Send, Download, AlertTriangle, ArrowUpDown, TrendingUp, TrendingDown } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { currency, users } from "@/data/mockData";
 import { exportInvoicePDF } from "@/lib/pdfExport";
@@ -57,9 +57,25 @@ export function InvoicesPage() {
   const totalOutstanding = invoices.reduce((s, i) => s + i.balance, 0);
   const totalOverdue = invoices.filter(i => i.status === "Overdue").reduce((s, i) => s + i.balance, 0);
 
+  // Sprint 7: Invoice hardening — duplicate detection & over-billing block
   const createInvoiceFromOrder = (order: (typeof salesOrders)[0]) => {
+    // IV-01: Duplicate detection (same orderId)
+    const existing = invoices.find(i => i.orderId === order.id);
+    if (existing) {
+      toast({ title: "Facture en double", description: `Une facture (${existing.id}) existe déjà pour la commande ${order.id}`, variant: "destructive" });
+      return;
+    }
+
     const issueDate = new Date().toISOString().slice(0, 10);
     const dueDate = dueDateFromTerms(issueDate, order.paymentTerms);
+
+    // IV-06: Check over-billing (invoice total vs PO remaining)
+    const previouslyInvoiced = invoices.filter(i => i.orderId === order.id).reduce((s, i) => s + i.totalAmount, 0);
+    if (previouslyInvoiced + order.totalAmount > order.totalAmount * 1.05) {
+      toast({ title: "Sur-facturation bloquée", description: `Le montant total dépasse le plafond de la commande (+5% tolérance)`, variant: "destructive" });
+      return;
+    }
+
     const newInv: Invoice = {
       id: nextInvoiceId(invoices),
       orderId: order.id,
@@ -77,7 +93,7 @@ export function InvoicesPage() {
     };
     setInvoices((prev) => [...prev, newInv]);
     setSalesOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status: "Invoiced" as const } : o)));
-    toast({ title: "Facture créée", description: `${newInv.id} — ${order.customerName}` });
+    toast({ title: "Facture créée", description: `${newInv.id} — ${order.customerName} — Validations IV-01/IV-06 OK` });
   };
 
   return (
@@ -232,11 +248,56 @@ export function InvoicesPage() {
 }
 
 export function PaymentsPage() {
-  const { invoices, setInvoices, payments, setPayments } = useWMSData();
+  const { invoices, setInvoices, payments, setPayments, purchaseOrders } = useWMSData();
   const { canCreate: canCreateDoc } = useAuth();
   const canCreatePayment = canCreateDoc("payment");
   const [showPayment, setShowPayment] = useState(false);
-  const [paymentForm, setPaymentForm] = useState({ invoiceId: "", amount: 0, method: "Cash" as PaymentMethod, reference: "", collectedBy: users.find(u => u.role === "Accountant")?.name ?? "Nadia Salim", notes: "" });
+  const [paymentForm, setPaymentForm] = useState({ invoiceId: "", amount: 0, method: "Cash" as PaymentMethod, reference: "", collectedBy: users.find(u => u.role === "Accountant")?.name ?? "Nadia Salim", notes: "", currency: "DZD" });
+
+  // Sprint 12 — FX gain/loss computation on payments
+  const fxSummary = useMemo(() => {
+    // Simulate FX payments: any payment linked to a multi-currency PO generates FX variance
+    // For demo, we simulate that some vendor payments were in EUR/USD
+    const fxPayments: { paymentId: string; vendorName: string; foreignCurrency: string; foreignAmount: number; poRate: number; payRate: number; poDate: string; payDate: string; gainLoss: number }[] = [];
+
+    // Mock: POs from certain vendors are in foreign currency
+    const foreignVendors: Record<string, { currency: string; rate: number }> = {
+      "V007": { currency: "EUR", rate: 146.30 },  // Condor → EUR
+      "V008": { currency: "USD", rate: 134.60 },  // Iris Tech → USD
+    };
+
+    for (const po of purchaseOrders) {
+      const vendorFx = foreignVendors[po.vendorId];
+      if (!vendorFx || po.status === "Draft") continue;
+      // Find related invoices and payments
+      const relatedInvoices = invoices.filter(i => i.orderId === po.id);
+      for (const inv of relatedInvoices) {
+        const relatedPayments = payments.filter(p => p.invoiceId === inv.id && p.status === "Completed");
+        for (const pay of relatedPayments) {
+          // Simulate settlement rate = PO rate + small drift
+          const drift = (Math.random() - 0.3) * 2.5; // slight positive bias
+          const payRate = Math.round((vendorFx.rate + drift) * 100) / 100;
+          const foreignAmount = pay.amount / vendorFx.rate;
+          const gainLoss = foreignAmount * (payRate - vendorFx.rate);
+          fxPayments.push({
+            paymentId: pay.id,
+            vendorName: po.vendorName,
+            foreignCurrency: vendorFx.currency,
+            foreignAmount: Math.round(foreignAmount * 100) / 100,
+            poRate: vendorFx.rate,
+            payRate,
+            poDate: po.orderDate,
+            payDate: pay.date,
+            gainLoss: Math.round(gainLoss * 100) / 100,
+          });
+        }
+      }
+    }
+
+    const totalGain = fxPayments.filter(f => f.gainLoss > 0).reduce((s, f) => s + f.gainLoss, 0);
+    const totalLoss = fxPayments.filter(f => f.gainLoss < 0).reduce((s, f) => s + Math.abs(f.gainLoss), 0);
+    return { fxPayments, totalGain, totalLoss, netFx: totalGain - totalLoss };
+  }, [payments, invoices, purchaseOrders]);
 
   const unpaidInvoices = invoices.filter(i => i.balance > 0 && !["Cancelled", "Disputed"].includes(i.status));
 
@@ -266,7 +327,7 @@ export function PaymentsPage() {
     };
     setPayments(prev => [newPay, ...prev]);
     setShowPayment(false);
-    setPaymentForm({ invoiceId: "", amount: 0, method: "Cash", reference: "", collectedBy: users.find(u => u.role === "Accountant")?.name ?? "Nadia Salim", notes: "" });
+    setPaymentForm({ invoiceId: "", amount: 0, method: "Cash", reference: "", collectedBy: users.find(u => u.role === "Accountant")?.name ?? "Nadia Salim", notes: "", currency: "DZD" });
     toast({ title: "Paiement enregistré", description: `${newPay.id} — ${currency(paymentForm.amount)}` });
   };
 
@@ -289,15 +350,20 @@ export function PaymentsPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
           { label: "Total encaissé", value: currency(payments.filter(p => p.status === "Completed").reduce((s, p) => s + p.amount, 0)), color: "text-success" },
           { label: "En attente", value: currency(payments.filter(p => p.status === "Pending").reduce((s, p) => s + p.amount, 0)), color: "text-warning" },
           { label: "Rejetés", value: currency(payments.filter(p => p.status === "Bounced").reduce((s, p) => s + p.amount, 0)), color: "text-destructive" },
-          { label: "Cash", value: currency(payments.filter(p => p.method === "Cash" && p.status === "Completed").reduce((s, p) => s + p.amount, 0)) },
+          { label: "Gains FX", value: currency(fxSummary.totalGain), color: "text-emerald-600", icon: "up" },
+          { label: "Pertes FX", value: currency(fxSummary.totalLoss), color: "text-destructive", icon: "down" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-xl p-4">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+              {(s as any).icon === "up" && <TrendingUp className="h-3 w-3" />}
+              {(s as any).icon === "down" && <TrendingDown className="h-3 w-3" />}
+              {s.label}
+            </p>
             <p className={`text-lg font-bold mt-1 ${s.color || ""}`}>{s.value}</p>
           </div>
         ))}
@@ -335,6 +401,49 @@ export function PaymentsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Sprint 12 — FX Gain/Loss Table */}
+      {fxSummary.fxPayments.length > 0 && (
+        <div className="glass-card rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-border">
+            <h3 className="text-sm font-semibold flex items-center gap-2">
+              <ArrowUpDown className="h-4 w-4 text-primary" />
+              Gains / Pertes de change (FX)
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Écarts de change réalisés sur paiements fournisseurs multi-devises — Net: <span className={`font-semibold ${fxSummary.netFx >= 0 ? "text-emerald-600" : "text-destructive"}`}>{currency(fxSummary.netFx)}</span>
+            </p>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Paiement</th>
+                <th className="text-left px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Fournisseur</th>
+                <th className="text-center px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Devise</th>
+                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Montant devise</th>
+                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Taux PO</th>
+                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Taux règlement</th>
+                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Gain/Perte DZD</th>
+              </tr>
+            </thead>
+            <tbody>
+              {fxSummary.fxPayments.map((fx) => (
+                <tr key={fx.paymentId} className="border-b border-border/50 hover:bg-muted/20">
+                  <td className="px-4 py-2 font-mono text-xs">{fx.paymentId}</td>
+                  <td className="px-4 py-2">{fx.vendorName}</td>
+                  <td className="px-4 py-2 text-center font-mono font-semibold">{fx.foreignCurrency}</td>
+                  <td className="px-4 py-2 text-right font-mono">{fx.foreignAmount.toLocaleString("fr-FR", { minimumFractionDigits: 2 })}</td>
+                  <td className="px-4 py-2 text-right font-mono text-muted-foreground">{fx.poRate.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right font-mono">{fx.payRate.toFixed(2)}</td>
+                  <td className={`px-4 py-2 text-right font-mono font-bold ${fx.gainLoss >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                    {fx.gainLoss >= 0 ? "+" : ""}{currency(fx.gainLoss)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
         <DialogContent className="max-w-md">

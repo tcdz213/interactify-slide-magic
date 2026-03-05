@@ -8,10 +8,10 @@ import {
   FileText, TrendingUp, AlertTriangle, Settings, ChevronDown, ChevronRight, LogOut,
   ShoppingBag, Building2, ClipboardCheck, Settings2, ArrowRightLeft, Globe,
   FolderTree, Ruler, ScanBarcode, MapPin, Database, ShieldCheck, ArrowDownToLine, ScrollText, Layers, Hand, Box,
-  Lock, RefreshCw, ListTodo, ArrowDownUp, FileCheck, Combine, PackageOpen, ShieldOff, Repeat,
+  Lock, RefreshCw, ListTodo, ArrowDownUp, FileCheck, Combine, PackageOpen, ShieldOff, Repeat, Banknote,
   Fingerprint, DollarSign, Boxes, DoorOpen, Bell, Plug, PackageCheck, History, ClipboardMinus,
-  Tags, BadgeDollarSign, Percent, Coins, BookOpen, Wallet,
-} from "lucide-react";
+  Tags, BadgeDollarSign, Percent, Coins, BookOpen, Wallet } from
+"lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,13 +36,44 @@ interface NavSection {
   path?: string;
   children?: NavItem[];
   wmsSubGroups?: WmsSubGroup[];
+  /** Section key for role-based filtering */
+  sectionKey?: string;
 }
 
+/** 
+ * Role-based sidebar visibility matrix.
+ * Each role maps to a Set of section keys they can see.
+ * If a role is not listed, they see ALL sections (full access).
+ */
+type UserRole = string;
+
+const ROLE_VISIBLE_SECTIONS: Record<UserRole, Set<string>> = {
+  FinanceDirector: new Set(["dashboard", "masterData", "accounting", "bi", "admin"]),
+  Operator: new Set(["dashboard", "wms"]),
+  Supervisor: new Set(["dashboard", "masterData", "wms", "distribution"]),
+  Driver: new Set(["dashboard", "distribution"]),
+  QCOfficer: new Set(["dashboard", "masterData", "wms"]),
+  Accountant: new Set(["dashboard", "masterData", "accounting", "bi"]),
+  BIAnalyst: new Set(["dashboard", "masterData", "bi"]),
+};
+
+/**
+ * For Operator role, restrict WMS to only these paths.
+ */
+const OPERATOR_WMS_PATHS = new Set([
+  "/wms/grn",
+  "/wms/cycle-count",
+  "/wms/picking",
+  "/wms/putaway",
+  "/wms/packing",
+  "/wms/tasks",
+]);
+
 const LANGS = [
-  { code: "fr", label: "Français" },
-  { code: "en", label: "English" },
-  { code: "ar", label: "العربية" },
-];
+{ code: "fr", label: "Français" },
+{ code: "en", label: "English" },
+{ code: "ar", label: "العربية" }];
+
 
 export default function AppSidebar() {
   const location = useLocation();
@@ -66,80 +97,81 @@ export default function AppSidebar() {
   };
 
   const wmsSubGroups: WmsSubGroup[] = useMemo(() => [
-    {
-      label: t("nav.wmsInbound", "Inbound"),
-      icon: PackageCheck,
-      colorClass: "text-emerald-400",
-      children: [
-        { label: t("nav.grn"), icon: Package, path: "/wms/grn" },
-        { label: t("nav.qualityControl", "Contrôle Qualité"), icon: ShieldCheck, path: "/wms/quality-control" },
-        { label: t("nav.putaway", "Rangement"), icon: ArrowDownToLine, path: "/wms/putaway" },
-        { label: t("nav.crossDocking", "Cross Docking"), icon: Repeat, path: "/wms/cross-docking" },
-        { label: t("nav.purchaseOrders"), icon: ShoppingBag, path: "/wms/purchase-orders" },
-        { label: t("nav.supplierContracts", "Contrats fournisseurs"), icon: FileCheck, path: "/wms/supplier-contracts" },
-      ],
-    },
-    {
-      label: t("nav.wmsOutbound", "Outbound"),
-      icon: Truck,
-      colorClass: "text-blue-400",
-      children: [
-        { label: t("nav.waves", "Vagues"), icon: Layers, path: "/wms/waves" },
-        { label: t("nav.picking", "Picking"), icon: Hand, path: "/wms/picking" },
-        { label: t("nav.packing", "Packing"), icon: Box, path: "/wms/packing" },
-        { label: t("nav.shipping", "Expédition"), icon: Truck, path: "/wms/shipping" },
-        { label: t("nav.replenishment", "Réapprovisionnement"), icon: RefreshCw, path: "/wms/replenishment-rules" },
-        { label: t("nav.reservations", "Réservations"), icon: Lock, path: "/wms/reservations" },
-      ],
-    },
-    {
-      label: t("nav.wmsStock", "Stock"),
-      icon: ClipboardList,
-      colorClass: "text-violet-400",
-      children: [
-        { label: t("nav.stockDashboard", "Tableau de bord stock"), icon: ClipboardList, path: "/wms/stock-dashboard" },
-        { label: t("nav.inventory"), icon: ClipboardList, path: "/wms/inventory" },
-        { label: t("nav.movements", "Journal mouvements"), icon: ScrollText, path: "/wms/movements" },
-        { label: t("nav.cycleCount"), icon: ClipboardCheck, path: "/wms/cycle-count" },
-        { label: t("nav.adjustments"), icon: Settings2, path: "/wms/adjustments" },
-        { label: t("nav.transfers"), icon: ArrowRightLeft, path: "/wms/transfers" },
-        { label: t("nav.stockBlock", "Blocage stock"), icon: ShieldOff, path: "/wms/stock-block" },
-      ],
-    },
-    {
-      label: t("nav.wmsTraceability", "Traçabilité"),
-      icon: Fingerprint,
-      colorClass: "text-amber-400",
-      children: [
-        { label: t("nav.lotBatch", "Lots / Batch"), icon: Boxes, path: "/wms/lot-batch" },
-        { label: t("nav.serialNumbers", "N° de Série"), icon: Fingerprint, path: "/wms/serial-numbers" },
-        { label: t("nav.stockValuation", "Valorisation Stock"), icon: DollarSign, path: "/wms/stock-valuation" },
-        { label: t("nav.priceHistory", "Historique Prix"), icon: History, path: "/wms/price-history" },
-      ],
-    },
-    {
-      label: t("nav.wmsInternalOps", "Opérations Internes"),
-      icon: Combine,
-      colorClass: "text-rose-400",
-      children: [
-        { label: t("nav.kitting", "Kitting / Assemblage"), icon: Combine, path: "/wms/kitting" },
-        { label: t("nav.repacking", "Reconditionnement"), icon: PackageOpen, path: "/wms/repacking" },
-        { label: t("nav.returns"), icon: RotateCcw, path: "/wms/returns" },
-        { label: "Avoirs & Notes de débit", icon: CreditCard, path: "/wms/credit-notes" },
-        { label: "Réclamations qualité", icon: AlertTriangle, path: "/wms/quality-claims" },
-        { label: "Scorecard fournisseurs", icon: BarChart3, path: "/wms/vendor-scorecard" },
-      ],
-    },
-    {
-      label: t("nav.wmsFieldMgmt", "Gestion Terrain"),
-      icon: ListTodo,
-      colorClass: "text-cyan-400",
-      children: [
-        { label: t("nav.taskQueue", "File de tâches"), icon: ListTodo, path: "/wms/tasks" },
-        { label: t("nav.yardDock", "Yard & Dock"), icon: DoorOpen, path: "/wms/yard-dock" },
-      ],
-    },
-  ], [t]);
+  {
+    label: t("nav.wmsInbound", "Inbound"),
+    icon: PackageCheck,
+    colorClass: "text-emerald-400",
+    children: [
+    { label: t("nav.grn"), icon: Package, path: "/wms/grn" },
+    { label: t("nav.qualityControl", "Contrôle Qualité"), icon: ShieldCheck, path: "/wms/quality-control" },
+    { label: t("nav.putaway", "Rangement"), icon: ArrowDownToLine, path: "/wms/putaway" },
+    { label: t("nav.crossDocking", "Cross Docking"), icon: Repeat, path: "/wms/cross-docking" },
+    { label: t("nav.purchaseOrders"), icon: ShoppingBag, path: "/wms/purchase-orders" },
+    { label: "Exceptions rapprochement", icon: AlertTriangle, path: "/wms/match-exceptions" },
+    { label: t("nav.supplierContracts", "Contrats fournisseurs"), icon: FileCheck, path: "/wms/supplier-contracts" }]
+
+  },
+  {
+    label: t("nav.wmsOutbound", "Outbound"),
+    icon: Truck,
+    colorClass: "text-blue-400",
+    children: [
+    { label: t("nav.waves", "Vagues"), icon: Layers, path: "/wms/waves" },
+    { label: t("nav.picking", "Picking"), icon: Hand, path: "/wms/picking" },
+    { label: t("nav.packing", "Packing"), icon: Box, path: "/wms/packing" },
+    { label: t("nav.shipping", "Expédition"), icon: Truck, path: "/wms/shipping" },
+    { label: t("nav.replenishment", "Réapprovisionnement"), icon: RefreshCw, path: "/wms/replenishment-rules" },
+    { label: t("nav.reservations", "Réservations"), icon: Lock, path: "/wms/reservations" }]
+
+  },
+  {
+    label: t("nav.wmsStock", "Stock"),
+    icon: ClipboardList,
+    colorClass: "text-violet-400",
+    children: [
+    { label: t("nav.stockDashboard", "Tableau de bord stock"), icon: ClipboardList, path: "/wms/stock-dashboard" },
+    { label: t("nav.inventory"), icon: ClipboardList, path: "/wms/inventory" },
+    { label: t("nav.movements", "Journal mouvements"), icon: ScrollText, path: "/wms/movements" },
+    { label: t("nav.cycleCount"), icon: ClipboardCheck, path: "/wms/cycle-count" },
+    { label: t("nav.adjustments"), icon: Settings2, path: "/wms/adjustments" },
+    { label: t("nav.transfers"), icon: ArrowRightLeft, path: "/wms/transfers" },
+    { label: t("nav.stockBlock", "Blocage stock"), icon: ShieldOff, path: "/wms/stock-block" }]
+
+  },
+  {
+    label: t("nav.wmsTraceability", "Traçabilité"),
+    icon: Fingerprint,
+    colorClass: "text-amber-400",
+    children: [
+    { label: t("nav.lotBatch", "Lots / Batch"), icon: Boxes, path: "/wms/lot-batch" },
+    { label: t("nav.serialNumbers", "N° de Série"), icon: Fingerprint, path: "/wms/serial-numbers" },
+    { label: t("nav.stockValuation", "Valorisation Stock"), icon: DollarSign, path: "/wms/stock-valuation" },
+    { label: t("nav.priceHistory", "Historique Prix"), icon: History, path: "/wms/price-history" }]
+
+  },
+  {
+    label: t("nav.wmsInternalOps", "Opérations Internes"),
+    icon: Combine,
+    colorClass: "text-rose-400",
+    children: [
+    { label: t("nav.kitting", "Kitting / Assemblage"), icon: Combine, path: "/wms/kitting" },
+    { label: t("nav.repacking", "Reconditionnement"), icon: PackageOpen, path: "/wms/repacking" },
+    { label: t("nav.returns"), icon: RotateCcw, path: "/wms/returns" },
+    { label: "Avoirs & Notes de débit", icon: CreditCard, path: "/wms/credit-notes" },
+    { label: "Réclamations qualité", icon: AlertTriangle, path: "/wms/quality-claims" },
+    { label: "Scorecard fournisseurs", icon: BarChart3, path: "/wms/vendor-scorecard" }]
+
+  },
+  {
+    label: t("nav.wmsFieldMgmt", "Gestion Terrain"),
+    icon: ListTodo,
+    colorClass: "text-cyan-400",
+    children: [
+    { label: t("nav.taskQueue", "File de tâches"), icon: ListTodo, path: "/wms/tasks" },
+    { label: t("nav.yardDock", "Yard & Dock"), icon: DoorOpen, path: "/wms/yard-dock" }]
+
+  }],
+  [t]);
 
   /** Roles that can see the Admin section */
   const ADMIN_ROLES = new Set(["CEO", "SystemAdmin", "OpsDirector", "FinanceDirector", "RegionalManager"]);
@@ -148,95 +180,122 @@ export default function AppSidebar() {
 
   const navigation: NavSection[] = useMemo(() => {
     const sections: NavSection[] = [
-    { label: t("nav.dashboard"), icon: LayoutDashboard, path: "/" },
+    { label: t("nav.dashboard"), icon: LayoutDashboard, path: "/", sectionKey: "dashboard" },
     {
-      label: t("nav.masterData", "Données de base"), icon: Database,
+      label: t("nav.masterData", "Données de base"), icon: Database, sectionKey: "masterData",
       children: [
-        { label: t("nav.products", "Produits"), icon: Package, path: "/wms/products" },
-        { label: t("nav.categories", "Catégories"), icon: FolderTree, path: "/wms/categories" },
-        { label: t("nav.uom", "Unités de mesure"), icon: Ruler, path: "/wms/uom" },
-        { label: t("nav.barcodes", "Codes-barres"), icon: ScanBarcode, path: "/wms/barcodes" },
-        { label: t("nav.vendors"), icon: Users, path: "/wms/vendors" },
-        { label: t("nav.carriers", "Transporteurs"), icon: Truck, path: "/wms/carriers" },
-        { label: "Conditions de paiement", icon: CreditCard, path: "/wms/payment-terms" },
-        { label: t("nav.currencies", "Devises & Taux"), icon: Coins, path: "/settings/currencies" },
-        { label: t("nav.taxConfig", "Configuration Fiscale"), icon: Percent, path: "/settings/tax-config" },
-        { label: t("nav.warehouses"), icon: Building2, path: "/wms/warehouses" },
-        { label: t("nav.locations", "Emplacements"), icon: MapPin, path: "/wms/locations" },
-      ],
+      { label: t("nav.products", "Produits"), icon: Package, path: "/wms/products" },
+      { label: t("nav.categories", "Catégories"), icon: FolderTree, path: "/wms/categories" },
+      { label: t("nav.uom", "Unités de mesure"), icon: Ruler, path: "/wms/uom" },
+      { label: t("nav.barcodes", "Codes-barres"), icon: ScanBarcode, path: "/wms/barcodes" },
+      { label: t("nav.vendors"), icon: Users, path: "/wms/vendors" },
+      { label: t("nav.carriers", "Transporteurs"), icon: Truck, path: "/wms/carriers" },
+      { label: "Conditions de paiement", icon: CreditCard, path: "/wms/payment-terms" },
+      { label: t("nav.currencies", "Devises & Taux"), icon: Coins, path: "/settings/currencies" },
+      { label: t("nav.taxConfig", "Configuration Fiscale"), icon: Percent, path: "/settings/tax-config" },
+      { label: t("nav.warehouses"), icon: Building2, path: "/wms/warehouses" },
+      { label: t("nav.locations", "Emplacements"), icon: MapPin, path: "/wms/locations" }]
+
     },
     {
-      label: t("nav.wms"), icon: Warehouse,
-      wmsSubGroups: wmsSubGroups,
+      label: t("nav.wms"), icon: Warehouse, sectionKey: "wms",
+      wmsSubGroups: wmsSubGroups
     },
     {
-      label: t("nav.sales"), icon: ShoppingCart,
+      label: t("nav.sales"), icon: ShoppingCart, sectionKey: "sales",
       children: [
-        { label: t("nav.orders"), icon: ShoppingCart, path: "/sales/orders" },
-        { label: t("nav.customers"), icon: Users, path: "/sales/customers" },
-        { label: "Plan de Tournée", icon: Route, path: "/sales/route-plan" },
-      ],
+      { label: t("nav.orders"), icon: ShoppingCart, path: "/sales/orders" },
+      { label: t("nav.customers"), icon: Users, path: "/sales/customers" },
+      { label: "Plan de Tournée", icon: Route, path: "/sales/route-plan" }]
+
     },
     {
-      label: t("nav.pricing", "Tarification"), icon: BadgeDollarSign,
+      label: t("nav.pricing", "Tarification"), icon: BadgeDollarSign, sectionKey: "pricing",
       children: [
-        { label: t("nav.clientTypes", "Types de Clients"), icon: Tags, path: "/pricing/client-types" },
-        { label: t("nav.priceManagement", "Grille Tarifaire"), icon: DollarSign, path: "/pricing/prices" },
-      ],
+      { label: t("nav.clientTypes", "Types de Clients"), icon: Tags, path: "/pricing/client-types" },
+      { label: t("nav.priceManagement", "Grille Tarifaire"), icon: DollarSign, path: "/pricing/prices" }]
+
     },
     {
-      label: t("nav.distribution"), icon: Truck,
+      label: t("nav.distribution"), icon: Truck, sectionKey: "distribution",
       children: [
-        { label: t("nav.routes"), icon: Route, path: "/distribution/routes" },
-        { label: t("nav.deliveries"), icon: Truck, path: "/distribution/deliveries" },
-        { label: t("nav.dailyClosing", "Clôture Quotidienne"), icon: ClipboardMinus, path: "/closing" },
-      ],
+      { label: t("nav.routes"), icon: Route, path: "/distribution/routes" },
+      { label: t("nav.deliveries"), icon: Truck, path: "/distribution/deliveries" },
+      { label: t("nav.dailyClosing", "Clôture Quotidienne"), icon: ClipboardMinus, path: "/closing" }]
+
     },
     ...(canSeeAccounting ? [{
-      label: t("nav.accounting"), icon: Calculator,
+      label: t("nav.accounting"), icon: Calculator, sectionKey: "accounting",
       children: [
-        { label: t("nav.invoices"), icon: Receipt, path: "/accounting/invoices" },
-        { label: t("nav.payments"), icon: CreditCard, path: "/accounting/payments" },
-        { label: "Plan Comptable", icon: BookOpen, path: "/accounting/chart-of-accounts" },
-        { label: "Budget & Centres", icon: Wallet, path: "/accounting/budgets" },
-        { label: t("nav.reports"), icon: FileText, path: "/accounting/reports" },
-      ],
+      { label: t("nav.invoices"), icon: Receipt, path: "/accounting/invoices" },
+      { label: t("nav.payments"), icon: CreditCard, path: "/accounting/payments" },
+      { label: "Lots de paiement AP", icon: Banknote, path: "/accounting/payment-runs" },
+      { label: "GRNI & Variances", icon: FileCheck, path: "/accounting/grni" },
+      { label: "Rapprochement bancaire", icon: Building2, path: "/accounting/bank-reconciliation" },
+      { label: "Plan Comptable", icon: BookOpen, path: "/accounting/chart-of-accounts" },
+      { label: "Budget & Centres", icon: Wallet, path: "/accounting/budgets" },
+      { label: t("nav.reports"), icon: FileText, path: "/accounting/reports" }]
+
     }] : []),
     {
-      label: t("nav.bi"), icon: BarChart3,
+      label: t("nav.bi"), icon: BarChart3, sectionKey: "bi",
       children: [
-        { label: t("nav.wmsReports", "Rapports WMS"), icon: FileText, path: "/reports" },
-        { label: "Générateur de rapports", icon: ClipboardList, path: "/reports/builder" },
-        { label: "Marge Historique", icon: DollarSign, path: "/reports/margin-history" },
-        { label: t("nav.performance"), icon: TrendingUp, path: "/bi/performance" },
-        { label: "Rentabilité", icon: BarChart3, path: "/bi/profitability" },
-        { label: "Répartition catégories", icon: FolderTree, path: "/bi/categories" },
-        { label: t("nav.alerts"), icon: AlertTriangle, path: "/bi/alerts" },
-      ],
-    },
-    ];
+      { label: t("nav.wmsReports", "Rapports WMS"), icon: FileText, path: "/reports" },
+      { label: "Générateur de rapports", icon: ClipboardList, path: "/reports/builder" },
+      { label: "Marge Historique", icon: DollarSign, path: "/reports/margin-history" },
+      { label: t("nav.performance"), icon: TrendingUp, path: "/bi/performance" },
+      { label: "Rentabilité", icon: BarChart3, path: "/bi/profitability" },
+      { label: "Répartition catégories", icon: FolderTree, path: "/bi/categories" },
+      { label: t("nav.alerts"), icon: AlertTriangle, path: "/bi/alerts" }]
+
+    }];
+
 
     // Only show Admin section for authorized roles
     if (canSeeAdmin) {
       sections.push({
         label: t("nav.admin", "Admin"),
-        icon: Settings,
+        icon: Settings, sectionKey: "admin",
         children: [
-          { label: t("nav.users", "Utilisateurs & Accès"), icon: Users, path: "/settings/users" },
-          { label: t("nav.auditLog", "Journal d'audit"), icon: ScrollText, path: "/settings/audit-log" },
-          { label: t("nav.pickingStrategy", "Stratégie picking"), icon: ArrowDownUp, path: "/settings/picking-strategy" },
-          { label: t("nav.approvalWorkflows", "Workflows approbation"), icon: FileCheck, path: "/settings/approval-workflows" },
-          { label: t("nav.putawayRules", "Règles putaway"), icon: ArrowDownToLine, path: "/settings/putaway-rules" },
-          { label: t("nav.alertRules", "Règles alertes"), icon: Bell, path: "/settings/alert-rules" },
-          { label: t("nav.locationTypes", "Types emplacements"), icon: MapPin, path: "/settings/location-types" },
-          { label: t("nav.integrations", "Intégrations"), icon: Plug, path: "/settings/integrations" },
-          ...(isSystemAdmin ? [{ label: t("nav.systemSettings", "Paramètres Système"), icon: Shield, path: "/settings/system" }] : []),
-        ],
+        { label: t("nav.users", "Utilisateurs & Accès"), icon: Users, path: "/settings/users" },
+        { label: t("nav.auditLog", "Journal d'audit"), icon: ScrollText, path: "/settings/audit-log" },
+        { label: t("nav.pickingStrategy", "Stratégie picking"), icon: ArrowDownUp, path: "/settings/picking-strategy" },
+        { label: t("nav.approvalWorkflows", "Workflows approbation"), icon: FileCheck, path: "/settings/approval-workflows" },
+        { label: t("nav.putawayRules", "Règles putaway"), icon: ArrowDownToLine, path: "/settings/putaway-rules" },
+        { label: t("nav.alertRules", "Règles alertes"), icon: Bell, path: "/settings/alert-rules" },
+        { label: t("nav.locationTypes", "Types emplacements"), icon: MapPin, path: "/settings/location-types" },
+        { label: t("nav.integrations", "Intégrations"), icon: Plug, path: "/settings/integrations" },
+        ...(isSystemAdmin ? [{ label: t("nav.systemSettings", "Paramètres Système"), icon: Shield, path: "/settings/system" }] : [])]
+
       });
     }
 
-    return sections;
-  }, [t, isSystemAdmin, wmsSubGroups, canSeeAdmin]);
+    // ── Role-based section filtering ──
+    const userRole = currentUser?.role;
+    const allowedSections = userRole ? ROLE_VISIBLE_SECTIONS[userRole] : undefined;
+
+    // If role has no restrictions (CEO, OpsDirector, etc.), show all
+    if (!allowedSections) return sections;
+
+    return sections
+      .filter((s) => {
+        const key = s.sectionKey ?? s.label;
+        return allowedSections.has(key);
+      })
+      .map((s) => {
+        // For Operator: filter WMS sub-groups to only allowed paths
+        if (userRole === "Operator" && s.sectionKey === "wms" && s.wmsSubGroups) {
+          const filteredSubGroups = s.wmsSubGroups
+            .map((sg) => ({
+              ...sg,
+              children: sg.children.filter((c) => OPERATOR_WMS_PATHS.has(c.path)),
+            }))
+            .filter((sg) => sg.children.length > 0);
+          return { ...s, wmsSubGroups: filteredSubGroups };
+        }
+        return s;
+      });
+  }, [t, isSystemAdmin, wmsSubGroups, canSeeAdmin, canSeeAccounting, currentUser?.role]);
 
   // Auto-expand active section + sub-group on mount and route change
   useEffect(() => {
@@ -269,7 +328,7 @@ export default function AppSidebar() {
 
   const toggleSection = (label: string) => {
     setExpanded((prev) =>
-      prev.includes(label) ? prev.filter((l) => l !== label) : [label]
+    prev.includes(label) ? prev.filter((l) => l !== label) : [label]
     );
     // Reset sub-groups when switching sections
     setExpandedSubGroups([]);
@@ -277,7 +336,7 @@ export default function AppSidebar() {
 
   const toggleSubGroup = (label: string) => {
     setExpandedSubGroups((prev) =>
-      prev.includes(label) ? prev.filter((l) => l !== label) : [label]
+    prev.includes(label) ? prev.filter((l) => l !== label) : [label]
     );
   };
 
@@ -297,34 +356,34 @@ export default function AppSidebar() {
   };
 
   const isSubGroupActive = (sg: WmsSubGroup) =>
-    sg.children.some((c) => location.pathname.startsWith(c.path));
+  sg.children.some((c) => location.pathname.startsWith(c.path));
 
-  const renderNavItem = (child: NavItem, indentClass = "ml-4 pl-3") => (
-    <Link
-      key={child.path}
-      to={child.path}
-      className={cn(
-        "relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[12px] font-medium transition-all duration-150",
-        isActive(child.path)
-          ? "bg-primary/15 text-primary before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:rounded-full before:bg-primary"
-          : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-      )}
-    >
+  const renderNavItem = (child: NavItem, indentClass = "ml-4 pl-3") =>
+  <Link
+    key={child.path}
+    to={child.path}
+    className={cn(
+      "relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[12px] font-medium transition-all duration-150",
+      isActive(child.path) ?
+      "bg-primary/15 text-primary before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[3px] before:rounded-full before:bg-primary" :
+      "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+    )}>
+    
       <child.icon className="h-3.5 w-3.5 shrink-0" />
       {child.label}
-    </Link>
-  );
+    </Link>;
 
-  const sidebarContent = (
-    <>
+
+  const sidebarContent =
+  <>
       {/* Logo */}
       <div className="flex h-16 items-center justify-between gap-3 px-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3 overflow-hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary shrink-0">
             <Package className="h-4 w-4 text-primary-foreground" />
           </div>
-          {!collapsed && (
-            <div className="min-w-0">
+          {!collapsed &&
+        <div className="min-w-0">
               <h1 className="text-sm font-bold text-sidebar-primary-foreground tracking-tight truncate">
                 {t("app.name")}
               </h1>
@@ -332,231 +391,231 @@ export default function AppSidebar() {
                 {t("app.subtitle")}
               </p>
             </div>
-          )}
+        }
         </div>
-        {isMobile ? (
-          <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-md hover:bg-sidebar-accent">
+        {isMobile ?
+      <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-md hover:bg-sidebar-accent">
             <X className="h-5 w-5 text-sidebar-foreground" />
-          </button>
-        ) : (
-          <button
-            onClick={toggleCollapsed}
-            className="p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
+          </button> :
+
+      <button
+        onClick={toggleCollapsed}
+        className="p-1.5 rounded-md hover:bg-sidebar-accent text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors"
+        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>
+        
             <ChevronRight className={cn("h-4 w-4 transition-transform duration-200", !collapsed && "rotate-180")} />
           </button>
-        )}
+      }
       </div>
 
       {/* Navigation */}
       <nav className={cn("flex-1 overflow-y-auto py-4 space-y-1", collapsed && !isMobile ? "px-1.5" : "px-3")}>
         {navigation.map((section) => {
-          // Direct link (Dashboard)
-          if (section.path) {
-            return collapsed && !isMobile ? (
-              <Link
-                key={section.label}
-                to={section.path}
-                className={cn(
-                  "flex items-center justify-center rounded-lg p-2.5 transition-all duration-150",
-                  isActive(section.path)
-                    ? "bg-primary/15 text-primary"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
-                title={section.label}
-              >
+        // Direct link (Dashboard)
+        if (section.path) {
+          return collapsed && !isMobile ?
+          <Link
+            key={section.label}
+            to={section.path}
+            className={cn(
+              "flex items-center justify-center rounded-lg p-2.5 transition-all duration-150",
+              isActive(section.path) ?
+              "bg-primary/15 text-primary" :
+              "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            )}
+            title={section.label}>
+            
                 <section.icon className="h-4 w-4 shrink-0" />
-              </Link>
-            ) : (
-              <Link
-                key={section.label}
-                to={section.path}
-              className={cn(
-                  "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
-                  isActive(section.path)
-                    ? "bg-primary/15 text-primary before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-primary"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                )}
-              >
+              </Link> :
+
+          <Link
+            key={section.label}
+            to={section.path}
+            className={cn(
+              "relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
+              isActive(section.path) ?
+              "bg-primary/15 text-primary before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:rounded-full before:bg-primary" :
+              "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            )}>
+            
                 <section.icon className="h-4 w-4 shrink-0" />
                 {section.label}
-              </Link>
-            );
-          }
+              </Link>;
 
-          const sectionActive = isSectionActive(section);
-          const isExpanded = expanded.includes(section.label);
+        }
 
-          if (collapsed && !isMobile) {
-            return (
-              <div key={section.label}>
-                <Link
-                  to={section.children?.[0]?.path ?? section.wmsSubGroups?.[0]?.children?.[0]?.path ?? "#"}
-                  className={cn(
-                    "flex items-center justify-center rounded-lg p-2.5 transition-all duration-150",
-                    sectionActive
-                      ? "text-primary bg-primary/10"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  )}
-                  title={section.label}
-                >
-                  <section.icon className="h-4 w-4 shrink-0" />
-                </Link>
-              </div>
-            );
-          }
+        const sectionActive = isSectionActive(section);
+        const isExpanded = expanded.includes(section.label);
 
+        if (collapsed && !isMobile) {
           return (
             <div key={section.label}>
-              <button
-                onClick={() => toggleSection(section.label)}
+                <Link
+                to={section.children?.[0]?.path ?? section.wmsSubGroups?.[0]?.children?.[0]?.path ?? "#"}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
-                  sectionActive
-                    ? "text-primary bg-primary/10"
-                    : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                  "flex items-center justify-center rounded-lg p-2.5 transition-all duration-150",
+                  sectionActive ?
+                  "text-primary bg-primary/10" :
+                  "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
-              >
+                title={section.label}>
+                
+                  <section.icon className="h-4 w-4 shrink-0" />
+                </Link>
+              </div>);
+
+        }
+
+        return (
+          <div key={section.label}>
+              <button
+              onClick={() => toggleSection(section.label)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all duration-150",
+                sectionActive ?
+                "text-primary bg-primary/10" :
+                "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}>
+              
                 <section.icon className="h-4 w-4 shrink-0" />
                 <span className="flex-1 text-left">{section.label}</span>
                 <ChevronDown
-                  className={cn(
-                    "h-3.5 w-3.5 transition-transform duration-200",
-                    !isExpanded && "-rotate-90"
-                  )}
-                />
+                className={cn(
+                  "h-3.5 w-3.5 transition-transform duration-200",
+                  !isExpanded && "-rotate-90"
+                )} />
+              
               </button>
 
-              {isExpanded && (
-                <div className="ml-4 mt-0.5 space-y-0.5 border-l border-sidebar-border pl-3">
+              {isExpanded &&
+            <div className="ml-4 mt-0.5 space-y-0.5 border-l border-sidebar-border pl-3">
                   {/* Regular children (non-WMS sections) */}
                   {section.children?.map((child) => renderNavItem(child))}
 
                   {/* WMS sub-groups */}
                   {section.wmsSubGroups?.map((sg) => {
-                    const sgActive = isSubGroupActive(sg);
-                    const sgExpanded = expandedSubGroups.includes(sg.label);
+                const sgActive = isSubGroupActive(sg);
+                const sgExpanded = expandedSubGroups.includes(sg.label);
 
-                    return (
-                      <div key={sg.label}>
+                return (
+                  <div key={sg.label}>
                         <button
-                          onClick={() => toggleSubGroup(sg.label)}
-                          className={cn(
-                            "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[12px] font-medium transition-all duration-150",
-                            sgActive
-                              ? "bg-primary/5 text-sidebar-accent-foreground"
-                              : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                          )}
-                        >
+                      onClick={() => toggleSubGroup(sg.label)}
+                      className={cn(
+                        "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-[12px] font-medium transition-all duration-150",
+                        sgActive ?
+                        "bg-primary/5 text-sidebar-accent-foreground" :
+                        "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}>
+                      
                           <sg.icon className={cn("h-3.5 w-3.5 shrink-0", sgActive ? sg.colorClass : "")} />
                           <span className="flex-1 text-left">{sg.label}</span>
                           <ChevronRight
-                            className={cn(
-                              "h-3 w-3 transition-transform duration-200",
-                              sgExpanded && "rotate-90"
-                            )}
-                          />
+                        className={cn(
+                          "h-3 w-3 transition-transform duration-200",
+                          sgExpanded && "rotate-90"
+                        )} />
+                      
                         </button>
 
-                        {sgExpanded && (
-                          <div className="ml-3 mt-0.5 space-y-0.5 border-l border-sidebar-border/50 pl-2">
+                        {sgExpanded &&
+                    <div className="ml-3 mt-0.5 space-y-0.5 border-l border-sidebar-border/50 pl-2">
                             {sg.children.map((child) => renderNavItem(child, ""))}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                    }
+                      </div>);
+
+              })}
                 </div>
-              )}
-            </div>
-          );
-        })}
+            }
+            </div>);
+
+      })}
       </nav>
 
       {/* Language Switcher */}
-      {(!collapsed || isMobile) && (
-        <div className="px-3 py-2">
+      {(!collapsed || isMobile) &&
+    <div className="px-3 py-2">
           <div className="flex items-center gap-2 px-3 py-1.5">
             <Globe className="h-3.5 w-3.5 text-sidebar-foreground/60" />
             <div className="flex gap-1">
-              {LANGS.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => changeLang(lang.code)}
-                  className={cn(
-                    "px-2 py-0.5 rounded text-[11px] font-medium transition-colors",
-                    i18n.language === lang.code
-                      ? "bg-primary/15 text-primary"
-                      : "text-sidebar-foreground/60 hover:text-sidebar-foreground"
-                  )}
-                >
+              {LANGS.map((lang) =>
+          <button
+            key={lang.code}
+            onClick={() => changeLang(lang.code)}
+            className={cn(
+              "px-2 py-0.5 rounded text-[11px] font-medium transition-colors",
+              i18n.language === lang.code ?
+              "bg-primary/15 text-primary" :
+              "text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            )}>
+            
                   {lang.code.toUpperCase()}
                 </button>
-              ))}
+          )}
             </div>
           </div>
         </div>
-      )}
+    }
 
       {/* Footer */}
       <div className={cn("border-t border-sidebar-border space-y-1", collapsed && !isMobile ? "p-1.5" : "p-3")}>
-        <Link
-          to="/settings"
-          className={cn(
-            "flex items-center rounded-lg text-[13px] font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-all",
-            collapsed && !isMobile ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
-          )}
-          title={collapsed ? t("nav.settings") : undefined}
-        >
-          <Settings className="h-4 w-4 shrink-0" />
-          {(!collapsed || isMobile) && t("nav.settings")}
-        </Link>
+        
+
+
+
+
+
+
+
+
+
+      
         <button
-          onClick={() => { logout(); navigate("/login"); }}
-          className={cn(
-            "flex w-full items-center rounded-lg text-[13px] font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-destructive transition-all",
-            collapsed && !isMobile ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
-          )}
-          title={collapsed ? t("nav.logout") : undefined}
-        >
+        onClick={() => {logout();navigate("/login");}}
+        className={cn(
+          "flex w-full items-center rounded-lg text-[13px] font-medium text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-destructive transition-all",
+          collapsed && !isMobile ? "justify-center p-2.5" : "gap-3 px-3 py-2.5"
+        )}
+        title={collapsed ? t("nav.logout") : undefined}>
+        
           <LogOut className="h-4 w-4 shrink-0" />
           {(!collapsed || isMobile) && t("nav.logout")}
         </button>
       </div>
-    </>
-  );
+    </>;
+
 
   return (
     <>
       {/* Mobile hamburger button */}
-      {isMobile && (
-        <button
-          onClick={() => setMobileOpen(true)}
-          className="fixed top-3 left-3 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-background border border-border shadow-sm md:hidden"
-          aria-label="Open menu"
-        >
+      {isMobile &&
+      <button
+        onClick={() => setMobileOpen(true)}
+        className="fixed top-3 left-3 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-background border border-border shadow-sm md:hidden"
+        aria-label="Open menu">
+        
           <Menu className="h-5 w-5" />
         </button>
-      )}
+      }
 
       {/* Mobile overlay */}
-      {isMobile && mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={() => setMobileOpen(false)}
-        />
-      )}
+      {isMobile && mobileOpen &&
+      <div
+        className="fixed inset-0 z-40 bg-black/50 md:hidden"
+        onClick={() => setMobileOpen(false)} />
+
+      }
 
       {/* Sidebar */}
       <aside
         className={cn(
           "fixed left-0 top-0 z-50 flex h-screen flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300",
-          isMobile ? (mobileOpen ? "w-64" : "w-64 -translate-x-full") : (collapsed ? "w-16" : "w-64")
-        )}
-      >
+          isMobile ? mobileOpen ? "w-64" : "w-64 -translate-x-full" : collapsed ? "w-16" : "w-64"
+        )}>
+        
         {sidebarContent}
       </aside>
-    </>
-  );
+    </>);
+
 }

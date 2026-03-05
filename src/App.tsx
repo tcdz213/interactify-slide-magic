@@ -1,4 +1,5 @@
 import { Suspense, lazy } from "react";
+import { Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -90,6 +91,10 @@ const CurrencyRatesPage = lazy(() => import("./pages/settings/CurrencyRatesPage"
 const TaxConfigPage = lazy(() => import("./pages/settings/TaxConfigPage"));
 const ChartOfAccountsPage = lazy(() => import("./pages/accounting/ChartOfAccountsPage"));
 const BudgetCostCentersPage = lazy(() => import("./pages/accounting/BudgetCostCentersPage"));
+const MatchExceptionsPage = lazy(() => import("./pages/wms/MatchExceptionsPage"));
+const GrniReportPage = lazy(() => import("./pages/accounting/GrniReportPage"));
+const PaymentRunsPage = lazy(() => import("./pages/accounting/PaymentRunsPage"));
+const BankReconciliationPage = lazy(() => import("./pages/accounting/BankReconciliationPage"));
 
 // Mobile Sales App screens
 const MobileLayout = lazy(() => import("./mobile/components/MobileLayout"));
@@ -255,6 +260,7 @@ const App = () => (
                       <Route path="/settings/location-types" element={<LocationTypesPage />} />
                       <Route path="/settings/integrations" element={<IntegrationsPage />} />
                       <Route path="/wms/supplier-contracts" element={<SupplierContractsPage />} />
+                      <Route path="/wms/match-exceptions" element={<MatchExceptionsPage />} />
                       <Route path="/sales/orders" element={<OrdersPage />} />
                       <Route path="/sales/customers" element={<CustomersPage />} />
                       <Route path="/sales/customers/:id" element={<CustomerDetailPage />} />
@@ -267,10 +273,14 @@ const App = () => (
                         <Route path="/accounting/reports" element={<AccountingReportsPage />} />
                         <Route path="/accounting/chart-of-accounts" element={<ChartOfAccountsPage />} />
                         <Route path="/accounting/budgets" element={<BudgetCostCentersPage />} />
+                        <Route path="/accounting/grni" element={<GrniReportPage />} />
+                        <Route path="/accounting/payment-runs" element={<PaymentRunsPage />} />
+                        <Route path="/accounting/bank-reconciliation" element={<BankReconciliationPage />} />
                       </Route>
                       <Route path="/bi/performance" element={<PerformancePage />} />
                       <Route path="/bi/alerts" element={<AlertsPage />} />
                       {/* Admin-protected settings routes */}
+                      <Route path="/settings" element={<Navigate to="/settings/users" replace />} />
                       <Route element={<AdminRoute />}>
                         <Route path="/settings/users" element={<UserManagementPage />} />
                         <Route path="/settings/system" element={<SystemSettingsPage />} />

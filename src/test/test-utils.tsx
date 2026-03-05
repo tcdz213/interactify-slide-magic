@@ -1,26 +1,18 @@
-import React, { type ReactElement } from "react";
-import { render, type RenderOptions, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { render, type RenderOptions } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { WMSDataProvider } from "@/contexts/WMSDataContext";
-import { FinancialTrackingProvider } from "@/contexts/FinancialTrackingContext";
-import { MemoryRouter } from "react-router-dom";
+import type { ReactElement, ReactNode } from "react";
 
-function AllProviders({ children }: { children: React.ReactNode }) {
+function AllProviders({ children }: { children: ReactNode }) {
   return (
-    <MemoryRouter>
-      <AuthProvider>
-        <WMSDataProvider>
-          <FinancialTrackingProvider>
-            {children}
-          </FinancialTrackingProvider>
-        </WMSDataProvider>
-      </AuthProvider>
-    </MemoryRouter>
+    <BrowserRouter>
+      <AuthProvider>{children}</AuthProvider>
+    </BrowserRouter>
   );
 }
 
-function customRender(ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) {
-  return render(ui, { wrapper: AllProviders, ...options });
-}
+const customRender = (ui: ReactElement, options?: Omit<RenderOptions, "wrapper">) =>
+  render(ui, { wrapper: AllProviders, ...options });
 
-export { customRender as render, screen, fireEvent, waitFor, within };
+export { customRender as render };
+export * from "@testing-library/react";

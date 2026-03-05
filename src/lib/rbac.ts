@@ -129,7 +129,7 @@ const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     },
     WarehouseManager: {
         canApprove: ["grn", "stockAdjustment", "stockTransfer", "cycleCount"],
-        canCreate: ["grn", "stockAdjustment", "stockTransfer", "cycleCount"],
+        canCreate: ["grn", "stockAdjustment", "stockTransfer", "cycleCount", "purchaseOrder"],
         canRead: ["grn", "stockAdjustment", "stockTransfer", "cycleCount", "purchaseOrder"],
         accessScope: "assigned",
         canApproveFinancial: false,

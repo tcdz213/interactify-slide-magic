@@ -5,6 +5,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import AppSidebar from "./AppSidebar";
 import Breadcrumbs from "./Breadcrumbs";
 import { Bell, Search, RotateCcw, LogOut, Package, ShoppingCart, Users, FileText, Building2 } from "lucide-react";
+import NotificationCenter from "./NotificationCenter";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -279,7 +280,7 @@ export default function AppLayout() {
           <GlobalSearch />
           <div className="flex items-center gap-3">
             <ResetDataButton />
-            <NotificationsPopover />
+            <NotificationCenter />
 
             {/* User identity area */}
             <TooltipProvider delayDuration={200}>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Users, Eye, Plus, Star, Search, Phone, Mail, MapPin, Building2, CreditCard, Landmark, ShieldAlert } from "lucide-react";
+import { Users, Eye, Plus, Star, Search, Phone, Mail, MapPin, Building2, CreditCard, Landmark, ShieldAlert, Download, Pencil } from "lucide-react";
 import { currency } from "@/data/mockData";
 import type { Vendor } from "@/data/mockData";
 import StatusBadge from "@/components/StatusBadge";
@@ -10,6 +10,7 @@ import { useWMSData } from "@/contexts/WMSDataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { FormField, formInputClass, formSelectClass } from "@/components/ui/form-field";
 import { getRoleLevel } from "@/lib/rbac";
+import { exportToCSV, type ExportColumn } from "@/lib/exportUtils";
 
 function nextVendorId(vendors: Vendor[]): string {
   const nums = vendors.map((v) => parseInt(v.id.replace("V", ""), 10)).filter((n) => !Number.isNaN(n));
@@ -22,7 +23,10 @@ export default function VendorsPage() {
   const { currentUser } = useAuth();
   // Phase 10.2: Only Managers+ (level ≤ 3) can create vendors
   const canCreateVendor = currentUser ? getRoleLevel(currentUser.role) <= 3 : false;
+  const canEditVendor = currentUser ? getRoleLevel(currentUser.role) <= 3 : false;
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
+  const [editForm, setEditForm] = useState({ paymentTerms: "", phone: "", email: "", city: "", bankAccount: "" });
   const [showCreate, setShowCreate] = useState(false);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -61,6 +65,60 @@ export default function VendorsPage() {
     setVendors(prev => prev.map(v => v.id === id ? { ...v, status: (v.status === "Active" ? "On Hold" : "Active") as Vendor["status"] } : v));
   };
 
+  // GAP 2.10: Edit vendor details
+  const openEditVendor = (v: Vendor) => {
+    setEditingVendor(v);
+    setEditForm({
+      paymentTerms: v.paymentTerms ?? "Net_30",
+      phone: v.phone,
+      email: v.email,
+      city: v.city,
+      bankAccount: v.bankAccount ?? "",
+    });
+  };
+
+  const handleEditVendor = () => {
+    if (!editingVendor) return;
+    setVendors(prev => prev.map(v => v.id === editingVendor.id ? {
+      ...v,
+      paymentTerms: editForm.paymentTerms as Vendor["paymentTerms"],
+      phone: editForm.phone,
+      email: editForm.email,
+      city: editForm.city,
+      bankAccount: editForm.bankAccount,
+    } : v));
+    toast({ title: "Fournisseur modifié", description: `${editingVendor.name} — conditions : ${editForm.paymentTerms.replace(/_/g, " ")}` });
+    setEditingVendor(null);
+    // Refresh detail view if open
+    if (selectedVendor?.id === editingVendor.id) {
+      setSelectedVendor(prev => prev ? { ...prev, paymentTerms: editForm.paymentTerms as Vendor["paymentTerms"], phone: editForm.phone, email: editForm.email, city: editForm.city, bankAccount: editForm.bankAccount } : null);
+    }
+  };
+
+  // GAP 2.12: Export vendors CSV
+  const handleExportCSV = () => {
+    const cols: ExportColumn<Vendor>[] = [
+      { key: "id", label: "ID" },
+      { key: "name", label: "Raison sociale" },
+      { key: "contact", label: "Contact" },
+      { key: "email", label: "Email" },
+      { key: "phone", label: "Téléphone" },
+      { key: "city", label: "Ville" },
+      { key: "taxId", label: "NIF" },
+      { key: "status", label: "Statut" },
+      { key: "paymentTerms", label: "Conditions paiement" },
+      { key: "rating", label: "Note" },
+      { key: "totalPOs", label: "Total POs" },
+      { key: "totalValue", label: "CA total" },
+      { key: "avgLeadDays", label: "Délai moyen (j)" },
+      { key: "lastDelivery", label: "Dernière livraison" },
+      { key: "bankAccount", label: "Compte bancaire" },
+      { key: "currencyId", label: "Devise" },
+    ];
+    exportToCSV(filtered, cols, "fournisseurs");
+    toast({ title: "Export CSV", description: `${filtered.length} fournisseur(s) exporté(s).` });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -73,9 +131,12 @@ export default function VendorsPage() {
             <p className="text-sm text-muted-foreground">{vendors.length} fournisseurs enregistrés</p>
           </div>
         </div>
-        {canCreateVendor && (
-          <Button onClick={() => setShowCreate(true)} className="gap-2"><Plus className="h-4 w-4" /> Nouveau fournisseur</Button>
-        )}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExportCSV} className="gap-2"><Download className="h-4 w-4" /> Exporter CSV</Button>
+          {canCreateVendor && (
+            <Button onClick={() => setShowCreate(true)} className="gap-2"><Plus className="h-4 w-4" /> Nouveau fournisseur</Button>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -183,6 +244,15 @@ export default function VendorsPage() {
                   </div>
                 ))}
               </div>
+
+              {/* Edit button for managers+ */}
+              {canEditVendor && (
+                <div className="pt-3 border-t border-border/40">
+                  <Button variant="outline" className="w-full gap-2" onClick={() => { openEditVendor(selectedVendor); setSelectedVendor(null); }}>
+                    <Pencil className="h-4 w-4" /> Modifier ce fournisseur
+                  </Button>
+                </div>
+              )}
             </>
           )}
         </DialogContent>
@@ -251,6 +321,51 @@ export default function VendorsPage() {
               <Plus className="h-4 w-4" /> Créer fournisseur
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {/* ── Edit Dialog (GAP 2.10) ── */}
+      <Dialog open={!!editingVendor} onOpenChange={() => setEditingVendor(null)}>
+        <DialogContent className="max-w-md">
+          {editingVendor && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-3">
+                  <div className="dialog-icon-primary"><Pencil className="h-4 w-4" /></div>
+                  Modifier — {editingVendor.name}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <FormField label="Conditions de paiement">
+                  <select value={editForm.paymentTerms} onChange={e => setEditForm({ ...editForm, paymentTerms: e.target.value })} className={formSelectClass}>
+                    <option value="Comptant">Comptant</option>
+                    <option value="Net_15">Net 15</option>
+                    <option value="Net_30">Net 30</option>
+                    <option value="Net_45">Net 45</option>
+                    <option value="Net_60">Net 60</option>
+                    <option value="30_jours_fin_mois">30j fin de mois</option>
+                  </select>
+                </FormField>
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField label="Téléphone">
+                    <input value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className={formInputClass} />
+                  </FormField>
+                  <FormField label="Ville">
+                    <input value={editForm.city} onChange={e => setEditForm({ ...editForm, city: e.target.value })} className={formInputClass} />
+                  </FormField>
+                </div>
+                <FormField label="Email">
+                  <input type="email" value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className={formInputClass} />
+                </FormField>
+                <FormField label="Compte bancaire (IBAN)">
+                  <input value={editForm.bankAccount} onChange={e => setEditForm({ ...editForm, bankAccount: e.target.value })} className={formInputClass} />
+                </FormField>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditingVendor(null)}>Annuler</Button>
+                <Button onClick={handleEditVendor}>Enregistrer</Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </div>

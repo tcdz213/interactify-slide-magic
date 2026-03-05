@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Ruler, Plus, Pencil, Trash2, Search, AlertTriangle, Download, Upload } from "lucide-react";
+import { Ruler, Plus, Pencil, Trash2, Search, AlertTriangle, Download, Upload, ArrowRightLeft } from "lucide-react";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import type { UnitOfMeasure } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { FormField, formInputClass, formSelectClass } from "@/components/ui/form-field";
 import { toast } from "@/hooks/use-toast";
 import { exportToCSV, type ExportColumn } from "@/lib/exportUtils";
+import { areaPieceM2, piecesForArea } from "@/lib/unitConversion";
 
 const empty: Omit<UnitOfMeasure, "id"> = { name: "", abbreviation: "", type: "Count", unitKind: "PHYSICAL" };
+
+interface QuickConversion { fromAbbr: string; toAbbr: string; factor: number; }
+const emptyQuickConv: QuickConversion = { fromAbbr: "", toAbbr: "", factor: 1 };
 
 export default function UomPage() {
   const { unitsOfMeasure: data, setUnitsOfMeasure: setData, products, setProducts, productUnitConversions, setProductUnitConversions } = useWMSData();
@@ -20,6 +24,8 @@ export default function UomPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<UnitOfMeasure | null>(null);
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importText, setImportText] = useState("");
+  const [showQuickConv, setShowQuickConv] = useState(false);
+  const [quickConv, setQuickConv] = useState<QuickConversion>(emptyQuickConv);
 
   const filtered = useMemo(() => data.filter(u => {
     if ((u as any).isDeleted) return false;
@@ -189,6 +195,32 @@ export default function UomPage() {
     setImportText("");
   };
 
+  // GAP 2.14: Quick inter-UoM conversion creation
+  const handleQuickConversion = () => {
+    if (!quickConv.fromAbbr || !quickConv.toAbbr || quickConv.factor <= 0) return;
+    if (quickConv.fromAbbr === quickConv.toAbbr) {
+      toast({ title: "Erreur", description: "Les deux UDM doivent être différentes.", variant: "destructive" });
+      return;
+    }
+    const fromUom = data.find(u => u.abbreviation === quickConv.fromAbbr);
+    const toUom = data.find(u => u.abbreviation === quickConv.toAbbr);
+    if (!fromUom || !toUom) return;
+    // Check if this derived relationship already exists
+    const exists = data.some(u => u.abbreviation === quickConv.fromAbbr && u.baseUnit === quickConv.toAbbr);
+    if (exists) {
+      toast({ title: "Existe déjà", description: `${fromUom.name} est déjà dérivée de ${toUom.name}.`, variant: "destructive" });
+      return;
+    }
+    // Update the "from" UoM to set its base unit and factor
+    setData(prev => prev.map(u => u.abbreviation === quickConv.fromAbbr
+      ? { ...u, baseUnit: quickConv.toAbbr, conversionFactor: quickConv.factor }
+      : u
+    ));
+    toast({ title: "Conversion enregistrée", description: `1 ${fromUom.name} = ${quickConv.factor} ${toUom.name}` });
+    setQuickConv(emptyQuickConv);
+    setShowQuickConv(false);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
@@ -199,6 +231,7 @@ export default function UomPage() {
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1.5"><Download className="h-3.5 w-3.5" /> Export CSV</Button>
           <Button variant="outline" size="sm" onClick={() => setShowImportDialog(true)} className="gap-1.5"><Upload className="h-3.5 w-3.5" /> Import CSV</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowQuickConv(true)} className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Conversion</Button>
           <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> Nouvelle UDM</Button>
         </div>
       </div>
@@ -250,6 +283,36 @@ export default function UomPage() {
           </tbody>
         </table>
         {filtered.length === 0 && <div className="py-12 text-center text-muted-foreground">Aucune UDM trouvée.</div>}
+      </div>
+
+      {/* GAP 2.15: m² Calculator */}
+      <div className="glass-card rounded-xl p-4 space-y-3">
+        <h3 className="text-sm font-semibold flex items-center gap-2">
+          <Ruler className="h-4 w-4 text-primary" />
+          Calculateur m² → Pièces
+        </h3>
+        <p className="text-xs text-muted-foreground">Pour les produits surfaciques (carrelage, panneaux). Entrez les dimensions d'une pièce.</p>
+        <div className="flex items-end gap-3 flex-wrap">
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Largeur (cm)</label>
+            <input type="number" min="1" className={`${formInputClass} w-24`} placeholder="50" id="calc-w" />
+          </div>
+          <span className="pb-2 text-muted-foreground">×</span>
+          <div>
+            <label className="text-xs font-medium text-muted-foreground">Hauteur (cm)</label>
+            <input type="number" min="1" className={`${formInputClass} w-24`} placeholder="50" id="calc-h" />
+          </div>
+          <Button variant="outline" size="sm" onClick={() => {
+            const w = +(document.getElementById("calc-w") as HTMLInputElement)?.value || 0;
+            const h = +(document.getElementById("calc-h") as HTMLInputElement)?.value || 0;
+            if (w <= 0 || h <= 0) { toast({ title: "Erreur", description: "Dimensions invalides", variant: "destructive" }); return; }
+            const area = areaPieceM2(w, h);
+            const pieces = piecesForArea(1, w, h, false);
+            toast({ title: `${w}×${h} cm = ${area.toFixed(4)} m²/pièce`, description: `1 m² = ${pieces} pièces (arrondi supérieur)` });
+          }}>
+            Calculer
+          </Button>
+        </div>
       </div>
 
       {/* Create / Edit Dialog */}
@@ -334,6 +397,40 @@ export default function UomPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => { setShowImportDialog(false); setImportText(""); }}>Annuler</Button>
             <Button onClick={handleImportCSV} disabled={!importText.trim()}>Importer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* GAP 2.14: Quick Conversion Dialog */}
+      <Dialog open={showQuickConv} onOpenChange={setShowQuickConv}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><ArrowRightLeft className="h-5 w-5 text-primary" /> Conversion inter-UDM</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">Définir qu'une UDM se convertit en une autre (ex: 1 Palette = 50 Sacs).</p>
+          <div className="space-y-4">
+            <FormField label="UDM source (la plus grande)" required>
+              <select className={formSelectClass} value={quickConv.fromAbbr} onChange={e => setQuickConv({ ...quickConv, fromAbbr: e.target.value })}>
+                <option value="">Sélectionner…</option>
+                {data.filter(u => !(u as any).isDeleted).map(u => <option key={u.id} value={u.abbreviation}>{u.name} ({u.abbreviation})</option>)}
+              </select>
+            </FormField>
+            <FormField label="Facteur de conversion" required hint="1 source = X destination">
+              <input type="number" step="0.001" min="0.001" className={formInputClass} value={quickConv.factor || ""} onChange={e => setQuickConv({ ...quickConv, factor: +e.target.value })} placeholder="ex: 50" />
+            </FormField>
+            <FormField label="UDM destination (unité de base)" required>
+              <select className={formSelectClass} value={quickConv.toAbbr} onChange={e => setQuickConv({ ...quickConv, toAbbr: e.target.value })}>
+                <option value="">Sélectionner…</option>
+                {data.filter(u => !(u as any).isDeleted && u.abbreviation !== quickConv.fromAbbr).map(u => <option key={u.id} value={u.abbreviation}>{u.name} ({u.abbreviation})</option>)}
+              </select>
+            </FormField>
+            {quickConv.fromAbbr && quickConv.toAbbr && quickConv.factor > 0 && (
+              <div className="rounded-lg bg-accent/10 border border-accent/30 p-3 text-sm font-medium text-center">
+                1 {data.find(u => u.abbreviation === quickConv.fromAbbr)?.name} = <strong>{quickConv.factor}</strong> {data.find(u => u.abbreviation === quickConv.toAbbr)?.name}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowQuickConv(false); setQuickConv(emptyQuickConv); }}>Annuler</Button>
+            <Button onClick={handleQuickConversion} disabled={!quickConv.fromAbbr || !quickConv.toAbbr || quickConv.factor <= 0}>Enregistrer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

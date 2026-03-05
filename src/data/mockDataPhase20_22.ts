@@ -105,6 +105,8 @@ export interface PutawayRule {
   notes: string;
 }
 
+export type NotificationChannel = "InApp" | "Email" | "SMS";
+
 export interface AlertRule {
   id: string;
   name: string;
@@ -113,7 +115,8 @@ export interface AlertRule {
   metric: "StockLevel" | "ExpiryDate" | "Temperature" | "OrderDelay" | "CycleCountVariance" | "Custom";
   condition: "Below" | "Above" | "Equals" | "Within" | "Overdue";
   threshold: string;
-  channel: "InApp" | "Email" | "Both";
+  channel: "InApp" | "Email" | "Both"; // legacy compat
+  channels: NotificationChannel[];
   recipients: string;
   isActive: boolean;
   lastTriggered?: string;
@@ -151,11 +154,11 @@ export const putawayRules: PutawayRule[] = [
 ];
 
 export const alertRules: AlertRule[] = [
-  { id: "ALR-001", name: "Stock bas — Ciment", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", metric: "StockLevel", condition: "Below", threshold: "500", channel: "Both", recipients: "Karim Ben Ali, Ahmed Mansour", isActive: true, lastTriggered: "2026-02-22", triggerCount: 5, createdBy: "Karim Ben Ali", createdAt: "2025-12-01", notes: "Saison haute BTP — seuil critique" },
-  { id: "ALR-002", name: "DLC < 30 jours", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", metric: "ExpiryDate", condition: "Within", threshold: "30 jours", channel: "Both", recipients: "Samir Rafik, Mourad Ziani", isActive: true, lastTriggered: "2026-02-24", triggerCount: 18, createdBy: "Samir Rafik", createdAt: "2025-12-01", notes: "Critique HACCP — FEFO obligatoire" },
-  { id: "ALR-003", name: "Variance comptage > 2%", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", metric: "CycleCountVariance", condition: "Above", threshold: "2%", channel: "Email", recipients: "Hassan Nour, Ahmed Mansour", isActive: true, lastTriggered: "2026-02-15", triggerCount: 1, createdBy: "Hassan Nour", createdAt: "2026-01-01", notes: "Enquête obligatoire — high-value items" },
-  { id: "ALR-004", name: "Retard commande > 48h", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", metric: "OrderDelay", condition: "Overdue", threshold: "48h", channel: "Both", recipients: "Ahmed Mansour", isActive: true, triggerCount: 2, createdBy: "Ahmed Mansour", createdAt: "2026-01-05", notes: "Impact chantier = pénalités" },
-  { id: "ALR-005", name: "Température chambre froide", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", metric: "Temperature", condition: "Above", threshold: "8°C", channel: "Both", recipients: "Samir Rafik", isActive: true, lastTriggered: "2026-02-10", triggerCount: 3, createdBy: "Samir Rafik", createdAt: "2025-12-15", notes: "Alerte critique — rupture chaîne du froid" },
+  { id: "ALR-001", name: "Stock bas — Ciment", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", metric: "StockLevel", condition: "Below", threshold: "500", channel: "Both", channels: ["InApp", "Email", "SMS"], recipients: "Karim Ben Ali, Ahmed Mansour", isActive: true, lastTriggered: "2026-02-22", triggerCount: 5, createdBy: "Karim Ben Ali", createdAt: "2025-12-01", notes: "Saison haute BTP — seuil critique" },
+  { id: "ALR-002", name: "DLC < 30 jours", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", metric: "ExpiryDate", condition: "Within", threshold: "30 jours", channel: "Both", channels: ["InApp", "Email"], recipients: "Samir Rafik, Mourad Ziani", isActive: true, lastTriggered: "2026-02-24", triggerCount: 18, createdBy: "Samir Rafik", createdAt: "2025-12-01", notes: "Critique HACCP — FEFO obligatoire" },
+  { id: "ALR-003", name: "Variance comptage > 2%", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", metric: "CycleCountVariance", condition: "Above", threshold: "2%", channel: "Email", channels: ["Email"], recipients: "Hassan Nour, Ahmed Mansour", isActive: true, lastTriggered: "2026-02-15", triggerCount: 1, createdBy: "Hassan Nour", createdAt: "2026-01-01", notes: "Enquête obligatoire — high-value items" },
+  { id: "ALR-004", name: "Retard commande > 48h", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", metric: "OrderDelay", condition: "Overdue", threshold: "48h", channel: "Both", channels: ["InApp", "Email"], recipients: "Ahmed Mansour", isActive: true, triggerCount: 2, createdBy: "Ahmed Mansour", createdAt: "2026-01-05", notes: "Impact chantier = pénalités" },
+  { id: "ALR-005", name: "Température chambre froide", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", metric: "Temperature", condition: "Above", threshold: "8°C", channel: "Both", channels: ["InApp", "Email", "SMS"], recipients: "Samir Rafik", isActive: true, lastTriggered: "2026-02-10", triggerCount: 3, createdBy: "Samir Rafik", createdAt: "2025-12-15", notes: "Alerte critique — rupture chaîne du froid" },
 ];
 
 export const locationTypes: LocationType[] = [
