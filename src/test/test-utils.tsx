@@ -1,12 +1,18 @@
 import { render, type RenderOptions } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { WMSDataProvider } from "@/contexts/WMSDataContext";
+import { FinancialTrackingProvider } from "@/contexts/FinancialTrackingContext";
 import type { ReactElement, ReactNode } from "react";
 
 function AllProviders({ children }: { children: ReactNode }) {
   return (
     <BrowserRouter>
-      <AuthProvider>{children}</AuthProvider>
+      <AuthProvider>
+        <WMSDataProvider>
+          <FinancialTrackingProvider>{children}</FinancialTrackingProvider>
+        </WMSDataProvider>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
