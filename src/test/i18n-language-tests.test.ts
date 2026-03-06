@@ -196,11 +196,11 @@ describe("T5 — Français — qualité du contenu", () => {
   });
 
   it("les statuts commande sont en français", () => {
-    expect(fr.orders.status.draft).toBe("Brouillon");
-    expect(fr.orders.status.approved).toBe("Approuvée");
-    expect(fr.orders.status.delivered).toBe("Livrée");
-    expect(fr.orders.status.invoiced).toBe("Facturée");
-    expect(fr.orders.status.cancelled).toBe("Annulée");
+    expect(fr.orders.statusDraft).toBe("Brouillon");
+    expect(fr.orders.statusApproved).toBe("Approuvée");
+    expect(fr.orders.statusDelivered).toBe("Livrée");
+    expect(fr.orders.statusInvoiced).toBe("Facturée");
+    expect(fr.orders.statusCancelled).toBe("Annulée");
   });
 
   it("pas de mots anglais non techniques dans les labels FR", () => {
@@ -232,10 +232,10 @@ describe("T6 — Anglais — cohérence du contenu", () => {
   });
 
   it("les statuts commande sont en anglais", () => {
-    expect(en.orders.status.draft).toBe("Draft");
-    expect(en.orders.status.approved).toBe("Approved");
-    expect(en.orders.status.delivered).toBe("Delivered");
-    expect(en.orders.status.invoiced).toBe("Invoiced");
+    expect(en.orders.statusDraft).toBe("Draft");
+    expect(en.orders.statusApproved).toBe("Approved");
+    expect(en.orders.statusDelivered).toBe("Delivered");
+    expect(en.orders.statusInvoiced).toBe("Invoiced");
   });
 });
 
@@ -265,13 +265,13 @@ describe("T7 — Sections métier complètes", () => {
     expect(commonKeys.length).toBeGreaterThanOrEqual(50);
   });
 
-  it("orders.status contient ≥8 statuts", () => {
-    const statusKeys = Object.keys(fr.orders.status);
+  it("orders contient ≥8 clés de statut", () => {
+    const statusKeys = Object.keys(fr.orders).filter(k => k.startsWith("status"));
     expect(statusKeys.length).toBeGreaterThanOrEqual(8);
   });
 
-  it("orders.channels contient ≥3 canaux", () => {
-    const channelKeys = Object.keys(fr.orders.channels);
+  it("orders contient ≥3 clés de canal", () => {
+    const channelKeys = Object.keys(fr.orders).filter(k => k.startsWith("channel"));
     expect(channelKeys.length).toBeGreaterThanOrEqual(3);
   });
 });
