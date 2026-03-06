@@ -4,6 +4,7 @@
  */
 import { useState, useMemo } from "react";
 import { Warehouse, Package, ArrowLeftRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useUnitConversion } from "@/hooks/useUnitConversion";
 import { fromBaseUnits } from "@/lib/unitConversion";
@@ -19,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 type UnitMode = "stock" | "base" | "all";
 
 export default function WarehouseStockDashboard() {
+  const { t } = useTranslation();
   const { products, inventory, warehouses, productUnitConversions } = useWMSData();
   const { getStockUnitFactor, getBaseUnitAbbr, getUnitsForProduct } = useUnitConversion();
 
@@ -110,25 +112,23 @@ export default function WarehouseStockDashboard() {
             <Warehouse className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Tableau de bord Stock</h1>
-            <p className="text-sm text-muted-foreground">
-              Vue multi-unités du stock par entrepôt
-            </p>
+            <h1 className="text-xl font-bold tracking-tight">{t("stockDashboard.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("stockDashboard.subtitle")}</p>
           </div>
         </div>
 
         {/* Unit mode toggle */}
         <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground font-medium">Affichage :</span>
+          <span className="text-xs text-muted-foreground font-medium">{t("stockDashboard.display")} :</span>
           <ToggleGroup type="single" value={unitMode} onValueChange={(v) => v && setUnitMode(v as UnitMode)} variant="outline" size="sm">
             <ToggleGroupItem value="stock" className="text-xs gap-1">
-              <Package className="h-3.5 w-3.5" /> Unité stock
+              <Package className="h-3.5 w-3.5" /> {t("stockDashboard.stockUnit")}
             </ToggleGroupItem>
             <ToggleGroupItem value="base" className="text-xs gap-1">
-              <ArrowLeftRight className="h-3.5 w-3.5" /> Unité base
+              <ArrowLeftRight className="h-3.5 w-3.5" /> {t("stockDashboard.baseUnit")}
             </ToggleGroupItem>
             <ToggleGroupItem value="all" className="text-xs gap-1">
-              Toutes
+              {t("stockDashboard.allUnits")}
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -137,19 +137,19 @@ export default function WarehouseStockDashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Produits en stock</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("stockDashboard.productsInStock")}</p>
           <p className="text-xl font-semibold">{totalProducts}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Lignes stock</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("stockDashboard.stockLines")}</p>
           <p className="text-xl font-semibold">{rows.length}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Stock critique</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("stockDashboard.criticalStock")}</p>
           <p className="text-xl font-semibold text-destructive">{criticalCount}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Valeur totale</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("stockDashboard.totalValue")}</p>
           <p className="text-xl font-semibold">{(totalBaseValue / 1_000_000).toFixed(1)} M DA</p>
         </div>
       </div>
@@ -157,17 +157,17 @@ export default function WarehouseStockDashboard() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <Input
-          placeholder="Rechercher produit…"
+          placeholder={t("stockDashboard.searchProduct")}
           value={search}
           onChange={e => setSearch(e.target.value)}
           className="max-w-xs h-9"
         />
         <Select value={selectedWh} onValueChange={setSelectedWh}>
           <SelectTrigger className="w-64 h-9">
-            <SelectValue placeholder="Entrepôt" />
+            <SelectValue placeholder={t("common.warehouse")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les entrepôts</SelectItem>
+            <SelectItem value="all">{t("stockDashboard.allWarehouses")}</SelectItem>
             {warehouses.map(w => (
               <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
             ))}
@@ -181,19 +181,19 @@ export default function WarehouseStockDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[180px]">Produit</TableHead>
-                <TableHead>Entrepôt</TableHead>
-                {unitMode === "stock" && <TableHead className="text-right">Qté (Stock)</TableHead>}
-                {unitMode === "base" && <TableHead className="text-right">Qté (Base)</TableHead>}
+                <TableHead className="min-w-[180px]">{t("stockDashboard.colProduct")}</TableHead>
+                <TableHead>{t("stockDashboard.colWarehouse")}</TableHead>
+                {unitMode === "stock" && <TableHead className="text-right">{t("stockDashboard.colQtyStock")}</TableHead>}
+                {unitMode === "base" && <TableHead className="text-right">{t("stockDashboard.colQtyBase")}</TableHead>}
                 {unitMode === "all" && (
                   <>
-                    <TableHead className="text-right">Qté Stock</TableHead>
-                    <TableHead className="text-right">Qté Base</TableHead>
-                    <TableHead>Autres unités</TableHead>
+                    <TableHead className="text-right">{t("stockDashboard.colQtyStockShort")}</TableHead>
+                    <TableHead className="text-right">{t("stockDashboard.colQtyBaseShort")}</TableHead>
+                    <TableHead>{t("stockDashboard.colOtherUnits")}</TableHead>
                   </>
                 )}
-                <TableHead className="text-right">Disponible</TableHead>
-                <TableHead className="w-[120px]">Niveau</TableHead>
+                <TableHead className="text-right">{t("stockDashboard.colAvailable")}</TableHead>
+                <TableHead className="w-[120px]">{t("stockDashboard.colLevel")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -263,7 +263,7 @@ export default function WarehouseStockDashboard() {
                     <div className="flex items-center gap-2">
                       <Progress value={row.fillPct} className="h-2 w-16" />
                       {row.isCritical && (
-                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Critique</Badge>
+                        <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{t("stockDashboard.critical")}</Badge>
                       )}
                     </div>
                   </TableCell>
@@ -272,7 +272,7 @@ export default function WarehouseStockDashboard() {
               {rows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={unitMode === "all" ? 7 : 5} className="text-center py-8 text-muted-foreground">
-                    Aucun stock trouvé
+                    {t("stockDashboard.noStock")}
                   </TableCell>
                 </TableRow>
               )}

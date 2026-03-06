@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Truck, Search, FileText, CheckCircle2, Undo2, Plus, Download } from "lucide-react";
+import { Truck, Search, FileText, CheckCircle2, Undo2, Download } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { currency } from "@/data/mockData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +16,7 @@ import ExportDialog from "@/components/ExportDialog";
 import type { ExportColumn } from "@/lib/exportUtils";
 
 export default function ShippingPage() {
+  const { t } = useTranslation();
   const { salesOrders, setSalesOrders, deliveryTrips, carriers } = useWMSData();
   const [search, setSearch] = useState("");
   const [revertTarget, setRevertTarget] = useState<string | null>(null);
@@ -47,18 +49,18 @@ export default function ShippingPage() {
     setSalesOrders((prev) =>
       prev.map((o) => o.id === orderId ? { ...o, status: "Shipped" as const } : o)
     );
-    toast({ title: "Commande expédiée", description: `${orderId} — BL généré` });
+    toast({ title: t("shippingPage.orderShipped"), description: t("shippingPage.orderShippedDesc", { id: orderId }) });
   };
 
   const confirmDelivery = (orderId: string) => {
     setSalesOrders((prev) =>
       prev.map((o) => o.id === orderId ? { ...o, status: "Delivered" as const } : o)
     );
-    toast({ title: "Livraison confirmée", description: `${orderId} — Delivered` });
+    toast({ title: t("shippingPage.deliveryConfirmed"), description: t("shippingPage.deliveryConfirmedDesc", { id: orderId }) });
   };
 
   const generateBL = (orderId: string) => {
-    toast({ title: "Bon de livraison", description: `BL généré pour ${orderId}` });
+    toast({ title: t("shippingPage.blGenerated"), description: t("shippingPage.blGeneratedDesc", { id: orderId }) });
   };
 
   const revertShipment = () => {
@@ -66,7 +68,7 @@ export default function ShippingPage() {
     setSalesOrders((prev) =>
       prev.map((o) => o.id === revertTarget ? { ...o, status: "Packed" as const } : o)
     );
-    toast({ title: "Expédition annulée", description: `${revertTarget} — retour en Packed` });
+    toast({ title: t("shippingPage.shipmentReverted"), description: t("shippingPage.shipmentRevertedDesc", { id: revertTarget }) });
     setRevertTarget(null);
   };
 
@@ -87,28 +89,28 @@ export default function ShippingPage() {
             <Truck className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Expédition / Shipping</h1>
-            <p className="text-sm text-muted-foreground">BL, transporteur, tracking, confirmation livraison</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("shippingPage.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("shippingPage.subtitle")}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}><Download className="h-4 w-4 mr-1" /> Exporter</Button>
+        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)}><Download className="h-4 w-4 mr-1" /> {t("shippingPage.export")}</Button>
       </div>
 
       <div className="grid grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">À expédier</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("shippingPage.toShip")}</p>
           <p className="text-xl font-semibold">{stats.toShip}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">En transit</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("shippingPage.inTransit")}</p>
           <p className="text-xl font-semibold text-warning">{stats.inTransit}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Livrées</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("shippingPage.delivered")}</p>
           <p className="text-xl font-semibold text-success">{stats.delivered}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Valeur totale</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("shippingPage.totalValue")}</p>
           <p className="text-xl font-semibold text-primary">{currency(stats.value)}</p>
         </div>
       </div>
@@ -116,7 +118,7 @@ export default function ShippingPage() {
       <div className="relative max-w-xs">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher…"
+          placeholder={t("shippingPage.searchPlaceholder")}
           className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-4 text-sm" />
       </div>
 
@@ -124,19 +126,19 @@ export default function ShippingPage() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <Truck className="h-12 w-12 mb-3 opacity-50" />
-            <p className="font-medium">Aucune commande à expédier.</p>
+            <p className="font-medium">{t("shippingPage.noOrders")}</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Commande</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Client</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Livraison</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Transporteur</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Total</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Statut</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("shippingPage.colOrder")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("shippingPage.colClient")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("shippingPage.colDelivery")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("shippingPage.colCarrier")}</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("shippingPage.colTotal")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("shippingPage.colStatus")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("shippingPage.colActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -154,11 +156,11 @@ export default function ShippingPage() {
                           setSalesOrders((prev) =>
                             prev.map((x) => x.id === o.id ? { ...x, carrierId: val, carrierName: carrier?.name } as any : x)
                           );
-                          toast({ title: "Transporteur assigné", description: `${carrier?.name} → ${o.id}` });
+                          toast({ title: t("shippingPage.carrierAssigned"), description: t("shippingPage.carrierAssignedDesc", { carrier: carrier?.name, id: o.id }) });
                         }}
                       >
                         <SelectTrigger className="h-7 w-[140px] text-xs">
-                          <SelectValue placeholder="Assigner…" />
+                          <SelectValue placeholder={t("shippingPage.assign")} />
                         </SelectTrigger>
                         <SelectContent>
                           {carriers.filter((c: any) => c.status === "Active").map((c: any) => (
@@ -181,17 +183,17 @@ export default function ShippingPage() {
                       {o.status === "Packed" && (
                         <>
                           <Button variant="ghost" size="sm" onClick={() => generateBL(o.id)}>
-                            <FileText className="h-3 w-3 mr-1" /> BL
+                            <FileText className="h-3 w-3 mr-1" /> {t("shippingPage.bl")}
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => shipOrder(o.id)}>
-                            <Truck className="h-3 w-3 mr-1" /> Expédier
+                            <Truck className="h-3 w-3 mr-1" /> {t("shippingPage.ship")}
                           </Button>
                         </>
                       )}
                       {o.status === "Shipped" && (
                         <>
                           <Button variant="outline" size="sm" onClick={() => confirmDelivery(o.id)}>
-                            <CheckCircle2 className="h-3 w-3 mr-1" /> Livré
+                            <CheckCircle2 className="h-3 w-3 mr-1" /> {t("shippingPage.deliveredLabel")}
                           </Button>
                           <Button variant="ghost" size="sm" className="text-destructive" onClick={() => setRevertTarget(o.id)}>
                             <Undo2 className="h-3 w-3" />
@@ -199,7 +201,7 @@ export default function ShippingPage() {
                         </>
                       )}
                       {o.status === "Delivered" && (
-                        <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Livré</span>
+                        <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {t("shippingPage.deliveredLabel")}</span>
                       )}
                     </div>
                   </td>
@@ -210,36 +212,34 @@ export default function ShippingPage() {
         )}
       </div>
 
-      {/* Carrier summary */}
       <div className="glass-card rounded-xl p-4 border border-border/60">
-        <h2 className="text-sm font-semibold mb-3">Transporteurs disponibles</h2>
+        <h2 className="text-sm font-semibold mb-3">{t("shippingPage.availableCarriers")}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {carriers.filter((c: any) => c.status === "Active").map((c: any) => (
             <div key={c.id} className="rounded-lg border border-border/40 p-3 text-xs">
               <p className="font-medium">{c.name}</p>
-              <p className="text-muted-foreground">{c.city} — {c.vehicleCount} véhicules</p>
+              <p className="text-muted-foreground">{c.city} — {c.vehicleCount} {t("shippingPage.vehicles")}</p>
               <p className="text-muted-foreground">★ {c.rating}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Delivery trips preview */}
       <div className="glass-card rounded-xl p-4 border border-border/60">
-        <h2 className="text-sm font-semibold mb-2">Tournées de livraison</h2>
+        <h2 className="text-sm font-semibold mb-2">{t("shippingPage.deliveryTrips")}</h2>
         {deliveryTrips.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Aucune tournée.</p>
+          <p className="text-xs text-muted-foreground">{t("shippingPage.noTrips")}</p>
         ) : (
           <div className="grid grid-cols-3 gap-2 text-xs">
-            {deliveryTrips.slice(0, 3).map((t: any) => (
-              <div key={t.id} className="rounded-lg border border-border/60 bg-muted/40 p-2">
-                <div className="font-mono text-[11px] mb-1">{t.id}</div>
+            {deliveryTrips.slice(0, 3).map((trip: any) => (
+              <div key={trip.id} className="rounded-lg border border-border/60 bg-muted/40 p-2">
+                <div className="font-mono text-[11px] mb-1">{trip.id}</div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">{t.driverName}</span>
-                  <StatusBadge status={t.status} />
+                  <span className="text-muted-foreground">{trip.driverName}</span>
+                  <StatusBadge status={trip.status} />
                 </div>
                 <div className="text-muted-foreground mt-0.5">
-                  {t.completedStops}/{t.totalStops} arrêts · {t.zone}
+                  {trip.completedStops}/{trip.totalStops} {t("shippingPage.stops")} · {trip.zone}
                 </div>
               </div>
             ))}
@@ -247,18 +247,15 @@ export default function ShippingPage() {
         )}
       </div>
 
-      {/* Revert shipment confirm */}
       <AlertDialog open={!!revertTarget} onOpenChange={(o) => !o && setRevertTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Annuler l'expédition ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              La commande {revertTarget} sera remise en statut "Packed".
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("shippingPage.revertTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("shippingPage.revertMsg", { id: revertTarget })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Non</AlertDialogCancel>
-            <AlertDialogAction onClick={revertShipment}>Oui, annuler</AlertDialogAction>
+            <AlertDialogCancel>{t("shippingPage.revertCancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={revertShipment}>{t("shippingPage.revertConfirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -267,9 +264,9 @@ export default function ShippingPage() {
         open={exportOpen} onOpenChange={setExportOpen}
         data={filtered}
         columns={[
-          { key: "id" as const, label: "Commande" }, { key: "customerName" as const, label: "Client" },
-          { key: "deliveryDate" as const, label: "Livraison" }, { key: "totalAmount" as const, label: "Total" },
-          { key: "status" as const, label: "Statut" },
+          { key: "id" as const, label: t("shippingPage.colOrder") }, { key: "customerName" as const, label: t("shippingPage.colClient") },
+          { key: "deliveryDate" as const, label: t("shippingPage.colDelivery") }, { key: "totalAmount" as const, label: t("shippingPage.colTotal") },
+          { key: "status" as const, label: t("shippingPage.colStatus") },
         ]}
         filename="expedition"
         statusKey="status"

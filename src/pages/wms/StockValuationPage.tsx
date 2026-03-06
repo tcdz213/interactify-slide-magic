@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUnitConversion } from "@/hooks/useUnitConversion";
@@ -21,6 +22,7 @@ const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#f59e0b", "#10b981
 type ValuationMethod = "WAC" | "FIFO" | "LAST_COST";
 
 export default function StockValuationPage() {
+  const { t } = useTranslation();
   const { inventory, products } = useWMSData();
   const { currentUser } = useAuth();
   const { getBaseUnitAbbr, getUnitsForProduct } = useUnitConversion();
@@ -32,14 +34,14 @@ export default function StockValuationPage() {
 
   type ValuationRow = { productId: string; productName: string; sku: string; category: string; totalQty: number; totalValue: number; avgCost: number; fifoCost: number; lastCost: number; items: typeof inventory };
   const valuationExportCols: ExportColumn<ValuationRow>[] = [
-    { key: "productName", label: "Produit" }, { key: "sku", label: "SKU" },
-    { key: "category", label: "Catégorie" }, { key: "totalQty", label: "Qté en stock" },
-    { key: "avgCost", label: "Coût moyen" }, { key: "totalValue", label: "Valeur totale" },
+    { key: "productName", label: t("stockValuation.colProduct") }, { key: "sku", label: t("stockValuation.colSKU") },
+    { key: "category", label: t("stockValuation.colCategory") }, { key: "totalQty", label: t("stockValuation.colQtyInStock") },
+    { key: "avgCost", label: t("stockValuation.colAvgCost") }, { key: "totalValue", label: t("stockValuation.colTotalValue") },
   ];
 
   // Compute valuation per product
   const valuationData = useMemo(() => {
-    const grouped = new Map<string, { productId: string; productName: string; sku: string; category: string; totalQty: number; totalValue: number; avgCost: number; fifoCost: number; lastCost: number; items: typeof inventory }>();
+    const grouped = new Map<string, ValuationRow>();
 
     inventory.forEach((item) => {
       if (warehouseFilter !== "all" && item.warehouseId !== warehouseFilter) return;
@@ -50,9 +52,7 @@ export default function StockValuationPage() {
         existing.totalQty += item.qtyOnHand;
         existing.totalValue += value;
         existing.avgCost = existing.totalQty > 0 ? existing.totalValue / existing.totalQty : 0;
-        // FIFO: use earliest batch cost (approximate via min cost)
         existing.fifoCost = Math.min(existing.fifoCost, item.unitCostAvg);
-        // Last cost: use latest batch cost (approximate via max cost seen)
         existing.lastCost = item.unitCostAvg;
         existing.items.push(item);
       } else {
@@ -71,13 +71,10 @@ export default function StockValuationPage() {
       }
     });
 
-    // Also try to get product-level costs for better FIFO/Last Cost
     const result = Array.from(grouped.values()).map(v => {
       const prod = products.find(p => p.id === v.productId);
       if (prod) {
-        // Last cost = product master unitCost (latest purchase)
         v.lastCost = prod.unitCost ?? v.avgCost;
-        // FIFO approximation: use earliest inventory batch cost or 90% of avg as proxy
         v.fifoCost = Math.min(v.fifoCost, v.avgCost * 0.95);
       }
       return v;
@@ -90,7 +87,6 @@ export default function StockValuationPage() {
     !search || v.productName.toLowerCase().includes(search.toLowerCase()) || v.sku.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Compute value based on selected method
   const getMethodCost = (v: typeof valuationData[0]) => {
     switch (method) {
       case "FIFO": return v.fifoCost;
@@ -104,11 +100,11 @@ export default function StockValuationPage() {
   const totalItems = valuationData.reduce((sum, v) => sum + v.totalQty, 0);
   const uniqueProducts = valuationData.length;
 
-  // WAC total for comparison
   const totalWACValue = valuationData.reduce((sum, v) => sum + v.totalValue, 0);
   const methodDiff = method !== "WAC" ? totalStockValue - totalWACValue : 0;
 
-  // Chart data by category
+  const costMethodLabel = method === "WAC" ? t("stockValuation.costAvg") : method === "FIFO" ? t("stockValuation.costFIFO") : t("stockValuation.costLast");
+
   const categoryData = useMemo(() => {
     const cats = new Map<string, number>();
     valuationData.forEach((v) => {
@@ -117,7 +113,6 @@ export default function StockValuationPage() {
     return Array.from(cats.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }, [valuationData]);
 
-  // Top 8 products by value for bar chart
   const topProducts = filtered.slice(0, 8).map((v) => ({
     name: v.productName.length > 15 ? v.productName.slice(0, 15) + "…" : v.productName,
     value: v.totalValue,
@@ -132,11 +127,8 @@ export default function StockValuationPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <ShieldAlert className="h-16 w-16 text-muted-foreground" />
-        <h2 className="text-xl font-semibold">Accès restreint</h2>
-        <p className="text-muted-foreground text-center max-w-md">
-          La valorisation du stock est réservée aux rôles financiers (CEO, Finance, Comptabilité, BI).
-          Contactez votre administrateur pour obtenir l'accès.
-        </p>
+        <h2 className="text-xl font-semibold">{t("stockValuation.restrictedAccess")}</h2>
+        <p className="text-muted-foreground text-center max-w-md">{t("stockValuation.restrictedMsg")}</p>
       </div>
     );
   }
@@ -145,10 +137,10 @@ export default function StockValuationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Valorisation du Stock</h1>
-          <p className="text-muted-foreground text-sm">Vue interactive de la valeur du stock — par produit, catégorie, entrepôt</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("stockValuation.title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("stockValuation.subtitle")}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-2"><Download className="h-4 w-4" /> Exporter</Button>
+        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-2"><Download className="h-4 w-4" /> {t("stockValuation.export")}</Button>
       </div>
 
       {/* KPIs */}
@@ -160,7 +152,7 @@ export default function StockValuationPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{currency(totalStockValue)}</p>
-              <p className="text-xs text-muted-foreground">Valeur totale</p>
+              <p className="text-xs text-muted-foreground">{t("stockValuation.totalValue")}</p>
             </div>
           </CardContent>
         </Card>
@@ -171,7 +163,7 @@ export default function StockValuationPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{totalItems.toLocaleString("fr-DZ")}</p>
-              <p className="text-xs text-muted-foreground">Unités en stock</p>
+              <p className="text-xs text-muted-foreground">{t("stockValuation.unitsInStock")}</p>
             </div>
           </CardContent>
         </Card>
@@ -182,7 +174,7 @@ export default function StockValuationPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{uniqueProducts}</p>
-              <p className="text-xs text-muted-foreground">Références</p>
+              <p className="text-xs text-muted-foreground">{t("stockValuation.references")}</p>
             </div>
           </CardContent>
         </Card>
@@ -193,10 +185,10 @@ export default function StockValuationPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{totalItems > 0 ? currency(Math.round(totalStockValue / totalItems)) : "—"}</p>
-              <p className="text-xs text-muted-foreground">Coût {method === "WAC" ? "moyen" : method === "FIFO" ? "FIFO" : "dernier"} / unité</p>
+              <p className="text-xs text-muted-foreground">{t("stockValuation.costPerUnit", { method: costMethodLabel })}</p>
               {method !== "WAC" && (
                 <p className={`text-[10px] font-medium ${methodDiff > 0 ? "text-destructive" : methodDiff < 0 ? "text-success" : "text-muted-foreground"}`}>
-                  {methodDiff > 0 ? "+" : ""}{currency(methodDiff)} vs PMP
+                  {methodDiff > 0 ? "+" : ""}{currency(methodDiff)} {t("stockValuation.vsWAC")}
                 </p>
               )}
             </div>
@@ -208,7 +200,7 @@ export default function StockValuationPage() {
       <div className="grid md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Valeur par catégorie</CardTitle>
+            <CardTitle className="text-base">{t("stockValuation.valueByCat")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -227,7 +219,7 @@ export default function StockValuationPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Top produits par valeur</CardTitle>
+            <CardTitle className="text-base">{t("stockValuation.topProducts")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64">
@@ -250,9 +242,9 @@ export default function StockValuationPage() {
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
             <div>
-              <CardTitle className="text-lg">Détail de la valorisation</CardTitle>
+              <CardTitle className="text-lg">{t("stockValuation.valuationDetail")}</CardTitle>
               <CardDescription className="text-xs">
-                Méthode : {method === "WAC" ? "Coût Moyen Pondéré (PMP)" : method === "FIFO" ? "Premier Entré, Premier Sorti (FIFO)" : "Dernier Coût"}
+                {t("stockValuation.methodLabel")} : {method === "WAC" ? t("stockValuation.methodWACFull") : method === "FIFO" ? t("stockValuation.methodFIFOFull") : t("stockValuation.methodLastCostFull")}
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -261,21 +253,21 @@ export default function StockValuationPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="WAC">PMP (Coût Moyen)</SelectItem>
-                  <SelectItem value="FIFO">FIFO</SelectItem>
-                  <SelectItem value="LAST_COST">Dernier Coût</SelectItem>
+                  <SelectItem value="WAC">{t("stockValuation.methodWAC")}</SelectItem>
+                  <SelectItem value="FIFO">{t("stockValuation.methodFIFO")}</SelectItem>
+                  <SelectItem value="LAST_COST">{t("stockValuation.methodLastCost")}</SelectItem>
                 </SelectContent>
               </Select>
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher produit, SKU…" className="pl-9 w-56" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input placeholder={t("stockValuation.searchPlaceholder")} className="pl-9 w-56" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <Select value={warehouseFilter} onValueChange={setWarehouseFilter}>
                 <SelectTrigger className="w-48">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les entrepôts</SelectItem>
+                  <SelectItem value="all">{t("stockValuation.allWarehouses")}</SelectItem>
                   {warehouses.map((wh) => (
                     <SelectItem key={wh} value={wh}>{warehouseNames[wh]}</SelectItem>
                   ))}
@@ -288,15 +280,15 @@ export default function StockValuationPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Produit</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead>Catégorie</TableHead>
-                <TableHead>Unité</TableHead>
-                <TableHead className="text-right">Qté en stock</TableHead>
-                <TableHead className="text-right">Qté (base)</TableHead>
-                <TableHead className="text-right">Coût moyen</TableHead>
-                <TableHead className="text-right">Valeur totale</TableHead>
-                <TableHead className="text-right">% du stock</TableHead>
+                <TableHead>{t("stockValuation.colProduct")}</TableHead>
+                <TableHead>{t("stockValuation.colSKU")}</TableHead>
+                <TableHead>{t("stockValuation.colCategory")}</TableHead>
+                <TableHead>{t("stockValuation.colUnit")}</TableHead>
+                <TableHead className="text-right">{t("stockValuation.colQtyInStock")}</TableHead>
+                <TableHead className="text-right">{t("stockValuation.colQtyBase")}</TableHead>
+                <TableHead className="text-right">{t("stockValuation.colAvgCost")}</TableHead>
+                <TableHead className="text-right">{t("stockValuation.colTotalValue")}</TableHead>
+                <TableHead className="text-right">{t("stockValuation.colPctStock")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -308,7 +300,6 @@ export default function StockValuationPage() {
                 const baseAbbr = getBaseUnitAbbr(v.productId);
                 const stockUom = prod?.uom ?? baseAbbr;
                 const units = getUnitsForProduct(v.productId);
-                // R6: Show multi-unit breakdown
                 const breakdownParts: string[] = [];
                 if (units.length > 1 && v.totalQty > 0) {
                   let remaining = v.totalQty;
@@ -359,7 +350,7 @@ export default function StockValuationPage() {
               })}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">Aucun produit trouvé</TableCell>
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">{t("stockValuation.noProduct")}</TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -369,7 +360,7 @@ export default function StockValuationPage() {
           {filtered.length > 0 && (
             <div className="mt-4 flex justify-end border-t pt-3">
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Valeur totale du stock affiché</p>
+                <p className="text-sm text-muted-foreground">{t("stockValuation.totalDisplayed")}</p>
                 <p className="text-2xl font-bold text-foreground">{currency(filtered.reduce((s, v) => s + v.totalValue, 0))}</p>
               </div>
             </div>

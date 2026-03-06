@@ -4,6 +4,7 @@ import { useWMSData } from "@/contexts/WMSDataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFinancialTracking } from "@/contexts/FinancialTrackingContext";
 import { canViewFinancials } from "@/lib/rbac";
+import { useTranslation } from "react-i18next";
 import type { Product } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { usePagination } from "@/hooks/usePagination";
@@ -70,6 +71,7 @@ export default function ProductsPage() {
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
   const [pricingProduct, setPricingProduct] = useState<Product | null>(null);
   const [unitsProduct, setUnitsProduct] = useState<Product | null>(null);
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -81,19 +83,19 @@ export default function ProductsPage() {
             <Package className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Catalogue Produits</h1>
+            <h1 className="text-xl font-bold tracking-tight">{t("productPage.catalog")}</h1>
             <p className="text-sm text-muted-foreground">
-              {filtered.length} produit{filtered.length > 1 ? "s" : ""}{" "}
-              {filters.filterWh !== "all" ? `dans ${warehouses.find(w => w.id === filters.filterWh)?.name ?? filters.filterWh}` : "référencés"}
+              {filtered.length} {t("common.product").toLowerCase()}{filtered.length > 1 ? "s" : ""}{" "}
+              {filters.filterWh !== "all" ? `${t("productPage.inWarehouse", { name: warehouses.find(w => w.id === filters.filterWh)?.name ?? filters.filterWh })}` : t("productPage.referenced")}
             </p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-1">
-            <Download className="h-4 w-4" /> Exporter
+            <Download className="h-4 w-4" /> {t("common.export")}
           </Button>
           <RBACGuard permission="manage_products">
-            <Button onClick={crud.openCreate} className="gap-2"><Plus className="h-4 w-4" /> Nouveau produit</Button>
+            <Button onClick={crud.openCreate} className="gap-2"><Plus className="h-4 w-4" /> {t("productPage.newProduct")}</Button>
           </RBACGuard>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import PageTransition from "./PageTransition";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -274,9 +275,12 @@ export default function AppLayout() {
   return (
     <div className="min-h-screen bg-background">
       <AppSidebar />
-      <div className={cn("transition-all duration-300", isMobile ? "ml-0" : sidebarCollapsed ? "ml-16" : "ml-64")}>
+      <div className={cn(
+        "transition-all duration-300",
+        isMobile ? "ms-0" : sidebarCollapsed ? "ms-16" : "ms-64"
+      )}>
         {/* Top bar */}
-        <header className={cn("sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm", isMobile ? "px-4 pl-14" : "px-6")}>
+        <header className={cn("sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm", isMobile ? "px-4 ps-14" : "px-6")}>
           <GlobalSearch />
           <div className="flex items-center gap-3">
             <ResetDataButton />
@@ -284,7 +288,7 @@ export default function AppLayout() {
 
             {/* User identity area */}
             <TooltipProvider delayDuration={200}>
-              <div className="flex items-center gap-2.5 border-l border-border pl-3">
+              <div className="flex items-center gap-2.5 border-s border-border ps-3">
                 {/* Avatar with tooltip for full details */}
                 <Tooltip>
                   <TooltipTrigger asChild>

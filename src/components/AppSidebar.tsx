@@ -190,7 +190,7 @@ export default function AppSidebar() {
       { label: t("nav.barcodes", "Codes-barres"), icon: ScanBarcode, path: "/wms/barcodes" },
       { label: t("nav.vendors"), icon: Users, path: "/wms/vendors" },
       { label: t("nav.carriers", "Transporteurs"), icon: Truck, path: "/wms/carriers" },
-      { label: "Conditions de paiement", icon: CreditCard, path: "/wms/payment-terms" },
+      { label: t("nav.paymentTerms"), icon: CreditCard, path: "/wms/payment-terms" },
       { label: t("nav.currencies", "Devises & Taux"), icon: Coins, path: "/settings/currencies" },
       { label: t("nav.taxConfig", "Configuration Fiscale"), icon: Percent, path: "/settings/tax-config" },
       { label: t("nav.warehouses"), icon: Building2, path: "/wms/warehouses" },
@@ -559,7 +559,7 @@ export default function AppSidebar() {
     }
 
       {/* Footer */}
-      <div className={cn("border-t border-sidebar-border space-y-1", collapsed && !isMobile ? "p-1.5" : "p-3")}>
+        <div className={cn("border-t border-sidebar-border space-y-1", collapsed && !isMobile ? "p-1.5" : "p-3")}>
         
 
 
@@ -592,7 +592,7 @@ export default function AppSidebar() {
       {isMobile &&
       <button
         onClick={() => setMobileOpen(true)}
-        className="fixed top-3 left-3 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-background border border-border shadow-sm md:hidden"
+        className="fixed top-3 start-3 z-50 flex h-10 w-10 items-center justify-center rounded-lg bg-background border border-border shadow-sm md:hidden"
         aria-label="Open menu">
         
           <Menu className="h-5 w-5" />
@@ -610,8 +610,10 @@ export default function AppSidebar() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 flex h-screen flex-col bg-sidebar border-r border-sidebar-border transition-all duration-300",
-          isMobile ? mobileOpen ? "w-64" : "w-64 -translate-x-full" : collapsed ? "w-16" : "w-64"
+          "fixed inset-inline-start-0 top-0 z-50 flex h-screen flex-col bg-sidebar border-e border-sidebar-border transition-all duration-300",
+          isMobile
+            ? mobileOpen ? "w-64" : "w-64 -translate-x-full rtl:translate-x-full"
+            : collapsed ? "w-16" : "w-64"
         )}>
         
         {sidebarContent}

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useWarehouseScope } from "@/hooks/useWarehouseScope";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,14 +17,8 @@ import { Plus, Search, Eye, ArrowRightLeft, CheckCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { CrossDock, CrossDockStatus } from "@/data/mockData";
 
-const STATUS_COLORS: Record<CrossDockStatus, string> = {
-  Pending: "warning",
-  In_Progress: "info",
-  Completed: "success",
-  Cancelled: "destructive",
-};
-
 export default function CrossDockingPage() {
+  const { t } = useTranslation();
   const { crossDocks: data, setCrossDocks: setData, grns, salesOrders, warehouses, products } = useWMSData();
   const { canOperateOn, operationalWarehouses } = useWarehouseScope();
   const { canCreate } = useAuth();
@@ -47,31 +42,23 @@ export default function CrossDockingPage() {
 
   const handleCreate = () => {
     if (!newForm.grnId || !newForm.salesOrderId || !newForm.productId || !newForm.warehouseId || newForm.qty <= 0) {
-      toast({ title: "Erreur", description: "Remplissez tous les champs obligatoires", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("crossDocking.errorRequired"), variant: "destructive" });
       return;
     }
     const wh = warehouses.find((w) => w.id === newForm.warehouseId);
     const prod = products.find((p) => p.id === newForm.productId);
     const newXD: CrossDock = {
       id: `XD-${String(data.length + 1).padStart(3, "0")}`,
-      grnId: newForm.grnId,
-      salesOrderId: newForm.salesOrderId,
-      productId: newForm.productId,
-      productName: prod?.name ?? newForm.productId,
-      qty: newForm.qty,
-      warehouseId: newForm.warehouseId,
-      warehouseName: wh?.name ?? newForm.warehouseId,
-      fromDock: newForm.fromDock || "Quai 1",
-      toDock: newForm.toDock || "Quai 2",
-      status: "Pending",
-      createdBy: "Utilisateur courant",
-      createdAt: new Date().toISOString().slice(0, 10),
-      notes: newForm.notes,
+      grnId: newForm.grnId, salesOrderId: newForm.salesOrderId,
+      productId: newForm.productId, productName: prod?.name ?? newForm.productId,
+      qty: newForm.qty, warehouseId: newForm.warehouseId, warehouseName: wh?.name ?? newForm.warehouseId,
+      fromDock: newForm.fromDock || "Quai 1", toDock: newForm.toDock || "Quai 2",
+      status: "Pending", createdBy: "Utilisateur courant", createdAt: new Date().toISOString().slice(0, 10), notes: newForm.notes,
     };
     setData((prev) => [newXD, ...prev]);
     setShowCreate(false);
     setNewForm({ grnId: "", salesOrderId: "", productId: "", qty: 0, warehouseId: "", fromDock: "", toDock: "", notes: "" });
-    toast({ title: "Cross-dock créé", description: newXD.id });
+    toast({ title: t("crossDocking.created"), description: newXD.id });
   };
 
   const handleAction = (id: string, action: "start" | "complete" | "cancel") => {
@@ -83,7 +70,7 @@ export default function CrossDockingPage() {
         return { ...x, status: "Cancelled" as const };
       })
     );
-    toast({ title: action === "complete" ? "Cross-dock terminé" : action === "start" ? "Cross-dock démarré" : "Cross-dock annulé" });
+    toast({ title: action === "complete" ? t("crossDocking.completed") : action === "start" ? t("crossDocking.started") : t("crossDocking.cancelled") });
   };
 
   const statuses: CrossDockStatus[] = ["Pending", "In_Progress", "Completed", "Cancelled"];
@@ -93,15 +80,14 @@ export default function CrossDockingPage() {
       <WarehouseScopeBanner />
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Cross Docking</h1>
-          <p className="text-sm text-muted-foreground">Transfert direct inbound → outbound sans stockage</p>
+          <h1 className="text-2xl font-bold">{t("crossDocking.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("crossDocking.subtitle")}</p>
         </div>
         {canCreate("grn") && (
-          <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />Nouveau cross-dock</Button>
+          <Button onClick={() => setShowCreate(true)}><Plus className="h-4 w-4 mr-2" />{t("crossDocking.newCrossDock")}</Button>
         )}
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statuses.map((s) => {
           const count = data.filter((x) => x.status === s && canOperateOn(x.warehouseId)).length;
@@ -116,25 +102,23 @@ export default function CrossDockingPage() {
         })}
       </div>
 
-      {/* Search */}
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Rechercher…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+        <Input placeholder={t("crossDocking.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
-      {/* Table */}
       <div className="rounded-lg border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Produit</TableHead>
+              <TableHead>{t("crossDocking.product")}</TableHead>
               <TableHead>GRN</TableHead>
-              <TableHead>Commande</TableHead>
-              <TableHead>Qté</TableHead>
-              <TableHead>De → Vers</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>{t("serialNumbers.order")}</TableHead>
+              <TableHead>{t("crossDocking.quantity")}</TableHead>
+              <TableHead>{t("crossDocking.fromTo")}</TableHead>
+              <TableHead>{t("crossDocking.status")}</TableHead>
+              <TableHead>{t("common.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -161,7 +145,7 @@ export default function CrossDockingPage() {
               </TableRow>
             ))}
             {paginatedItems.length === 0 && (
-              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Aucun cross-dock trouvé</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">{t("crossDocking.noCrossDockFound")}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -171,19 +155,19 @@ export default function CrossDockingPage() {
       {/* Detail Dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Cross-dock {selected?.id}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("crossDocking.detail", { id: selected?.id })}</DialogTitle></DialogHeader>
           {selected && (
             <div className="space-y-2 text-sm">
-              <p><strong>Produit :</strong> {selected.productName}</p>
-              <p><strong>Quantité :</strong> {selected.qty}</p>
-              <p><strong>GRN :</strong> {selected.grnId}</p>
-              <p><strong>Commande :</strong> {selected.salesOrderId}</p>
-              <p><strong>Entrepôt :</strong> {selected.warehouseName}</p>
-              <p><strong>Quai :</strong> {selected.fromDock} → {selected.toDock}</p>
-              <p><strong>Statut :</strong> <StatusBadge status={selected.status} /></p>
-              <p><strong>Créé par :</strong> {selected.createdBy} le {selected.createdAt}</p>
-              {selected.completedAt && <p><strong>Terminé :</strong> {selected.completedAt}</p>}
-              {selected.notes && <p><strong>Notes :</strong> {selected.notes}</p>}
+              <p><strong>{t("crossDocking.productLabel")}</strong> {selected.productName}</p>
+              <p><strong>{t("crossDocking.qtyLabel")}</strong> {selected.qty}</p>
+              <p><strong>{t("crossDocking.grnLabel")}</strong> {selected.grnId}</p>
+              <p><strong>{t("crossDocking.orderLabel")}</strong> {selected.salesOrderId}</p>
+              <p><strong>{t("crossDocking.warehouseLabel")}</strong> {selected.warehouseName}</p>
+              <p><strong>{t("crossDocking.dockLabel")}</strong> {selected.fromDock} → {selected.toDock}</p>
+              <p><strong>{t("crossDocking.statusLabel")}</strong> <StatusBadge status={selected.status} /></p>
+              <p><strong>{t("crossDocking.createdByLabel")}</strong> {selected.createdBy} le {selected.createdAt}</p>
+              {selected.completedAt && <p><strong>{t("crossDocking.completedLabel")}</strong> {selected.completedAt}</p>}
+              {selected.notes && <p><strong>{t("crossDocking.notesLabel")}</strong> {selected.notes}</p>}
             </div>
           )}
         </DialogContent>
@@ -192,46 +176,46 @@ export default function CrossDockingPage() {
       {/* Create Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Nouveau Cross-dock</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("crossDocking.createTitle")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <FormSection title="Informations">
-              <FormField label="Entrepôt">
+            <FormSection title={t("crossDocking.info")}>
+              <FormField label={t("crossDocking.warehouse")}>
                 <select className={formSelectClass} value={newForm.warehouseId} onChange={(e) => setNewForm({ ...newForm, warehouseId: e.target.value })}>
-                  <option value="">— Sélectionner —</option>
+                  <option value="">{t("crossDocking.selectPlaceholder")}</option>
                   {operationalWarehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
                 </select>
               </FormField>
-              <FormField label="Produit">
+              <FormField label={t("crossDocking.product")}>
                 <select className={formSelectClass} value={newForm.productId} onChange={(e) => setNewForm({ ...newForm, productId: e.target.value })}>
-                  <option value="">— Sélectionner —</option>
+                  <option value="">{t("crossDocking.selectPlaceholder")}</option>
                   {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </FormField>
-              <FormField label="GRN source">
+              <FormField label={t("crossDocking.grnSource")}>
                 <Input className={formInputClass} value={newForm.grnId} onChange={(e) => setNewForm({ ...newForm, grnId: e.target.value })} placeholder="GRN-..." />
               </FormField>
-              <FormField label="Commande destination">
+              <FormField label={t("crossDocking.orderDest")}>
                 <Input className={formInputClass} value={newForm.salesOrderId} onChange={(e) => setNewForm({ ...newForm, salesOrderId: e.target.value })} placeholder="SO-..." />
               </FormField>
-              <FormField label="Quantité">
+              <FormField label={t("crossDocking.qty")}>
                 <Input type="number" className={formInputClass} value={newForm.qty} onChange={(e) => setNewForm({ ...newForm, qty: Number(e.target.value) })} />
               </FormField>
               <div className="grid grid-cols-2 gap-3">
-                <FormField label="Quai source">
+                <FormField label={t("crossDocking.dockFrom")}>
                   <Input className={formInputClass} value={newForm.fromDock} onChange={(e) => setNewForm({ ...newForm, fromDock: e.target.value })} placeholder="Quai 1" />
                 </FormField>
-                <FormField label="Quai destination">
+                <FormField label={t("crossDocking.dockTo")}>
                   <Input className={formInputClass} value={newForm.toDock} onChange={(e) => setNewForm({ ...newForm, toDock: e.target.value })} placeholder="Quai 2" />
                 </FormField>
               </div>
-              <FormField label="Notes">
+              <FormField label={t("crossDocking.notes")}>
                 <Input className={formInputClass} value={newForm.notes} onChange={(e) => setNewForm({ ...newForm, notes: e.target.value })} />
               </FormField>
             </FormSection>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
-            <Button onClick={handleCreate}>Créer</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleCreate}>{t("common.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

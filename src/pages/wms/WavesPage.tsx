@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Layers, Search, Plus, Play, CheckCircle2, Clock, Package, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import type { SalesOrder } from "@/data/mockData";
 import { currency } from "@/data/mockData";
@@ -23,6 +24,7 @@ interface Wave {
 }
 
 export default function WavesPage() {
+  const { t } = useTranslation();
   const { salesOrders, setSalesOrders } = useWMSData();
   const { canCreate } = useAuth();
   const [waves, setWaves] = useState<Wave[]>([
@@ -75,7 +77,7 @@ export default function WavesPage() {
     setWaves((prev) => [newWave, ...prev]);
     setShowCreate(false);
     setSelectedOrders([]);
-    toast({ title: "Vague créée", description: `${newWave.id} — ${orders.length} commande(s)` });
+    toast({ title: t("wavesPage.waveCreated"), description: t("wavesPage.waveCreatedDesc", { id: newWave.id, count: orders.length }) });
   };
 
   const releaseWave = (waveId: string) => {
@@ -86,17 +88,17 @@ export default function WavesPage() {
         prev.map((o) => wave.orderIds.includes(o.id) ? { ...o, status: "Picking" as const } : o)
       );
     }
-    toast({ title: "Vague libérée", description: `${waveId} — commandes passées en Picking` });
+    toast({ title: t("wavesPage.waveReleased"), description: t("wavesPage.waveReleasedDesc", { id: waveId }) });
   };
 
   const deleteWave = (waveId: string) => {
     const wave = waves.find((w) => w.id === waveId);
     if (wave && wave.status !== "Draft") {
-      toast({ title: "Suppression impossible", description: "Seules les vagues en brouillon peuvent être supprimées", variant: "destructive" });
+      toast({ title: t("wavesPage.deleteError"), description: t("wavesPage.deleteErrorDesc"), variant: "destructive" });
       return;
     }
     setWaves((prev) => prev.filter((w) => w.id !== waveId));
-    toast({ title: "Vague supprimée", description: waveId });
+    toast({ title: t("wavesPage.waveDeleted"), description: waveId });
   };
 
   const waveStatusColors: Record<string, string> = {
@@ -116,65 +118,61 @@ export default function WavesPage() {
             <Layers className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Vagues d&apos;expédition</h1>
-            <p className="text-sm text-muted-foreground">Planification et regroupement des commandes pour picking</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("wavesPage.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("wavesPage.subtitle")}</p>
           </div>
         </div>
         {canCreate("salesOrder") && (
           <Button onClick={() => setShowCreate(true)} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Créer une vague
+            <Plus className="h-4 w-4 mr-1" /> {t("wavesPage.createWave")}
           </Button>
         )}
       </div>
 
       <div className="grid grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Vagues totales</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("wavesPage.totalWaves")}</p>
           <p className="text-xl font-semibold">{stats.totalWaves}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Libérées</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("wavesPage.released")}</p>
           <p className="text-xl font-semibold text-info">{stats.released}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">En cours</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("wavesPage.inProgress")}</p>
           <p className="text-xl font-semibold text-warning">{stats.inProgress}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Valeur totale</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("wavesPage.totalValue")}</p>
           <p className="text-xl font-semibold text-primary">{currency(stats.totalValue)}</p>
         </div>
       </div>
 
       <div className="relative max-w-xs">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher une vague…"
-          className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-4 text-sm"
-        />
+        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder={t("wavesPage.searchPlaceholder")}
+          className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-4 text-sm" />
       </div>
 
       <div className="glass-card rounded-xl overflow-hidden">
         {filteredWaves.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <Layers className="h-12 w-12 mb-3 opacity-50" />
-            <p className="font-medium">Aucune vague créée.</p>
+            <p className="font-medium">{t("wavesPage.noWaves")}</p>
           </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">ID Vague</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Nom</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Créée le</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Commandes</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Lignes</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Valeur</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Statut</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Actions</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("wavesPage.colWaveId")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("wavesPage.colName")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("wavesPage.colCreatedAt")}</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("wavesPage.colOrders")}</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("wavesPage.colLines")}</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("wavesPage.colValue")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("wavesPage.colStatus")}</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("wavesPage.colActions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -195,7 +193,7 @@ export default function WavesPage() {
                     {w.status === "Draft" && (
                       <div className="flex gap-1">
                         <Button variant="outline" size="sm" onClick={() => releaseWave(w.id)}>
-                          <Play className="h-3 w-3 mr-1" /> Libérer
+                          <Play className="h-3 w-3 mr-1" /> {t("wavesPage.release")}
                         </Button>
                         <Button variant="ghost" size="sm" className="text-destructive" onClick={() => deleteWave(w.id)}>
                           <Trash2 className="h-3 w-3" />
@@ -203,13 +201,13 @@ export default function WavesPage() {
                       </div>
                     )}
                     {w.status === "Released" && (
-                      <span className="text-xs text-info flex items-center gap-1"><Clock className="h-3 w-3" /> En attente picking</span>
+                      <span className="text-xs text-info flex items-center gap-1"><Clock className="h-3 w-3" /> {t("wavesPage.waitingPicking")}</span>
                     )}
                     {w.status === "In_Progress" && (
-                      <span className="text-xs text-warning flex items-center gap-1"><Package className="h-3 w-3" /> Picking en cours</span>
+                      <span className="text-xs text-warning flex items-center gap-1"><Package className="h-3 w-3" /> {t("wavesPage.pickingInProgress")}</span>
                     )}
                     {w.status === "Completed" && (
-                      <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Terminée</span>
+                      <span className="text-xs text-success flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> {t("wavesPage.completed")}</span>
                     )}
                   </td>
                 </tr>
@@ -219,17 +217,14 @@ export default function WavesPage() {
         )}
       </div>
 
-      {/* Create Wave Dialog */}
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Créer une vague d'expédition</DialogTitle>
+            <DialogTitle>{t("wavesPage.createWaveTitle")}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground mb-3">
-            Sélectionnez les commandes approuvées à inclure dans cette vague :
-          </p>
+          <p className="text-sm text-muted-foreground mb-3">{t("wavesPage.selectOrders")}</p>
           {candidates.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-4">Aucune commande en statut "Approved" disponible.</p>
+            <p className="text-sm text-muted-foreground py-4">{t("wavesPage.noApprovedOrders")}</p>
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
               {candidates.map((o) => (
@@ -247,16 +242,16 @@ export default function WavesPage() {
                       <span className="font-mono text-xs">{o.id}</span>
                       <span className="text-xs font-medium">{currency(o.totalAmount)}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">{o.customerName} — {o.lines.length} lignes</p>
+                    <p className="text-xs text-muted-foreground">{o.customerName} — {o.lines.length} {t("wavesPage.colLines").toLowerCase()}</p>
                   </div>
                 </label>
               ))}
             </div>
           )}
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleCreateWave} disabled={selectedOrders.length === 0}>
-              Créer ({selectedOrders.length} commande{selectedOrders.length > 1 ? "s" : ""})
+              {t("wavesPage.createCount", { count: selectedOrders.length })}
             </Button>
           </div>
         </DialogContent>

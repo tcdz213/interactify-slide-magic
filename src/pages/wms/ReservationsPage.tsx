@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Lock, Search, Unlock, ShoppingCart, Package, Plus } from "lucide-react";
+import { Lock, Search, Unlock, Plus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
-import { currency, products } from "@/data/mockData";
+import { products } from "@/data/mockData";
 import { WarehouseScopeBanner } from "@/components/WarehouseScopeBanner";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ const INITIAL_RESERVATIONS: StockReservation[] = [
 ];
 
 export default function ReservationsPage() {
+  const { t } = useTranslation();
   const { salesOrders, inventory } = useWMSData();
   const [reservations, setReservations] = useState(INITIAL_RESERVATIONS);
   const [search, setSearch] = useState("");
@@ -54,7 +56,7 @@ export default function ReservationsPage() {
 
   const releaseReservation = (id: string) => {
     setReservations((prev) => prev.map((r) => r.id === id ? { ...r, status: "Released" as const } : r));
-    toast({ title: "Réservation libérée", description: `${id} — stock rendu disponible` });
+    toast({ title: t("reservationsPage.released_toast"), description: t("reservationsPage.releasedDesc", { id }) });
   };
 
   const statusColors: Record<string, string> = {
@@ -74,28 +76,28 @@ export default function ReservationsPage() {
             <Lock className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Réservations de stock</h1>
-            <p className="text-sm text-muted-foreground">Stock réservé pour les commandes clients</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("reservationsPage.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("reservationsPage.subtitle")}</p>
           </div>
         </div>
-        <Button onClick={() => { setNewRes({ orderId: "", productId: "", warehouseId: "WH01", locationId: "", qty: 0, expiresAt: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10) }); setShowCreate(true); }} className="gap-2"><Plus className="h-4 w-4" /> Créer réservation</Button>
+        <Button onClick={() => { setNewRes({ orderId: "", productId: "", warehouseId: "WH01", locationId: "", qty: 0, expiresAt: new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10) }); setShowCreate(true); }} className="gap-2"><Plus className="h-4 w-4" /> {t("reservationsPage.createReservation")}</Button>
       </div>
 
       <div className="grid grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Réservations</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reservationsPage.totalReservations")}</p>
           <p className="text-xl font-semibold">{stats.total}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Actives</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reservationsPage.active")}</p>
           <p className="text-xl font-semibold text-info">{stats.active}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Qté réservée</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reservationsPage.reservedQty")}</p>
           <p className="text-xl font-semibold text-primary">{stats.totalQty.toLocaleString()}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Libérées</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reservationsPage.released")}</p>
           <p className="text-xl font-semibold text-success">{stats.released}</p>
         </div>
       </div>
@@ -103,7 +105,7 @@ export default function ReservationsPage() {
       <div className="relative max-w-xs">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher…"
+          placeholder={t("reservationsPage.searchPlaceholder")}
           className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-4 text-sm" />
       </div>
 
@@ -111,15 +113,15 @@ export default function ReservationsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">ID</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Commande</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Client</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Produit</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Emplacement</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Qté</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Expire</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Statut</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Action</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("reservationsPage.colId")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("reservationsPage.colOrder")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("reservationsPage.colClient")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("reservationsPage.colProduct")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("reservationsPage.colLocation")}</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("reservationsPage.colQty")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("reservationsPage.colExpires")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("reservationsPage.colStatus")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("reservationsPage.colAction")}</th>
             </tr>
           </thead>
           <tbody>
@@ -140,7 +142,7 @@ export default function ReservationsPage() {
                 <td className="px-4 py-3">
                   {r.status === "Active" && (
                     <Button variant="ghost" size="sm" onClick={() => releaseReservation(r.id)}>
-                      <Unlock className="h-3 w-3 mr-1" /> Libérer
+                      <Unlock className="h-3 w-3 mr-1" /> {t("reservationsPage.release")}
                     </Button>
                   )}
                 </td>
@@ -149,44 +151,43 @@ export default function ReservationsPage() {
           </tbody>
         </table>
       </div>
-      {/* Create reservation dialog */}
+
       <Dialog open={showCreate} onOpenChange={setShowCreate}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Créer une réservation</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("reservationsPage.createTitle")}</DialogTitle></DialogHeader>
           <div className="space-y-3 mt-2">
-            <FormField label="Commande">
-              <select value={newRes.orderId} onChange={e => { const o = salesOrders.find(x => x.id === e.target.value); setNewRes(p => ({ ...p, orderId: e.target.value, ...(o ? {} : {}) })); }} className={formSelectClass}>
-                <option value="">Sélectionner...</option>
+            <FormField label={t("reservationsPage.order")}>
+              <select value={newRes.orderId} onChange={e => setNewRes(p => ({ ...p, orderId: e.target.value }))} className={formSelectClass}>
+                <option value="">{t("reservationsPage.select")}</option>
                 {salesOrders.filter(o => ["Approved", "Picking", "Packed"].includes(o.status)).map(o => (
                   <option key={o.id} value={o.id}>{o.id} — {o.customerName}</option>
                 ))}
               </select>
             </FormField>
-            <FormField label="Produit">
+            <FormField label={t("reservationsPage.product")}>
               <select value={newRes.productId} onChange={e => setNewRes(p => ({ ...p, productId: e.target.value }))} className={formSelectClass}>
-                <option value="">Sélectionner...</option>
+                <option value="">{t("reservationsPage.select")}</option>
                 {products.filter(p => p.isActive).map(p => (
                   <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
                 ))}
               </select>
             </FormField>
-            <FormField label="Quantité">
+            <FormField label={t("reservationsPage.quantity")}>
               <input type="number" min={1} value={newRes.qty} onChange={e => setNewRes(p => ({ ...p, qty: Number(e.target.value) }))} className={formInputClass} />
             </FormField>
-            <FormField label="Date d'expiration">
+            <FormField label={t("reservationsPage.expiryDate")}>
               <input type="date" value={newRes.expiresAt} onChange={e => setNewRes(p => ({ ...p, expiresAt: e.target.value }))} className={formInputClass} />
             </FormField>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("common.cancel")}</Button>
             <Button onClick={() => {
               if (!newRes.orderId || !newRes.productId || newRes.qty <= 0) return;
               const product = products.find(p => p.id === newRes.productId);
               const order = salesOrders.find(o => o.id === newRes.orderId);
-              // Check available stock
               const available = inventory.filter((i: any) => i.productId === newRes.productId).reduce((s: number, i: any) => s + i.qtyAvailable, 0);
               if (newRes.qty > available) {
-                toast({ title: "Stock insuffisant", description: `Disponible: ${available}`, variant: "destructive" });
+                toast({ title: t("reservationsPage.insufficientStock"), description: t("reservationsPage.availableStock", { count: available }), variant: "destructive" });
                 return;
               }
               const newId = `RSV-${String(reservations.length + 1).padStart(3, "0")}`;
@@ -203,9 +204,9 @@ export default function ReservationsPage() {
                 reservedAt: new Date().toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "short" }),
                 expiresAt: newRes.expiresAt,
               }]);
-              toast({ title: "Réservation créée", description: `${newId} — ${newRes.qty} unités réservées` });
+              toast({ title: t("reservationsPage.reservationCreated"), description: t("reservationsPage.reservationCreatedDesc", { id: newId, qty: newRes.qty }) });
               setShowCreate(false);
-            }}>Créer</Button>
+            }}>{t("common.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

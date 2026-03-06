@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Settings2, Search, Plus, AlertTriangle, CheckCircle2, Trash2, Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { currency } from "@/data/mockData";
 import { WarehouseScopeBanner } from "@/components/WarehouseScopeBanner";
@@ -43,6 +44,7 @@ const emptyForm = (): Partial<ReplenishmentRule> => ({
 });
 
 export default function ReplenishmentRulesPage() {
+  const { t } = useTranslation();
   const { products } = useWMSData();
   const [rules, setRules] = useState<ReplenishmentRule[]>(INITIAL_RULES);
   const [search, setSearch] = useState("");
@@ -71,7 +73,7 @@ export default function ReplenishmentRulesPage() {
     setRules((prev) =>
       prev.map((r) => r.id === ruleId ? { ...r, lastTriggered: new Date().toISOString().slice(0, 10) } : r)
     );
-    toast({ title: "Réapprovisionnement déclenché", description: `Règle ${ruleId}` });
+    toast({ title: t("replenishmentPage.triggered"), description: t("replenishmentPage.triggeredDesc", { id: ruleId }) });
   };
 
   const openCreate = () => {
@@ -88,12 +90,12 @@ export default function ReplenishmentRulesPage() {
 
   const saveRule = () => {
     if (!form.productName || !form.locationId) {
-      toast({ title: "Erreur", description: "Produit et emplacement requis", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("replenishmentPage.errorRequired"), variant: "destructive" });
       return;
     }
     if (editingRule) {
       setRules((prev) => prev.map((r) => r.id === editingRule.id ? { ...r, ...form } as ReplenishmentRule : r));
-      toast({ title: "Règle modifiée", description: editingRule.id });
+      toast({ title: t("replenishmentPage.ruleModified"), description: editingRule.id });
     } else {
       const newRule: ReplenishmentRule = {
         id: `RPL-R${String(rules.length + 1).padStart(3, "0")}`,
@@ -110,7 +112,7 @@ export default function ReplenishmentRulesPage() {
         status: form.status ?? "Active",
       };
       setRules((prev) => [...prev, newRule]);
-      toast({ title: "Règle créée", description: newRule.id });
+      toast({ title: t("replenishmentPage.ruleCreated"), description: newRule.id });
     }
     setFormOpen(false);
   };
@@ -118,7 +120,7 @@ export default function ReplenishmentRulesPage() {
   const deleteRule = () => {
     if (!deleteTarget) return;
     setRules((prev) => prev.filter((r) => r.id !== deleteTarget));
-    toast({ title: "Règle supprimée", description: deleteTarget });
+    toast({ title: t("replenishmentPage.ruleDeleted"), description: deleteTarget });
     setDeleteTarget(null);
   };
 
@@ -132,30 +134,30 @@ export default function ReplenishmentRulesPage() {
             <Settings2 className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Règles de réapprovisionnement</h1>
-            <p className="text-sm text-muted-foreground">Min/Max par produit, déclenchement auto</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("replenishmentPage.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("replenishmentPage.subtitle")}</p>
           </div>
         </div>
         <Button onClick={openCreate}>
-          <Plus className="h-4 w-4 mr-1" /> Nouvelle règle
+          <Plus className="h-4 w-4 mr-1" /> {t("replenishmentPage.newRule")}
         </Button>
       </div>
 
       <div className="grid grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Règles totales</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("replenishmentPage.totalRules")}</p>
           <p className="text-xl font-semibold">{stats.totalRules}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Actives</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("replenishmentPage.activeRules")}</p>
           <p className="text-xl font-semibold text-success">{stats.active}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Sous le minimum</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("replenishmentPage.belowMin")}</p>
           <p className="text-xl font-semibold text-destructive">{stats.belowMin}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Valeur déficit</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("replenishmentPage.deficitValue")}</p>
           <p className="text-xl font-semibold text-warning">{currency(stats.alertValue)}</p>
         </div>
       </div>
@@ -163,7 +165,7 @@ export default function ReplenishmentRulesPage() {
       <div className="relative max-w-xs">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher…"
+          placeholder={t("replenishmentPage.searchPlaceholder")}
           className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-4 text-sm" />
       </div>
 
@@ -171,14 +173,14 @@ export default function ReplenishmentRulesPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Produit</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Emplacement</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Stratégie</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Min</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Max</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Actuel</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">État</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("replenishmentPage.colProduct")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("replenishmentPage.colLocation")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("replenishmentPage.colStrategy")}</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("replenishmentPage.colMin")}</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("replenishmentPage.colMax")}</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("replenishmentPage.colCurrent")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("replenishmentPage.colState")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("replenishmentPage.colActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -195,11 +197,11 @@ export default function ReplenishmentRulesPage() {
                   <td className="px-4 py-3">
                     {belowMin ? (
                       <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-destructive/10 text-destructive flex items-center gap-1 w-fit">
-                        <AlertTriangle className="h-3 w-3" /> Sous min
+                        <AlertTriangle className="h-3 w-3" /> {t("replenishmentPage.belowMinLabel")}
                       </span>
                     ) : (
                       <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-success/10 text-success flex items-center gap-1 w-fit">
-                        <CheckCircle2 className="h-3 w-3" /> OK
+                        <CheckCircle2 className="h-3 w-3" /> {t("replenishmentPage.ok")}
                       </span>
                     )}
                   </td>
@@ -207,7 +209,7 @@ export default function ReplenishmentRulesPage() {
                     <div className="flex gap-1">
                       {belowMin && (
                         <Button variant="outline" size="sm" onClick={() => triggerReplenishment(r.id)}>
-                          Déclencher
+                          {t("replenishmentPage.trigger")}
                         </Button>
                       )}
                       <Button variant="ghost" size="sm" onClick={() => openEdit(r)}>
@@ -225,76 +227,74 @@ export default function ReplenishmentRulesPage() {
         </table>
       </div>
 
-      {/* Create/Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingRule ? "Modifier la règle" : "Nouvelle règle"}</DialogTitle>
+            <DialogTitle>{editingRule ? t("replenishmentPage.editTitle") : t("replenishmentPage.createTitle")}</DialogTitle>
           </DialogHeader>
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <label className="text-xs font-medium text-muted-foreground">Produit</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("replenishmentPage.product")}</label>
               <select className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm mt-1"
                 value={form.productName ?? ""} onChange={(e) => setForm({ ...form, productName: e.target.value })}>
-                <option value="">— Choisir —</option>
+                <option value="">{t("replenishmentPage.choose")}</option>
                 {products.map((p: any) => <option key={p.id} value={p.name}>{p.name}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Emplacement</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("replenishmentPage.location")}</label>
               <input className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm mt-1"
                 value={form.locationId ?? ""} onChange={(e) => setForm({ ...form, locationId: e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Stratégie</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("replenishmentPage.strategy")}</label>
               <select className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm mt-1"
                 value={form.strategy ?? "Min_Max"} onChange={(e) => setForm({ ...form, strategy: e.target.value as any })}>
-                <option value="Min_Max">Min / Max</option>
-                <option value="Reorder_Point">Reorder Point</option>
-                <option value="Kanban">Kanban</option>
+                <option value="Min_Max">{t("replenishmentPage.minMax")}</option>
+                <option value="Reorder_Point">{t("replenishmentPage.reorderPoint")}</option>
+                <option value="Kanban">{t("replenishmentPage.kanban")}</option>
               </select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Min</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("replenishmentPage.min")}</label>
               <input type="number" className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm mt-1"
                 value={form.minQty ?? 0} onChange={(e) => setForm({ ...form, minQty: +e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Max</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("replenishmentPage.max")}</label>
               <input type="number" className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm mt-1"
                 value={form.maxQty ?? 0} onChange={(e) => setForm({ ...form, maxQty: +e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Qté réapprovisionnement</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("replenishmentPage.reorderQty")}</label>
               <input type="number" className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm mt-1"
                 value={form.reorderQty ?? 0} onChange={(e) => setForm({ ...form, reorderQty: +e.target.value })} />
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground">Statut</label>
+              <label className="text-xs font-medium text-muted-foreground">{t("replenishmentPage.status")}</label>
               <select className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm mt-1"
                 value={form.status ?? "Active"} onChange={(e) => setForm({ ...form, status: e.target.value as any })}>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
+                <option value="Active">{t("replenishmentPage.active")}</option>
+                <option value="Inactive">{t("replenishmentPage.inactive")}</option>
               </select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFormOpen(false)}>Annuler</Button>
-            <Button onClick={saveRule}>{editingRule ? "Modifier" : "Créer"}</Button>
+            <Button variant="outline" onClick={() => setFormOpen(false)}>{t("common.cancel")}</Button>
+            <Button onClick={saveRule}>{editingRule ? t("common.edit") : t("common.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete confirm */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette règle ?</AlertDialogTitle>
-            <AlertDialogDescription>La règle {deleteTarget} sera supprimée définitivement.</AlertDialogDescription>
+            <AlertDialogTitle>{t("replenishmentPage.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("replenishmentPage.deleteMsg", { id: deleteTarget })}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Non</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteRule}>Oui, supprimer</AlertDialogAction>
+            <AlertDialogCancel>{t("pickingPage.no")}</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteRule}>{t("common.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

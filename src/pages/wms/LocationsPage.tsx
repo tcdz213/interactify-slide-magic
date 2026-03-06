@@ -10,6 +10,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { pct } from "@/data/mockData";
 import { usePagination } from "@/hooks/usePagination";
 import DataTablePagination from "@/components/DataTablePagination";
+import { useTranslation } from "react-i18next";
 
 const TYPES: WarehouseLocation["type"][] = ["Ambient", "Chilled", "Frozen", "Dry"];
 const STATUSES: WarehouseLocation["status"][] = ["Available", "Full", "Reserved", "Maintenance"];
@@ -17,6 +18,7 @@ const STATUSES: WarehouseLocation["status"][] = ["Available", "Full", "Reserved"
 const emptyLoc: Omit<WarehouseLocation, "id"> = { warehouseId: "", zone: "", aisle: "", rack: "", level: "1", type: "Ambient", capacity: 0, used: 0, status: "Available" };
 
 export default function LocationsPage() {
+  const { t } = useTranslation();
   const { warehouseLocations: data, setWarehouseLocations: setData, warehouses } = useWMSData();
   const [search, setSearch] = useState("");
   const [filterWh, setFilterWh] = useState("all");
@@ -49,11 +51,11 @@ export default function LocationsPage() {
     if (!form.warehouseId || !form.zone) return;
     if (editing) {
       setData(prev => prev.map(l => l.id === editing.id ? { ...l, ...form } : l));
-      toast({ title: "Emplacement modifié" });
+      toast({ title: t("locations.modified") });
     } else {
       const id = `${form.warehouseId}-${form.zone}${form.aisle}-${form.rack}`;
       setData(prev => [...prev, { id, ...form }]);
-      toast({ title: "Emplacement créé", description: id });
+      toast({ title: t("locations.created"), description: id });
     }
     setShowForm(false);
   };
@@ -61,7 +63,7 @@ export default function LocationsPage() {
   const handleDelete = () => {
     if (!deleteConfirm) return;
     setData(prev => prev.filter(l => l.id !== deleteConfirm.id));
-    toast({ title: "Emplacement supprimé" }); setDeleteConfirm(null);
+    toast({ title: t("locations.deleted") }); setDeleteConfirm(null);
   };
 
   return (
@@ -69,27 +71,27 @@ export default function LocationsPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10"><MapPin className="h-5 w-5 text-primary" /></div>
-          <div><h1 className="text-xl font-bold tracking-tight">Emplacements (Zones / Racks / Bins)</h1><p className="text-sm text-muted-foreground">{data.length} emplacements</p></div>
+          <div><h1 className="text-xl font-bold tracking-tight">{t("locations.title")}</h1><p className="text-sm text-muted-foreground">{t("locations.subtitle", { count: data.length })}</p></div>
         </div>
-        <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> Nouvel emplacement</Button>
+        <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> {t("locations.newLocation")}</Button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Total emplacements</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("locations.totalLocations")}</p>
           <p className="text-xl font-semibold">{stats.total}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Capacité totale</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("locations.totalCapacity")}</p>
           <p className="text-xl font-semibold">{stats.totalCapacity.toLocaleString()}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Taux d'occupation</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("locations.occupancyRate")}</p>
           <p className="text-xl font-semibold">{pct(stats.totalCapacity ? (stats.totalUsed / stats.totalCapacity) * 100 : 0)}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">En maintenance</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("locations.inMaintenance")}</p>
           <p className="text-xl font-semibold text-warning">{stats.maintenance}</p>
         </div>
       </div>
@@ -98,15 +100,15 @@ export default function LocationsPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher par ID ou zone..." value={search} onChange={e => setSearch(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
+          <input type="text" placeholder={t("locations.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
         <select value={filterWh} onChange={e => setFilterWh(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="all">Tous les entrepôts</option>
+          <option value="all">{t("locations.allWarehouses")}</option>
           {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
         </select>
         <select value={filterType} onChange={e => setFilterType(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="all">Tous types</option>
-          {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+          <option value="all">{t("common.allTypes")}</option>
+          {TYPES.map(tp => <option key={tp} value={tp}>{tp}</option>)}
         </select>
       </div>
 
@@ -115,17 +117,17 @@ export default function LocationsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm min-w-[800px]">
             <thead><tr className="border-b border-border/50 bg-muted/30">
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
-              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Entrepôt</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Zone</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Allée</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Rack</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Niveau</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Type</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Capacité</th>
-              <th className="px-4 py-3 text-right font-medium text-muted-foreground">Utilisé</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Statut</th>
-              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Actions</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.id")}</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.warehouse")}</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("locations.zone")}</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("locations.aisle")}</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("locations.rack")}</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("locations.level")}</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("common.type")}</th>
+              <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t("locations.capacity")}</th>
+              <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t("locations.used")}</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("common.status")}</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("common.actions")}</th>
             </tr></thead>
             <tbody>
               {paginatedItems.map(l => {
@@ -157,7 +159,7 @@ export default function LocationsPage() {
             </tbody>
           </table>
         </div>
-        {filtered.length === 0 && <div className="py-12 text-center text-muted-foreground">Aucun emplacement trouvé.</div>}
+        {filtered.length === 0 && <div className="py-12 text-center text-muted-foreground">{t("locations.noFound")}</div>}
         <DataTablePagination
           currentPage={currentPage}
           totalPages={totalPages}
@@ -171,50 +173,50 @@ export default function LocationsPage() {
       {/* Create/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>{editing ? "Modifier l'emplacement" : "Nouvel emplacement"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? t("locations.editLocation") : t("locations.newLocation")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <FormField label="Entrepôt" required>
+            <FormField label={t("common.warehouse")} required>
               <select className={formSelectClass} value={form.warehouseId} onChange={e => setForm({ ...form, warehouseId: e.target.value })}>
                 {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
               </select>
             </FormField>
             <div className="grid grid-cols-4 gap-3">
-              <FormField label="Zone" required><input className={formInputClass} value={form.zone} onChange={e => setForm({ ...form, zone: e.target.value })} placeholder="A" /></FormField>
-              <FormField label="Allée"><input className={formInputClass} value={form.aisle} onChange={e => setForm({ ...form, aisle: e.target.value })} placeholder="1" /></FormField>
-              <FormField label="Rack"><input className={formInputClass} value={form.rack} onChange={e => setForm({ ...form, rack: e.target.value })} placeholder="01" /></FormField>
-              <FormField label="Niveau"><input className={formInputClass} value={form.level} onChange={e => setForm({ ...form, level: e.target.value })} placeholder="1" /></FormField>
+              <FormField label={t("locations.zone")} required><input className={formInputClass} value={form.zone} onChange={e => setForm({ ...form, zone: e.target.value })} placeholder="A" /></FormField>
+              <FormField label={t("locations.aisle")}><input className={formInputClass} value={form.aisle} onChange={e => setForm({ ...form, aisle: e.target.value })} placeholder="1" /></FormField>
+              <FormField label={t("locations.rack")}><input className={formInputClass} value={form.rack} onChange={e => setForm({ ...form, rack: e.target.value })} placeholder="01" /></FormField>
+              <FormField label={t("locations.level")}><input className={formInputClass} value={form.level} onChange={e => setForm({ ...form, level: e.target.value })} placeholder="1" /></FormField>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Type">
+              <FormField label={t("common.type")}>
                 <select className={formSelectClass} value={form.type} onChange={e => setForm({ ...form, type: e.target.value as WarehouseLocation["type"] })}>
-                  {TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                  {TYPES.map(tp => <option key={tp} value={tp}>{tp}</option>)}
                 </select>
               </FormField>
-              <FormField label="Statut">
+              <FormField label={t("common.status")}>
                 <select className={formSelectClass} value={form.status} onChange={e => setForm({ ...form, status: e.target.value as WarehouseLocation["status"] })}>
                   {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </FormField>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <FormField label="Capacité"><input type="number" className={formInputClass} value={form.capacity} onChange={e => setForm({ ...form, capacity: +e.target.value })} /></FormField>
-              <FormField label="Utilisé"><input type="number" className={formInputClass} value={form.used} onChange={e => setForm({ ...form, used: +e.target.value })} /></FormField>
+              <FormField label={t("locations.capacity")}><input type="number" className={formInputClass} value={form.capacity} onChange={e => setForm({ ...form, capacity: +e.target.value })} /></FormField>
+              <FormField label={t("locations.used")}><input type="number" className={formInputClass} value={form.used} onChange={e => setForm({ ...form, used: +e.target.value })} /></FormField>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowForm(false)}>Annuler</Button>
-            <Button onClick={handleSave} disabled={!form.warehouseId || !form.zone}>{editing ? "Enregistrer" : "Créer"}</Button>
+            <Button variant="outline" onClick={() => setShowForm(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleSave} disabled={!form.warehouseId || !form.zone}>{editing ? t("common.save") : t("common.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Supprimer l'emplacement ?</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Supprimer <strong>{deleteConfirm?.id}</strong> ?</p>
+          <DialogHeader><DialogTitle>{t("locations.deleteConfirm")}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("locations.deleteMsg", { id: deleteConfirm?.id })}</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Annuler</Button>
-            <Button variant="destructive" onClick={handleDelete}>Supprimer</Button>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>{t("common.cancel")}</Button>
+            <Button variant="destructive" onClick={handleDelete}>{t("common.delete")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -8,27 +8,10 @@ import StatusBadge from "@/components/StatusBadge";
 import { WarehouseScopeBanner } from "@/components/WarehouseScopeBanner";
 import { useWarehouseScope } from "@/hooks/useWarehouseScope";
 import { toast } from "@/hooks/use-toast";
-
-const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: "all", label: "Tous les statuts" },
-  { value: "Pending", label: "En attente" },
-  { value: "In_Progress", label: "En cours" },
-  { value: "Passed", label: "Conforme" },
-  { value: "Failed", label: "Non conforme" },
-  { value: "Conditional", label: "Conditionnel" },
-  { value: "On_Hold", label: "En suspens" },
-];
-
-const STATUS_STYLE: Record<QCInspectionStatus, string> = {
-  Pending: "warning",
-  In_Progress: "info",
-  Passed: "success",
-  Failed: "destructive",
-  Conditional: "warning",
-  On_Hold: "secondary",
-};
+import { useTranslation } from "react-i18next";
 
 export default function QualityControlPage() {
+  const { t } = useTranslation();
   const { qcInspections, setQCInspections } = useWMSData();
   const { canOperateOn } = useWarehouseScope();
   const [search, setSearch] = useState("");
@@ -36,6 +19,16 @@ export default function QualityControlPage() {
   const [selectedQC, setSelectedQC] = useState<QCInspection | null>(null);
   const [sortBy, setSortBy] = useState<"date" | "vendor" | "status">("date");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+
+  const STATUS_OPTIONS = [
+    { value: "all", label: t("qc.allStatuses") },
+    { value: "Pending", label: t("qc.statusPending") },
+    { value: "In_Progress", label: t("qc.statusInProgress") },
+    { value: "Passed", label: t("qc.statusPassed") },
+    { value: "Failed", label: t("qc.statusFailed") },
+    { value: "Conditional", label: t("qc.statusConditional") },
+    { value: "On_Hold", label: t("qc.statusOnHold") },
+  ];
 
   const filtered = useMemo(() => {
     let list = qcInspections.filter((qc) => {
@@ -64,7 +57,8 @@ export default function QualityControlPage() {
       q.id === qc.id ? { ...q, status: result as QCInspectionStatus, overallResult: result, completedDate: new Date().toISOString().slice(0, 10) } : q
     ));
     setSelectedQC(null);
-    toast({ title: `QC ${result === "Passed" ? "validé" : result === "Failed" ? "rejeté" : "conditionnel"}`, description: qc.id });
+    const label = result === "Passed" ? t("qc.qcValidated") : result === "Failed" ? t("qc.qcRejected") : t("qc.qcConditional");
+    toast({ title: label, description: qc.id });
   };
 
   return (
@@ -76,8 +70,8 @@ export default function QualityControlPage() {
             <ShieldCheck className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Contrôle Qualité (QC)</h1>
-            <p className="text-sm text-muted-foreground">Inspections, quarantaine et rapports qualité</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("qc.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("qc.subtitle")}</p>
           </div>
         </div>
       </div>
@@ -85,19 +79,19 @@ export default function QualityControlPage() {
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">En attente / En cours</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("qc.pendingInProgress")}</p>
           <p className="text-xl font-semibold text-warning">{stats.pending}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Conformes</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("qc.passed")}</p>
           <p className="text-xl font-semibold text-success">{stats.passed}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Non conformes</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("qc.failed")}</p>
           <p className="text-xl font-semibold text-destructive">{stats.failed}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Conditionnels</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("qc.conditional")}</p>
           <p className="text-xl font-semibold text-warning">{stats.conditional}</p>
         </div>
       </div>
@@ -106,15 +100,15 @@ export default function QualityControlPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher QC, GRN ou fournisseur..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
+          <input type="text" placeholder={t("qc.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
           {STATUS_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="date">Tri: Date</option>
-          <option value="vendor">Tri: Fournisseur</option>
-          <option value="status">Tri: Statut</option>
+          <option value="date">{t("qc.sortDate")}</option>
+          <option value="vendor">{t("qc.sortVendor")}</option>
+          <option value="status">{t("qc.sortStatus")}</option>
         </select>
         <button type="button" onClick={() => setSortDir(d => d === "asc" ? "desc" : "asc")} className="h-9 px-2 rounded-lg border border-input bg-muted/50">
           {sortDir === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -126,22 +120,22 @@ export default function QualityControlPage() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <ShieldCheck className="h-12 w-12 mb-3 opacity-50" />
-            <p className="font-medium">Aucune inspection QC</p>
+            <p className="font-medium">{t("qc.noInspections")}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">ID</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.id")}</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">GRN</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Fournisseur</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Entrepôt</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Inspecteur</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Lignes</th>
-                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Statut</th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Actions</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.vendor")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.warehouse")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("qc.inspector")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.date")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("qc.lines")}</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.status")}</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t("common.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,9 +153,9 @@ export default function QualityControlPage() {
                       <td className="px-4 py-3 text-xs">{qc.scheduledDate}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs">{qc.lines.length} lignes</span>
-                          {failedLines > 0 && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-destructive/10 text-destructive">{failedLines} échec</span>}
-                          {conditionalLines > 0 && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/10 text-warning">{conditionalLines} cond.</span>}
+                          <span className="text-xs">{qc.lines.length} {t("qc.lines")}</span>
+                          {failedLines > 0 && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-destructive/10 text-destructive">{t("qc.failedLines", { count: failedLines })}</span>}
+                          {conditionalLines > 0 && <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-warning/10 text-warning">{t("qc.condLines", { count: conditionalLines })}</span>}
                           {hasTemp && <Thermometer className="h-3.5 w-3.5 text-muted-foreground" />}
                         </div>
                       </td>
@@ -188,37 +182,37 @@ export default function QualityControlPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <ShieldCheck className="h-5 w-5 text-primary" />
-                  Inspection {selectedQC.id}
+                  {t("qc.inspection", { id: selectedQC.id })}
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                <div><span className="text-muted-foreground">GRN :</span> <span className="font-mono text-primary">{selectedQC.grnId}</span></div>
-                <div><span className="text-muted-foreground">Fournisseur :</span> {selectedQC.vendorName}</div>
-                <div><span className="text-muted-foreground">Entrepôt :</span> {selectedQC.warehouseName}</div>
-                <div><span className="text-muted-foreground">Inspecteur :</span> {selectedQC.inspectorName}</div>
-                <div><span className="text-muted-foreground">Date prévue :</span> {selectedQC.scheduledDate}</div>
-                <div><span className="text-muted-foreground">Terminé le :</span> {selectedQC.completedDate ?? "—"}</div>
-                <div><span className="text-muted-foreground">Statut :</span> <StatusBadge status={selectedQC.status} /></div>
+                <div><span className="text-muted-foreground">{t("qc.grn")}</span> <span className="font-mono text-primary">{selectedQC.grnId}</span></div>
+                <div><span className="text-muted-foreground">{t("qc.vendorLabel")}</span> {selectedQC.vendorName}</div>
+                <div><span className="text-muted-foreground">{t("qc.warehouseLabel")}</span> {selectedQC.warehouseName}</div>
+                <div><span className="text-muted-foreground">{t("qc.inspector")}</span> {selectedQC.inspectorName}</div>
+                <div><span className="text-muted-foreground">{t("qc.scheduledDate")}</span> {selectedQC.scheduledDate}</div>
+                <div><span className="text-muted-foreground">{t("qc.completedDate")}</span> {selectedQC.completedDate ?? "—"}</div>
+                <div><span className="text-muted-foreground">{t("qc.statusLabel")}</span> <StatusBadge status={selectedQC.status} /></div>
                 {selectedQC.quarantineLocationId && (
-                  <div><span className="text-muted-foreground">Zone quarantaine :</span> <span className="font-mono text-warning">{selectedQC.quarantineLocationId}</span></div>
+                  <div><span className="text-muted-foreground">{t("qc.quarantineZone")}</span> <span className="font-mono text-warning">{selectedQC.quarantineLocationId}</span></div>
                 )}
               </div>
               {selectedQC.notes && <p className="text-sm bg-muted/30 rounded-lg p-3 mb-4">{selectedQC.notes}</p>}
 
               {/* Inspection lines */}
-              <h3 className="font-semibold text-sm mb-2">Lignes d'inspection</h3>
+              <h3 className="font-semibold text-sm mb-2">{t("qc.inspectionLines")}</h3>
               <div className="overflow-x-auto rounded-lg border border-border">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b bg-muted/30">
-                      <th className="px-3 py-2 text-left">Produit</th>
-                      <th className="px-3 py-2 text-left">Lot</th>
-                      <th className="px-3 py-2 text-right">Échantillon</th>
-                      <th className="px-3 py-2 text-right">OK</th>
-                      <th className="px-3 py-2 text-right">Rejetés</th>
-                      <th className="px-3 py-2 text-left">Temp.</th>
-                      <th className="px-3 py-2 text-left">Défaut</th>
-                      <th className="px-3 py-2 text-left">Résultat</th>
+                      <th className="px-3 py-2 text-left">{t("qc.productCol")}</th>
+                      <th className="px-3 py-2 text-left">{t("qc.lotCol")}</th>
+                      <th className="px-3 py-2 text-right">{t("qc.sampleCol")}</th>
+                      <th className="px-3 py-2 text-right">{t("qc.okCol")}</th>
+                      <th className="px-3 py-2 text-right">{t("qc.rejectedCol")}</th>
+                      <th className="px-3 py-2 text-left">{t("qc.tempCol")}</th>
+                      <th className="px-3 py-2 text-left">{t("qc.defectCol")}</th>
+                      <th className="px-3 py-2 text-left">{t("qc.resultCol")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -257,13 +251,13 @@ export default function QualityControlPage() {
               {(selectedQC.status === "Pending" || selectedQC.status === "In_Progress") && (
                 <div className="flex gap-2 mt-4 justify-end">
                   <Button variant="destructive" size="sm" onClick={() => handleComplete(selectedQC, "Failed")} className="gap-1">
-                    <XCircle className="h-4 w-4" /> Rejeter
+                    <XCircle className="h-4 w-4" /> {t("qc.reject")}
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => handleComplete(selectedQC, "Conditional")} className="gap-1 text-warning border-warning/50">
-                    <AlertTriangle className="h-4 w-4" /> Conditionnel
+                    <AlertTriangle className="h-4 w-4" /> {t("qc.conditionalBtn")}
                   </Button>
                   <Button size="sm" onClick={() => handleComplete(selectedQC, "Passed")} className="gap-1">
-                    <CheckCircle className="h-4 w-4" /> Valider
+                    <CheckCircle className="h-4 w-4" /> {t("qc.validate")}
                   </Button>
                 </div>
               )}

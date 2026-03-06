@@ -6,6 +6,10 @@ import ar from "./locales/ar.json";
 
 const savedLang = localStorage.getItem("jawda-lang") || "fr";
 
+// Set initial direction and lang on the document
+document.documentElement.dir = savedLang === "ar" ? "rtl" : "ltr";
+document.documentElement.lang = savedLang;
+
 i18n.use(initReactI18next).init({
   resources: { fr: { translation: fr }, en: { translation: en }, ar: { translation: ar } },
   lng: savedLang,

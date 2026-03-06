@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { ScrollText, Search, ArrowUpRight, ArrowDownLeft, ArrowLeftRight, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { DateFilter } from "@/components/DateFilter";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import type { StockMovement, MovementType } from "@/data/mockData";
@@ -22,21 +23,6 @@ const DIRECTION_STYLE: Record<string, string> = {
   Out: "text-destructive",
   Internal: "text-info",
 };
-
-const TYPE_OPTIONS: { value: string; label: string }[] = [
-  { value: "all", label: "Tous les types" },
-  { value: "GRN_Receipt", label: "Réception GRN" },
-  { value: "Putaway", label: "Rangement" },
-  { value: "Transfer_Out", label: "Transfert sortant" },
-  { value: "Transfer_In", label: "Transfert entrant" },
-  { value: "Adjustment_Increase", label: "Ajustement (+)" },
-  { value: "Adjustment_Decrease", label: "Ajustement (−)" },
-  { value: "Picking", label: "Prélèvement" },
-  { value: "Return_In", label: "Retour entrant" },
-  { value: "Return_Out", label: "Retour sortant" },
-  { value: "QC_Quarantine", label: "Quarantaine QC" },
-  { value: "QC_Release", label: "Libération QC" },
-];
 
 interface ExportRow {
   ID: string;
@@ -63,6 +49,7 @@ const EXPORT_COLUMNS: ExportColumn<ExportRow>[] = [
 ];
 
 export default function MovementJournalPage() {
+  const { t } = useTranslation();
   const { stockMovements, warehouses } = useWMSData();
   const { operationalWarehouseIds } = useWarehouseScope();
   const [search, setSearch] = useState("");
@@ -73,6 +60,21 @@ export default function MovementJournalPage() {
   const [dateTo, setDateTo] = useState("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [exportOpen, setExportOpen] = useState(false);
+
+  const TYPE_OPTIONS: { value: string; label: string }[] = [
+    { value: "all", label: t("movementJournal.allTypes") },
+    { value: "GRN_Receipt", label: t("movementJournal.grnReceipt") },
+    { value: "Putaway", label: t("movementJournal.putaway") },
+    { value: "Transfer_Out", label: t("movementJournal.transferOut") },
+    { value: "Transfer_In", label: t("movementJournal.transferIn") },
+    { value: "Adjustment_Increase", label: t("movementJournal.adjustIncrease") },
+    { value: "Adjustment_Decrease", label: t("movementJournal.adjustDecrease") },
+    { value: "Picking", label: t("movementJournal.picking") },
+    { value: "Return_In", label: t("movementJournal.returnIn") },
+    { value: "Return_Out", label: t("movementJournal.returnOut") },
+    { value: "QC_Quarantine", label: t("movementJournal.qcQuarantine") },
+    { value: "QC_Release", label: t("movementJournal.qcRelease") },
+  ];
 
   const filtered = useMemo(() => {
     let list = stockMovements.filter((m) => {
@@ -127,31 +129,31 @@ export default function MovementJournalPage() {
             <ScrollText className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Journal des Mouvements</h1>
-            <p className="text-sm text-muted-foreground">Traçabilité complète de tous les mouvements stock</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("movementJournal.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("movementJournal.subtitle")}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-1">
-          <Download className="h-4 w-4" /> Exporter
+          <Download className="h-4 w-4" /> {t("movementJournal.export")}
         </Button>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Total mouvements</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("movementJournal.totalMovements")}</p>
           <p className="text-xl font-semibold">{stats.count}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1"><ArrowDownLeft className="h-3.5 w-3.5 text-success" /> Entrées</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1"><ArrowDownLeft className="h-3.5 w-3.5 text-success" /> {t("movementJournal.inflows")}</p>
           <p className="text-xl font-semibold text-success">{stats.totalIn.toLocaleString()}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1"><ArrowUpRight className="h-3.5 w-3.5 text-destructive" /> Sorties</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1"><ArrowUpRight className="h-3.5 w-3.5 text-destructive" /> {t("movementJournal.outflows")}</p>
           <p className="text-xl font-semibold text-destructive">{stats.totalOut.toLocaleString()}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1"><ArrowLeftRight className="h-3.5 w-3.5 text-info" /> Internes</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1"><ArrowLeftRight className="h-3.5 w-3.5 text-info" /> {t("movementJournal.internal")}</p>
           <p className="text-xl font-semibold text-info">{stats.totalInternal.toLocaleString()}</p>
         </div>
       </div>
@@ -160,22 +162,22 @@ export default function MovementJournalPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher mouvement, produit, réf..." value={search} onChange={(e) => setSearch(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
+          <input type="text" placeholder={t("movementJournal.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
-        <DateFilter value={dateFrom} onChange={setDateFrom} placeholder="Date début" />
-        <DateFilter value={dateTo} onChange={setDateTo} placeholder="Date fin" />
+        <DateFilter value={dateFrom} onChange={setDateFrom} placeholder={t("movementJournal.dateStart")} />
+        <DateFilter value={dateTo} onChange={setDateTo} placeholder={t("movementJournal.dateEnd")} />
         <select value={filterWh} onChange={(e) => setFilterWh(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="all">Tous les entrepôts</option>
+          <option value="all">{t("movementJournal.allWarehouses")}</option>
           {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
         </select>
         <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
           {TYPE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         <select value={filterDirection} onChange={(e) => setFilterDirection(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="all">Toutes directions</option>
-          <option value="In">Entrées</option>
-          <option value="Out">Sorties</option>
-          <option value="Internal">Internes</option>
+          <option value="all">{t("movementJournal.allDirections")}</option>
+          <option value="In">{t("movementJournal.inflows")}</option>
+          <option value="Out">{t("movementJournal.outflows")}</option>
+          <option value="Internal">{t("movementJournal.internal")}</option>
         </select>
         <button type="button" onClick={() => setSortDir(d => d === "asc" ? "desc" : "asc")} className="h-9 px-2 rounded-lg border border-input bg-muted/50">
           {sortDir === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -188,15 +190,15 @@ export default function MovementJournalPage() {
           <table className="w-full text-sm min-w-[900px]">
             <thead>
               <tr className="border-b border-border/50 bg-muted/30">
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">Date</th>
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">ID</th>
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">Type</th>
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">Réf.</th>
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">Produit</th>
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">Entrepôt</th>
-                <th className="px-3 py-3 text-center font-medium text-muted-foreground text-xs">De → Vers</th>
-                <th className="px-3 py-3 text-right font-medium text-muted-foreground text-xs">Qté</th>
-                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">Par</th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">{t("movementJournal.colDate")}</th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">{t("movementJournal.colID")}</th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">{t("movementJournal.colType")}</th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">{t("movementJournal.colRef")}</th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">{t("movementJournal.colProduct")}</th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">{t("movementJournal.colWarehouse")}</th>
+                <th className="px-3 py-3 text-center font-medium text-muted-foreground text-xs">{t("movementJournal.colFromTo")}</th>
+                <th className="px-3 py-3 text-right font-medium text-muted-foreground text-xs">{t("movementJournal.colQty")}</th>
+                <th className="px-3 py-3 text-left font-medium text-muted-foreground text-xs">{t("movementJournal.colBy")}</th>
               </tr>
             </thead>
             <tbody>
@@ -229,8 +231,8 @@ export default function MovementJournalPage() {
         {filtered.length === 0 && (
           <div className="py-12 text-center text-muted-foreground">
             <ScrollText className="h-10 w-10 mx-auto mb-2 opacity-30" />
-            <p className="font-medium">Aucun mouvement trouvé</p>
-            <p className="text-sm mt-1">Ajustez vos filtres pour afficher des résultats.</p>
+            <p className="font-medium">{t("movementJournal.noMovement")}</p>
+            <p className="text-sm mt-1">{t("movementJournal.noMovementHint")}</p>
           </div>
         )}
       </div>

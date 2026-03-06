@@ -6,6 +6,7 @@ import StatusBadge from "@/components/StatusBadge";
 import { RBACGuard } from "@/components/RBACGuard";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ProductTableProps {
   items: Product[];
@@ -25,6 +26,7 @@ interface ProductTableProps {
 
 export function ProductTable({ items, isVisible, sortKey, sortDir, onSort, onView, onEdit, onPricing, onToggle, onDelete, onUnits, onClone, subCatMap }: ProductTableProps) {
   const { unitsOfMeasure, productUnitConversions, productBaseUnits } = useWMSData();
+  const { t } = useTranslation();
 
   const productMeta = useMemo(() => {
     const map = new Map<string, { baseLabel: string; convCount: number }>();
@@ -48,15 +50,15 @@ export function ProductTable({ items, isVisible, sortKey, sortDir, onSort, onVie
       <table className="w-full text-sm min-w-[700px]">
         <thead>
           <tr className="border-b border-border/50 bg-muted/30">
-            {isVisible("sku") && <SortableHeader label="SKU" sortKey="sku" currentSortKey={sortKey} currentDirection={sortDir} onSort={onSort} />}
-            {isVisible("name") && <SortableHeader label="Nom" sortKey="name" currentSortKey={sortKey} currentDirection={sortDir} onSort={onSort} />}
-            {isVisible("category") && <SortableHeader label="Catégorie" sortKey="category" currentSortKey={sortKey} currentDirection={sortDir} onSort={onSort} />}
-            {isVisible("subcategory") && <th className="px-4 py-3 text-left font-medium text-muted-foreground">Sous-catégorie</th>}
-            {isVisible("uom") && <th className="px-4 py-3 text-left font-medium text-muted-foreground">Unité base</th>}
-            {isVisible("conversions") && <th className="px-4 py-3 text-center font-medium text-muted-foreground">Conv.</th>}
-            {isVisible("stock") && <th className="px-4 py-3 text-center font-medium text-muted-foreground">Stock Total</th>}
-            {isVisible("status") && <th className="px-4 py-3 text-center font-medium text-muted-foreground">Statut</th>}
-            {isVisible("actions") && <th className="px-4 py-3 text-center font-medium text-muted-foreground" style={{ minWidth: 200 }}>Actions</th>}
+            {isVisible("sku") && <SortableHeader label={t("table.sku")} sortKey="sku" currentSortKey={sortKey} currentDirection={sortDir} onSort={onSort} />}
+            {isVisible("name") && <SortableHeader label={t("table.name")} sortKey="name" currentSortKey={sortKey} currentDirection={sortDir} onSort={onSort} />}
+            {isVisible("category") && <SortableHeader label={t("table.category")} sortKey="category" currentSortKey={sortKey} currentDirection={sortDir} onSort={onSort} />}
+            {isVisible("subcategory") && <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("table.subCategory")}</th>}
+            {isVisible("uom") && <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("table.baseUnit")}</th>}
+            {isVisible("conversions") && <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("table.conversions")}</th>}
+            {isVisible("stock") && <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("table.stockTotal")}</th>}
+            {isVisible("status") && <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("table.status")}</th>}
+            {isVisible("actions") && <th className="px-4 py-3 text-center font-medium text-muted-foreground" style={{ minWidth: 200 }}>{t("table.actions")}</th>}
           </tr>
         </thead>
         <tbody>

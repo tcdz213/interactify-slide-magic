@@ -1,6 +1,7 @@
 import { AlertTriangle } from "lucide-react";
 import { currency } from "@/data/mockData";
 import { RBACGuard } from "@/components/RBACGuard";
+import { useTranslation } from "react-i18next";
 
 interface ProductKPICardsProps {
   totalProducts: number;
@@ -12,15 +13,16 @@ interface ProductKPICardsProps {
 }
 
 export function ProductKPICards({ totalProducts, categoriesCount, activeCount, criticalStockCount, avgCost, avgPrice }: ProductKPICardsProps) {
+  const { t } = useTranslation();
   return (
     <>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KPICard label="Total produits" value={totalProducts} />
-        <KPICard label="Catégories" value={categoriesCount} />
-        <KPICard label="Produits actifs" value={activeCount} valueClass="text-primary" />
+        <KPICard label={t("productPage.totalProducts")} value={totalProducts} />
+        <KPICard label={t("productPage.categories")} value={categoriesCount} />
+        <KPICard label={t("productPage.activeProducts")} value={activeCount} valueClass="text-primary" />
         <div className="glass-card rounded-lg p-3 border border-border/50 hover:shadow-md transition-shadow">
           <p className="text-xs text-muted-foreground uppercase tracking-wider flex items-center gap-1">
-            <AlertTriangle className="h-3 w-3" /> Stock critique
+            <AlertTriangle className="h-3 w-3" /> {t("productPage.criticalStock")}
           </p>
           <p className="text-xl font-semibold text-destructive">{criticalStockCount}</p>
         </div>
@@ -28,8 +30,8 @@ export function ProductKPICards({ totalProducts, categoriesCount, activeCount, c
 
       <RBACGuard permission="view_financials">
         <div className="grid grid-cols-2 gap-3">
-          <KPICard label="Coût moyen" value={currency(avgCost)} />
-          <KPICard label="Prix moyen" value={currency(avgPrice)} />
+          <KPICard label={t("productPage.avgCost")} value={currency(avgCost)} />
+          <KPICard label={t("productPage.avgPrice")} value={currency(avgPrice)} />
         </div>
       </RBACGuard>
     </>

@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import ColumnToggle, { type ColumnDef } from "@/components/ColumnToggle";
 import type { Sector, SubCategory } from "@/data/masterData";
+import { useTranslation } from "react-i18next";
 
 interface ProductFilterBarProps {
   search: string;
@@ -34,33 +35,34 @@ export function ProductFilterBar({
   warehouses, categories, sectors, subCategories,
   columns, visible, onToggle,
 }: ProductFilterBarProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-3">
       <div className="relative flex-1 min-w-[200px] max-w-xs">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input type="text" placeholder="Rechercher par nom ou SKU..." value={search} onChange={e => onSearchChange(e.target.value)}
-          className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
+        <Search className="absolute inset-inline-start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input type="text" placeholder={t("productPage.searchPlaceholder")} value={search} onChange={e => onSearchChange(e.target.value)}
+          className="h-9 w-full rounded-lg border border-input bg-muted/50 ps-9 pe-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
       </div>
       <select value={filterSector} onChange={e => { onFilterSectorChange(e.target.value); onFilterCatChange("all"); onFilterSubCatChange("all"); }} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-        <option value="all">Tous secteurs</option>
+        <option value="all">{t("productPage.allSectors")}</option>
         {sectors.filter(s => s.status === "Active").map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
       </select>
       <select value={filterCat} onChange={e => { onFilterCatChange(e.target.value); onFilterSubCatChange("all"); }} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-        <option value="all">Toutes catégories</option>
+        <option value="all">{t("productPage.allCategories")}</option>
         {categories.map(c => <option key={c} value={c}>{c}</option>)}
       </select>
       <select value={filterSubCat} onChange={e => onFilterSubCatChange(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-        <option value="all">Toutes sous-catégories</option>
+        <option value="all">{t("productPage.allSubCategories")}</option>
         {subCategories.filter(sc => sc.status === "Active").map(sc => <option key={sc.id} value={sc.id}>{sc.name}</option>)}
       </select>
       <select value={filterWh} onChange={e => onFilterWhChange(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-        <option value="all">Tous les entrepôts</option>
+        <option value="all">{t("productPage.allWarehouses")}</option>
         {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
       </select>
       <select value={filterStatus} onChange={e => onFilterStatusChange(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-        <option value="all">Tous statuts</option>
-        <option value="active">Actif</option>
-        <option value="inactive">Inactif</option>
+        <option value="all">{t("productPage.allStatuses")}</option>
+        <option value="active">{t("productPage.active")}</option>
+        <option value="inactive">{t("productPage.inactive")}</option>
       </select>
       <ColumnToggle columns={columns} visible={visible} onToggle={onToggle} />
     </div>

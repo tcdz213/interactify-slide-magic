@@ -91,11 +91,20 @@ export const stockBlocks: StockBlock[] = [
 
 // ---------- Repacking ----------
 export type RepackStatus = "Pending" | "In_Progress" | "Completed" | "Cancelled";
-export interface RepackOrder { id: string; productId: string; productName: string; warehouseId: string; warehouseName: string; locationId: string; sourceUom: string; targetUom: string; sourceQty: number; targetQty: number; status: RepackStatus; createdBy: string; createdAt: string; completedAt?: string; reason: string; notes: string; }
+export interface RepackOrder {
+  id: string; productId: string; productName: string;
+  warehouseId: string; warehouseName: string; locationId: string;
+  sourceUom: string; targetUom: string; sourceQty: number; targetQty: number;
+  status: RepackStatus; createdBy: string; createdAt: string; completedAt?: string;
+  reason: string; notes: string;
+  /** Lot traceability — links repack to source and generated lots */
+  sourceLotId?: string; sourceLotNumber?: string;
+  targetLotIds?: string[]; targetLotNumbers?: string[];
+}
 
 export const repackOrders: RepackOrder[] = [
-  { id: "RPK-001", productId: "P012", productName: "Sucre blanc 1kg", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", locationId: "ORA-A1-02", sourceUom: "Sac (50kg)", targetUom: "Sac (1kg)", sourceQty: 10, targetQty: 500, status: "Completed", createdBy: "Mourad Ziani", createdAt: "2026-02-15", completedAt: "2026-02-15", reason: "Reconditionnement pour vente détail", notes: "" },
-  { id: "RPK-002", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", locationId: "ALG-A1-01", sourceUom: "Palette (40 sacs)", targetUom: "Sac", sourceQty: 5, targetQty: 200, status: "Pending", createdBy: "Karim Ben Ali", createdAt: "2026-02-22", reason: "Commande détaillant — sacs individuels", notes: "À traiter lundi" },
+  { id: "RPK-001", productId: "P012", productName: "Sucre blanc 1kg", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", locationId: "ORA-A1-02", sourceUom: "Sac (50kg)", targetUom: "Sac (1kg)", sourceQty: 10, targetQty: 500, status: "Completed", createdBy: "Mourad Ziani", createdAt: "2026-02-15", completedAt: "2026-02-15", reason: "Reconditionnement pour vente détail", notes: "", sourceLotId: "LOT-004", sourceLotNumber: "LOT-HUI-0220A", targetLotIds: ["LOT-RPK-001"], targetLotNumbers: ["LOT-RPK-SUC-0215A"] },
+  { id: "RPK-002", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", locationId: "ALG-A1-01", sourceUom: "Palette (40 sacs)", targetUom: "Sac", sourceQty: 5, targetQty: 200, status: "Pending", createdBy: "Karim Ben Ali", createdAt: "2026-02-22", reason: "Commande détaillant — sacs individuels", notes: "À traiter lundi", sourceLotId: "LOT-001", sourceLotNumber: "LOT-CIM-0213A" },
 ];
 
 // ---------- Lot/Batch ----------
