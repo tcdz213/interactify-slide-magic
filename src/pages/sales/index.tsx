@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ShoppingCart, Users, Eye, Search, Plus, Copy, XCircle, History, CheckCircle, Package, Truck, Pencil, ShieldAlert, MapPin, Navigation } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { currency } from "@/data/mockData";
@@ -13,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { SalesOrder, Customer } from "@/data/mockData";
-import { NEXT_STATUS, NEXT_STATUS_TOOLTIP, STATUS_LABELS_FR, CHANNEL_LABELS } from "@/modules/sales/orderStatus";
+import { NEXT_STATUS } from "@/modules/sales/orderStatus";
 import { useOrderForm } from "@/modules/sales/useOrderForm";
 import { OrderFormDialog } from "@/modules/sales/OrderFormDialog";
 import { OrderDetailDrawer } from "@/modules/sales/OrderDetailDrawer";
@@ -23,7 +24,36 @@ import { formatDate } from "@/lib/utils";
 // OrdersPage — Orchestrator (Phase 8 refactoring)
 // ═══════════════════════════════════════════════════════════
 
+const STATUS_KEYS: Record<string, string> = {
+  Draft: "orders.statusDraft",
+  Credit_Hold: "orders.statusCreditHold",
+  Approved: "orders.statusApproved",
+  Picking: "orders.statusPicking",
+  Packed: "orders.statusPacked",
+  Shipped: "orders.statusShipped",
+  Partially_Delivered: "orders.statusPartiallyDelivered",
+  Delivered: "orders.statusDelivered",
+  Invoiced: "orders.statusInvoiced",
+  Cancelled: "orders.statusCancelled",
+};
+
+const CHANNEL_KEYS: Record<string, string> = {
+  Web: "orders.channelWeb",
+  Phone: "orders.channelPhone",
+  Manual: "orders.channelManual",
+  Mobile_App: "orders.channelMobileApp",
+};
+
+const TOOLTIP_KEYS: Record<string, string> = {
+  Draft: "orders.tooltipApprove",
+  Approved: "orders.tooltipPicking",
+  Picking: "orders.tooltipPacked",
+  Packed: "orders.tooltipShip",
+  Shipped: "orders.tooltipDeliver",
+};
+
 export function OrdersPage() {
+  const { t } = useTranslation();
   const hook = useOrderForm();
   const {
     salesOrders, filtered, canCreate, canApprove,
@@ -41,13 +71,13 @@ export function OrdersPage() {
             <ShoppingCart className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Commandes</h1>
-            <p className="text-sm text-muted-foreground">{salesOrders.length} commandes — Cycle complet de vente</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("orders.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("orders.subtitle", { count: salesOrders.length })}</p>
           </div>
         </div>
         {canCreate("salesOrder") && (
           <Button className="flex items-center gap-2" onClick={() => { resetForm(); setNewOrderOpen(true); }}>
-            <Plus className="h-4 w-4" /> Nouvelle commande
+            <Plus className="h-4 w-4" /> {t("orders.newOrder")}
           </Button>
         )}
       </div>
@@ -55,11 +85,11 @@ export function OrdersPage() {
       {/* KPI Summary */}
       <div className="grid grid-cols-5 gap-3">
         {[
-          { label: "Total", value: salesOrders.length, color: "" },
-          { label: "En cours", value: salesOrders.filter((o) => ["Picking", "Packed", "Shipped"].includes(o.status)).length, color: "text-info" },
-          { label: "Livrées", value: salesOrders.filter((o) => o.status === "Delivered").length, color: "text-success" },
-          { label: "Bloquées", value: salesOrders.filter((o) => o.status === "Credit_Hold").length, color: "text-destructive" },
-          { label: "CA Total", value: currency(salesOrders.reduce((s, o) => s + o.totalAmount, 0)), color: "text-primary" },
+          { label: t("orders.total"), value: salesOrders.length, color: "" },
+          { label: t("orders.inProgress"), value: salesOrders.filter((o) => ["Picking", "Packed", "Shipped"].includes(o.status)).length, color: "text-info" },
+          { label: t("orders.delivered"), value: salesOrders.filter((o) => o.status === "Delivered").length, color: "text-success" },
+          { label: t("orders.blocked"), value: salesOrders.filter((o) => o.status === "Credit_Hold").length, color: "text-destructive" },
+          { label: t("orders.totalRevenue"), value: currency(salesOrders.reduce((s, o) => s + o.totalAmount, 0)), color: "text-primary" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-xl p-3 text-center">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
@@ -72,14 +102,14 @@ export function OrdersPage() {
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher commande ou client..." value={search} onChange={(e) => setSearch(e.target.value)}
+          <input type="text" placeholder={t("orders.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)}
             className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
           className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/20">
-          <option value="all">Tous les statuts</option>
+          <option value="all">{t("orders.allStatuses")}</option>
           {["Draft","Credit_Hold","Approved","Picking","Packed","Shipped","Partially_Delivered","Delivered","Invoiced","Cancelled"].map((s) => (
-            <option key={s} value={s}>{STATUS_LABELS_FR[s] ?? s}</option>
+            <option key={s} value={s}>{t(STATUS_KEYS[s] ?? s)}</option>
           ))}
         </select>
       </div>
@@ -89,15 +119,15 @@ export function OrdersPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Commande</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Client</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Vendeur</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Date</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Livraison</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Canal</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Total</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Actions</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colOrder")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colClient")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colSalesRep")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colDate")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colDelivery")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colChannel")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colTotal")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colStatus")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("orders.colActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -108,17 +138,16 @@ export function OrdersPage() {
                 <td className="px-4 py-3 text-muted-foreground text-xs">{order.salesRep}</td>
                 <td className="px-4 py-3 text-muted-foreground text-xs">{formatDate(order.orderDate, true)}</td>
                 <td className="px-4 py-3 text-xs">{formatDate(order.deliveryDate)}</td>
-                <td className="px-4 py-3 text-xs text-muted-foreground">{CHANNEL_LABELS[order.channel] ?? order.channel}</td>
+                <td className="px-4 py-3 text-xs text-muted-foreground">{t(CHANNEL_KEYS[order.channel] ?? order.channel)}</td>
                 <td className="px-4 py-3 text-right font-medium">{currency(order.totalAmount)}</td>
                 <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => setSelectedOrder(order)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Voir les détails">
+                    <button onClick={() => setSelectedOrder(order)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title={t("orders.viewDetails")}>
                       <Eye className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
                     {order.status === "Draft" && canCreate("salesOrder") && (
                       <button onClick={() => {
-                        // Pre-fill form with order data for editing
                         hook.setNewOrderCustomerId(order.customerId);
                         hook.setNewOrderSalesRep(order.salesRep);
                         hook.setNewOrderChannel(order.channel as any);
@@ -134,18 +163,18 @@ export function OrdersPage() {
                         })));
                         hook.setEditingOrderId?.(order.id);
                         hook.setNewOrderOpen(true);
-                      }} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Modifier la commande">
+                      }} className="p-1.5 rounded-md hover:bg-muted transition-colors" title={t("orders.editOrder")}>
                         <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     )}
-                    <button onClick={() => handleDuplicate(order)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Dupliquer la commande">
+                    <button onClick={() => handleDuplicate(order)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title={t("orders.duplicateOrder")}>
                       <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
-                    <button onClick={() => setHistoryDialogOrder(order)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Historique des statuts">
+                    <button onClick={() => setHistoryDialogOrder(order)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title={t("orders.statusHistory")}>
                       <History className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
                     {order.status !== "Cancelled" && order.status !== "Delivered" && order.status !== "Invoiced" && (
-                      <button onClick={() => setCancelDialogOrder(order)} className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive transition-colors" title="Annuler la commande">
+                      <button onClick={() => setCancelDialogOrder(order)} className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive transition-colors" title={t("orders.cancelOrder")}>
                         <XCircle className="h-3.5 w-3.5" />
                       </button>
                     )}
@@ -153,7 +182,7 @@ export function OrdersPage() {
                       <button
                         onClick={() => handleStatusChange(order.id, NEXT_STATUS[order.status]!)}
                         className="p-1.5 rounded-md hover:bg-success/10 text-success transition-colors"
-                        title={NEXT_STATUS_TOOLTIP[order.status] ?? `Passer à ${STATUS_LABELS_FR[NEXT_STATUS[order.status]!] ?? NEXT_STATUS[order.status]}`}
+                        title={t(TOOLTIP_KEYS[order.status] ?? "orders.advanceTo", { status: t(STATUS_KEYS[NEXT_STATUS[order.status]!] ?? NEXT_STATUS[order.status]!) })}
                       >
                         {order.status === "Draft" ? <CheckCircle className="h-3.5 w-3.5" /> : order.status === "Packed" ? <Truck className="h-3.5 w-3.5" /> : <Package className="h-3.5 w-3.5" />}
                       </button>
@@ -181,7 +210,7 @@ function CreditBadge({ pct, status }: { pct: number; status: string }) {
   if (status === "Credit_Hold" || status === "Blocked") {
     return (
       <Badge variant="destructive" className="gap-1 text-[10px]">
-        <ShieldAlert className="h-3 w-3" /> Bloqué
+        <ShieldAlert className="h-3 w-3" /> {status === "Credit_Hold" ? "Credit Hold" : "Blocked"}
       </Badge>
     );
   }
@@ -205,6 +234,7 @@ function nextCustomerId(customers: Customer[]): string {
 }
 
 export function CustomersPage() {
+  const { t } = useTranslation();
   const { customers, setCustomers, invoices } = useWMSData();
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -222,7 +252,6 @@ export function CustomersPage() {
 
   const now = new Date();
 
-  // Auto-block detection: credit > 100% or overdue > 60 days
   const getAutoBlockStatus = (c: Customer) => {
     const pct = Math.round((c.creditUsed / c.creditLimit) * 100);
     const customerInvoices = invoices.filter((inv) => inv.customerId === c.id);
@@ -235,30 +264,28 @@ export function CustomersPage() {
       : 0;
     const shouldBlock = pct > 100 || maxOverdueDays >= 60;
     const reason = pct > 100 && maxOverdueDays >= 60
-      ? `Crédit ${pct}% + ${maxOverdueDays}j impayés`
+      ? t("customers.creditAndOverdue", { pct, days: maxOverdueDays })
       : pct > 100
-      ? `Crédit dépassé (${pct}%)`
+      ? t("customers.creditExceeded", { pct })
       : maxOverdueDays >= 60
-      ? `Impayés > 60j (${maxOverdueDays}j)`
+      ? t("customers.overdueInvoices", { days: maxOverdueDays })
       : null;
     return { shouldBlock, reason, overdueDays: maxOverdueDays };
   };
 
-  // Geo-sort: request user location then sort by distance
   const handleGeoSort = () => {
     if (geoSortActive) { setGeoSortActive(false); return; }
     if (userLocation) { setGeoSortActive(true); return; }
     if (!navigator.geolocation) {
-      toast({ title: "Géolocalisation non disponible", variant: "destructive" });
+      toast({ title: t("customers.geoUnavailable"), variant: "destructive" });
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => { setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setGeoSortActive(true); },
       () => {
-        // Fallback: use Alger centre
         setUserLocation({ lat: 36.7538, lng: 3.0588 });
         setGeoSortActive(true);
-        toast({ title: "Position par défaut (Alger)", description: "Géolocalisation refusée — tri par distance depuis Alger" });
+        toast({ title: t("customers.geoDefault"), description: t("customers.geoDefaultDesc") });
       }
     );
   };
@@ -294,56 +321,56 @@ export function CustomersPage() {
             <Users className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Clients</h1>
-            <p className="text-sm text-muted-foreground">{customers.length} clients enregistrés</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("customers.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("customers.subtitle", { count: customers.length })}</p>
           </div>
         </div>
         {canModifyCustomers && (
           <Button className="flex items-center gap-2" onClick={() => { setNewCustomerForm({ name: "", type: "Détaillant", zone: "", phone: "", email: "", creditLimit: 500000, paymentTerms: "Net_30" }); setNewCustomerOpen(true); }}>
-            <Plus className="h-4 w-4" /> Nouveau client
+            <Plus className="h-4 w-4" /> {t("customers.newCustomer")}
           </Button>
         )}
       </div>
 
       <Dialog open={newCustomerOpen} onOpenChange={(open) => { setNewCustomerOpen(open); if (!open) setEditingCustomer(null); }}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editingCustomer ? `Modifier ${editingCustomer.name}` : "Nouveau client"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editingCustomer ? t("customers.editCustomer", { name: editingCustomer.name }) : t("customers.newCustomer")}</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div className="col-span-2 space-y-2">
-              <Label>Nom</Label>
-              <Input value={newCustomerForm.name} onChange={(e) => setNewCustomerForm((p) => ({ ...p, name: e.target.value }))} placeholder="Raison sociale ou nom" />
+              <Label>{t("customers.formName")}</Label>
+              <Input value={newCustomerForm.name} onChange={(e) => setNewCustomerForm((p) => ({ ...p, name: e.target.value }))} placeholder={t("customers.formNamePlaceholder")} />
             </div>
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>{t("customers.formType")}</Label>
               <Select value={newCustomerForm.type} onValueChange={(v) => setNewCustomerForm((p) => ({ ...p, type: v as Customer["type"] }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(["Entreprise", "PME", "Grand Compte", "Détaillant", "Artisan", "Grossiste"] as const).map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  {(["Entreprise", "PME", "Grand Compte", "Détaillant", "Artisan", "Grossiste"] as const).map((tp) => (
+                    <SelectItem key={tp} value={tp}>{tp}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"><Label>Zone</Label><Input value={newCustomerForm.zone} onChange={(e) => setNewCustomerForm((p) => ({ ...p, zone: e.target.value }))} placeholder="ex. Alger Nord" /></div>
-            <div className="space-y-2"><Label>Téléphone</Label><Input value={newCustomerForm.phone} onChange={(e) => setNewCustomerForm((p) => ({ ...p, phone: e.target.value }))} placeholder="+213-..." /></div>
-            <div className="space-y-2"><Label>Email</Label><Input type="email" value={newCustomerForm.email} onChange={(e) => setNewCustomerForm((p) => ({ ...p, email: e.target.value }))} placeholder="email@..." /></div>
+            <div className="space-y-2"><Label>{t("customers.formZone")}</Label><Input value={newCustomerForm.zone} onChange={(e) => setNewCustomerForm((p) => ({ ...p, zone: e.target.value }))} placeholder={t("customers.formZonePlaceholder")} /></div>
+            <div className="space-y-2"><Label>{t("customers.formPhone")}</Label><Input value={newCustomerForm.phone} onChange={(e) => setNewCustomerForm((p) => ({ ...p, phone: e.target.value }))} placeholder="+213-..." /></div>
+            <div className="space-y-2"><Label>{t("customers.formEmail")}</Label><Input type="email" value={newCustomerForm.email} onChange={(e) => setNewCustomerForm((p) => ({ ...p, email: e.target.value }))} placeholder="email@..." /></div>
             <div className="space-y-2">
-              <Label>Conditions de paiement</Label>
+              <Label>{t("customers.formPaymentTerms")}</Label>
               <Select value={newCustomerForm.paymentTerms} onValueChange={(v) => setNewCustomerForm((p) => ({ ...p, paymentTerms: v as Customer["paymentTerms"] }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Cash">Comptant</SelectItem>
+                  <SelectItem value="Cash">{t("orders.formPaymentCash")}</SelectItem>
                   <SelectItem value="Net_15">Net 15</SelectItem>
                   <SelectItem value="Net_30">Net 30</SelectItem>
                   <SelectItem value="Net_60">Net 60</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2"><Label>Limite de crédit (DZD)</Label><Input type="number" min={0} value={newCustomerForm.creditLimit} onChange={(e) => setNewCustomerForm((p) => ({ ...p, creditLimit: Number(e.target.value) || 0 }))} /></div>
+            <div className="space-y-2"><Label>{t("customers.formCreditLimit")}</Label><Input type="number" min={0} value={newCustomerForm.creditLimit} onChange={(e) => setNewCustomerForm((p) => ({ ...p, creditLimit: Number(e.target.value) || 0 }))} /></div>
             <div className="col-span-2 flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => { setNewCustomerOpen(false); setEditingCustomer(null); }}>Annuler</Button>
+              <Button variant="outline" onClick={() => { setNewCustomerOpen(false); setEditingCustomer(null); }}>{t("customers.formCancel")}</Button>
               <Button onClick={() => {
-                if (!newCustomerForm.name.trim()) { toast({ title: "Nom requis", variant: "destructive" }); return; }
+                if (!newCustomerForm.name.trim()) { toast({ title: t("customers.nameRequired"), variant: "destructive" }); return; }
                 if (editingCustomer) {
                   setCustomers((prev) => prev.map((c) => c.id === editingCustomer.id ? {
                     ...c,
@@ -352,7 +379,7 @@ export function CustomersPage() {
                     email: newCustomerForm.email.trim() || "—", creditLimit: newCustomerForm.creditLimit,
                     paymentTerms: newCustomerForm.paymentTerms,
                   } : c));
-                  toast({ title: "Client modifié", description: editingCustomer.name });
+                  toast({ title: t("customers.customerModified"), description: editingCustomer.name });
                   setEditingCustomer(null);
                   setNewCustomerOpen(false);
                   return;
@@ -364,9 +391,9 @@ export function CustomersPage() {
                   status: "Active", lastOrder: "", totalOrders: 0, totalRevenue: 0, lat: 0, lng: 0,
                 };
                 setCustomers((prev) => [...prev, newCustomer]);
-                toast({ title: "Client créé", description: `${newCustomer.name} (${newCustomer.id})` });
+                toast({ title: t("customers.customerCreated"), description: `${newCustomer.name} (${newCustomer.id})` });
                 setNewCustomerOpen(false);
-              }}>{editingCustomer ? "Enregistrer" : "Créer le client"}</Button>
+              }}>{editingCustomer ? t("customers.formSave") : t("customers.formCreate")}</Button>
             </div>
           </div>
         </DialogContent>
@@ -375,19 +402,19 @@ export function CustomersPage() {
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher client..." value={search} onChange={(e) => setSearch(e.target.value)}
+          <input type="text" placeholder={t("customers.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)}
             className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
           className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/20">
-          <option value="all">Tous</option>
-          <option value="Active">Actif</option>
-          <option value="Credit_Hold">Crédit bloqué</option>
-          <option value="Blocked">Bloqué</option>
+          <option value="all">{t("customers.all")}</option>
+          <option value="Active">{t("customers.active")}</option>
+          <option value="Credit_Hold">{t("customers.creditHold")}</option>
+          <option value="Blocked">{t("customers.blockedStatus")}</option>
         </select>
         <Button variant={geoSortActive ? "default" : "outline"} size="sm" className="gap-1.5" onClick={handleGeoSort}>
           <Navigation className={`h-3.5 w-3.5 ${geoSortActive ? "" : "text-muted-foreground"}`} />
-          {geoSortActive ? "Tri GPS actif" : "Tri par distance"}
+          {geoSortActive ? t("customers.gpsActive") : t("customers.gpsSort")}
         </Button>
       </div>
 
@@ -395,16 +422,16 @@ export function CustomersPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Client</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Type</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Zone</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Conditions</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Crédit utilisé</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Limite</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">% Crédit</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">CA Total</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Actions</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colClient")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colType")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colZone")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colTerms")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colCreditUsed")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colLimit")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colCreditPct")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colRevenue")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colStatus")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customers.colActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -418,7 +445,7 @@ export function CustomersPage() {
                     <span className="font-medium">{c.name}</span>
                     {blockInfo.shouldBlock && (
                       <Badge variant="destructive" className="gap-1 text-[10px] whitespace-nowrap">
-                        <ShieldAlert className="h-3 w-3" /> Auto-bloqué
+                        <ShieldAlert className="h-3 w-3" /> {t("customers.autoBlocked")}
                       </Badge>
                     )}
                   </div>
@@ -440,13 +467,13 @@ export function CustomersPage() {
                 <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => navigate(`/sales/customers/${c.id}`)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Voir détails"><Eye className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                    <button onClick={() => navigate(`/sales/customers/${c.id}`)} className="p-1.5 rounded-md hover:bg-muted transition-colors" title={t("customers.viewDetails")}><Eye className="h-3.5 w-3.5 text-muted-foreground" /></button>
                     {canModifyCustomers && (
                       <button onClick={() => {
                         setEditingCustomer(c);
                         setNewCustomerForm({ name: c.name, type: c.type, zone: c.zone, phone: c.phone, email: c.email, creditLimit: c.creditLimit, paymentTerms: c.paymentTerms });
                         setNewCustomerOpen(true);
-                      }} className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Modifier">
+                      }} className="p-1.5 rounded-md hover:bg-muted transition-colors" title={t("customers.modify")}>
                         <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     )}
@@ -467,17 +494,17 @@ export function CustomersPage() {
                 <DialogTitle className="flex items-center gap-3">{selectedCustomer.name} <StatusBadge status={selectedCustomer.status} /></DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-3 text-sm mt-4">
-                <div><span className="text-muted-foreground">ID :</span> {selectedCustomer.id}</div>
-                <div><span className="text-muted-foreground">Type :</span> {selectedCustomer.type}</div>
-                <div><span className="text-muted-foreground">Zone :</span> {selectedCustomer.zone}</div>
-                <div><span className="text-muted-foreground">Tél :</span> {selectedCustomer.phone}</div>
-                <div><span className="text-muted-foreground">Email :</span> {selectedCustomer.email}</div>
-                <div><span className="text-muted-foreground">Conditions :</span> {selectedCustomer.paymentTerms.replace(/_/g, " ")}</div>
-                <div><span className="text-muted-foreground">Crédit utilisé :</span> {currency(selectedCustomer.creditUsed)}</div>
-                <div><span className="text-muted-foreground">Limite :</span> {currency(selectedCustomer.creditLimit)}</div>
-                <div><span className="text-muted-foreground">Commandes :</span> {selectedCustomer.totalOrders}</div>
-                <div><span className="text-muted-foreground">CA Total :</span> {currency(selectedCustomer.totalRevenue)}</div>
-                <div><span className="text-muted-foreground">Dernière commande :</span> {selectedCustomer.lastOrder || "—"}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailId")}</span> {selectedCustomer.id}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailType")}</span> {selectedCustomer.type}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailZone")}</span> {selectedCustomer.zone}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailPhone")}</span> {selectedCustomer.phone}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailEmail")}</span> {selectedCustomer.email}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailTerms")}</span> {selectedCustomer.paymentTerms.replace(/_/g, " ")}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailCreditUsed")}</span> {currency(selectedCustomer.creditUsed)}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailLimit")}</span> {currency(selectedCustomer.creditLimit)}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailOrders")}</span> {selectedCustomer.totalOrders}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailRevenue")}</span> {currency(selectedCustomer.totalRevenue)}</div>
+                <div><span className="text-muted-foreground">{t("customers.detailLastOrder")}</span> {selectedCustomer.lastOrder || "—"}</div>
               </div>
             </>
           )}

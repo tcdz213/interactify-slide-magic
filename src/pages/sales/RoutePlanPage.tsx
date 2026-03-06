@@ -5,6 +5,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MapPin, Navigation, Clock, CheckCircle2, LogIn, LogOut,
   List, Map as MapIcon, MessageSquare, Users, ArrowLeft,
@@ -95,6 +96,7 @@ function AgentCard({ agent, onSelect }: { agent: SalesAgent; onSelect: () => voi
 
 /* ─────────────── Main Page ─────────────── */
 export default function RoutePlanPage() {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const { warehouses } = useWMSData();
 
@@ -151,12 +153,12 @@ export default function RoutePlanPage() {
     try {
       const visit = await checkIn(planned.customerId, planned.name, repId, visitNotes);
       await enqueue({ type: "check_in", payload: { visitId: visit.id, customerId: planned.customerId } });
-      toast({ title: "Check-in réussi", description: `Visite commencée chez ${planned.name}` });
+      toast({ title: t("routePlan.checkInSuccess"), description: t("routePlan.checkInDesc", { name: planned.name }) });
       setCheckInDialogCustomer(null);
       setVisitNotes("");
       refreshVisits();
     } catch (err) {
-      toast({ title: "Erreur", description: (err as Error).message, variant: "destructive" });
+      toast({ title: t("routePlan.error"), description: (err as Error).message, variant: "destructive" });
     }
   };
 
@@ -165,12 +167,12 @@ export default function RoutePlanPage() {
     try {
       await checkOut(checkOutDialogVisit.id, visitNotes);
       await enqueue({ type: "check_out", payload: { visitId: checkOutDialogVisit.id } });
-      toast({ title: "Check-out réussi", description: `Visite terminée chez ${checkOutDialogVisit.customerName}` });
+      toast({ title: t("routePlan.checkOutSuccess"), description: t("routePlan.checkOutDesc", { name: checkOutDialogVisit.customerName }) });
       setCheckOutDialogVisit(null);
       setVisitNotes("");
       refreshVisits();
     } catch (err) {
-      toast({ title: "Erreur", description: (err as Error).message, variant: "destructive" });
+      toast({ title: t("routePlan.error"), description: (err as Error).message, variant: "destructive" });
     }
   };
 
@@ -193,11 +195,11 @@ export default function RoutePlanPage() {
             <div>
               <h1 className="text-2xl font-bold flex items-center gap-2">
                 <Navigation className="h-6 w-6 text-primary" />
-                Plan de Tournée — {selectedAgent.name}
+                {t("routePlan.routePlanTitle", { name: selectedAgent.name })}
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
                 {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-                {" · "}{plannedVisits.length} visites planifiées · {completedToday} terminée(s)
+                {" · "}{t("routePlan.plannedVisits", { count: plannedVisits.length })} · {t("routePlan.completed", { count: completedToday })}
                 {" · "}{selectedAgent.zone}
               </p>
             </div>
@@ -206,7 +208,7 @@ export default function RoutePlanPage() {
             {activeVisit && (
               <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 animate-pulse">
                 <MapPin className="h-3 w-3 mr-1" />
-                En visite: {activeVisit.customerName}
+                {t("routePlan.inVisit", { name: activeVisit.customerName })}
               </Badge>
             )}
             <div className="flex rounded-lg border overflow-hidden">
@@ -222,16 +224,16 @@ export default function RoutePlanPage() {
 
         {/* KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <Card className="p-3"><div className="text-xs text-muted-foreground">Visites planifiées</div><div className="text-2xl font-bold">{plannedVisits.length}</div></Card>
-          <Card className="p-3"><div className="text-xs text-muted-foreground">Terminées</div><div className="text-2xl font-bold text-emerald-600">{completedToday}</div></Card>
-          <Card className="p-3"><div className="text-xs text-muted-foreground">Restantes</div><div className="text-2xl font-bold text-amber-600">{plannedVisits.length - completedToday}</div></Card>
-          <Card className="p-3"><div className="text-xs text-muted-foreground">Taux complétion</div><div className="text-2xl font-bold">{plannedVisits.length > 0 ? Math.round((completedToday / plannedVisits.length) * 100) : 0}%</div></Card>
+          <Card className="p-3"><div className="text-xs text-muted-foreground">{t("routePlan.plannedVisitsCard")}</div><div className="text-2xl font-bold">{plannedVisits.length}</div></Card>
+          <Card className="p-3"><div className="text-xs text-muted-foreground">{t("routePlan.completedCard")}</div><div className="text-2xl font-bold text-emerald-600">{completedToday}</div></Card>
+          <Card className="p-3"><div className="text-xs text-muted-foreground">{t("routePlan.remainingCard")}</div><div className="text-2xl font-bold text-amber-600">{plannedVisits.length - completedToday}</div></Card>
+          <Card className="p-3"><div className="text-xs text-muted-foreground">{t("routePlan.completionRate")}</div><div className="text-2xl font-bold">{plannedVisits.length > 0 ? Math.round((completedToday / plannedVisits.length) * 100) : 0}%</div></Card>
         </div>
 
         <div className={cn("grid gap-4", view === "map" ? "grid-cols-1 lg:grid-cols-3" : "grid-cols-1")}>
           {view === "map" && (
             <div className="lg:col-span-2 rounded-xl border overflow-hidden" style={{ height: 480 }}>
-              <Suspense fallback={<div className="flex items-center justify-center h-full text-muted-foreground">Chargement de la carte…</div>}>
+              <Suspense fallback={<div className="flex items-center justify-center h-full text-muted-foreground">{t("routePlan.loadingMap")}</div>}>
                 <RouteMapView
                   plannedVisits={plannedVisits}
                   activeVisit={activeVisit}
@@ -245,7 +247,7 @@ export default function RoutePlanPage() {
 
           <div className={cn(view === "map" ? "lg:col-span-1" : "")}>
             <Card>
-              <CardHeader className="pb-2"><CardTitle className="text-base">Visites du jour</CardTitle></CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-base">{t("routePlan.todayVisits")}</CardTitle></CardHeader>
               <CardContent className="space-y-2">
                 {plannedVisits.map((pv) => {
                   const isActive = activeVisit?.customerId === pv.customerId;
@@ -276,14 +278,14 @@ export default function RoutePlanPage() {
             {todayVisits.filter((v) => v.status === "completed").length > 0 && (
               <Card className="mt-3">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2"><MessageSquare className="h-4 w-4" />Notes de visite</CardTitle>
+                  <CardTitle className="text-base flex items-center gap-2"><MessageSquare className="h-4 w-4" />{t("routePlan.visitNotes")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {todayVisits.filter((v) => v.status === "completed").map((v) => (
                     <div key={v.id} className="text-xs border rounded-md p-2">
                       <p className="font-medium">{v.customerName}</p>
-                      <p className="text-muted-foreground">{v.notes || "Aucune note"}</p>
-                      {v.orderIds.length > 0 && <Badge variant="secondary" className="mt-1 text-[10px]">{v.orderIds.length} commande(s)</Badge>}
+                      <p className="text-muted-foreground">{v.notes || t("routePlan.noNotes")}</p>
+                      {v.orderIds.length > 0 && <Badge variant="secondary" className="mt-1 text-[10px]">{t("routePlan.ordersCount", { count: v.orderIds.length })}</Badge>}
                     </div>
                   ))}
                 </CardContent>
@@ -296,18 +298,18 @@ export default function RoutePlanPage() {
         <Dialog open={!!checkInDialogCustomer} onOpenChange={(o) => !o && setCheckInDialogCustomer(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><LogIn className="h-5 w-5 text-primary" />Check-in — {checkInDialogCustomer?.name}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><LogIn className="h-5 w-5 text-primary" />{t("routePlan.checkInTitle", { name: checkInDialogCustomer?.name })}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">📍 {checkInDialogCustomer?.zone} · Heure prévue: {checkInDialogCustomer?.time}</p>
+              <p className="text-sm text-muted-foreground">{t("routePlan.checkInZone", { zone: checkInDialogCustomer?.zone, time: checkInDialogCustomer?.time })}</p>
               <div>
-                <label className="text-sm font-medium">Notes (optionnel)</label>
-                <Textarea value={visitNotes} onChange={(e) => setVisitNotes(e.target.value)} placeholder="Objectif de la visite, produits à proposer…" rows={3} />
+                <label className="text-sm font-medium">{t("routePlan.checkInNotes")}</label>
+                <Textarea value={visitNotes} onChange={(e) => setVisitNotes(e.target.value)} placeholder={t("routePlan.checkInNotesPlaceholder")} rows={3} />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCheckInDialogCustomer(null)}>Annuler</Button>
-              <Button onClick={() => checkInDialogCustomer && handleCheckIn(checkInDialogCustomer)}><MapPin className="h-4 w-4 mr-1" />Confirmer Check-in</Button>
+              <Button variant="outline" onClick={() => setCheckInDialogCustomer(null)}>{t("routePlan.checkInCancel")}</Button>
+              <Button onClick={() => checkInDialogCustomer && handleCheckIn(checkInDialogCustomer)}><MapPin className="h-4 w-4 mr-1" />{t("routePlan.checkInConfirm")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -316,18 +318,18 @@ export default function RoutePlanPage() {
         <Dialog open={!!checkOutDialogVisit} onOpenChange={(o) => !o && setCheckOutDialogVisit(null)}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2"><LogOut className="h-5 w-5 text-destructive" />Check-out — {checkOutDialogVisit?.customerName}</DialogTitle>
+              <DialogTitle className="flex items-center gap-2"><LogOut className="h-5 w-5 text-destructive" />{t("routePlan.checkOutTitle", { name: checkOutDialogVisit?.customerName })}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">Début: {checkOutDialogVisit && new Date(checkOutDialogVisit.checkInTime).toLocaleTimeString("fr-FR")}</p>
+              <p className="text-sm text-muted-foreground">{t("routePlan.checkOutStart", { time: checkOutDialogVisit ? new Date(checkOutDialogVisit.checkInTime).toLocaleTimeString("fr-FR") : "" })}</p>
               <div>
-                <label className="text-sm font-medium">Notes de fin de visite</label>
-                <Textarea value={visitNotes} onChange={(e) => setVisitNotes(e.target.value)} placeholder="Résultat de la visite, commandes passées, remarques…" rows={3} />
+                <label className="text-sm font-medium">{t("routePlan.checkOutNotes")}</label>
+                <Textarea value={visitNotes} onChange={(e) => setVisitNotes(e.target.value)} placeholder={t("routePlan.checkOutNotesPlaceholder")} rows={3} />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCheckOutDialogVisit(null)}>Annuler</Button>
-              <Button variant="destructive" onClick={handleCheckOut}><CheckCircle2 className="h-4 w-4 mr-1" />Confirmer Check-out</Button>
+              <Button variant="outline" onClick={() => setCheckOutDialogVisit(null)}>{t("routePlan.checkOutCancel")}</Button>
+              <Button variant="destructive" onClick={handleCheckOut}><CheckCircle2 className="h-4 w-4 mr-1" />{t("routePlan.checkOutConfirm")}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -350,21 +352,21 @@ export default function RoutePlanPage() {
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <Users className="h-6 w-6 text-primary" />
-            Vendeurs & Tournées
+            {t("routePlan.title")}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
-            {" · "}{totalAgents} vendeur(s) · {totalDone}/{totalVisits} visites
+            {" · "}{t("routePlan.agentCount", { count: totalAgents })} · {t("routePlan.visitCount", { done: totalDone, total: totalVisits })}
           </p>
         </div>
 
         <Select value={warehouseFilter} onValueChange={setWarehouseFilter}>
           <SelectTrigger className="w-[260px]">
             <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="Filtrer par entrepôt" />
+            <SelectValue placeholder={t("routePlan.filterWarehouse")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les entrepôts</SelectItem>
+            <SelectItem value="all">{t("routePlan.allWarehouses")}</SelectItem>
             {warehouseOptions.map((wh) => (
               <SelectItem key={wh.id} value={wh.id}>{wh.label}</SelectItem>
             ))}
@@ -374,10 +376,10 @@ export default function RoutePlanPage() {
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="p-3"><div className="text-xs text-muted-foreground">Vendeurs actifs</div><div className="text-2xl font-bold">{totalAgents}</div></Card>
-        <Card className="p-3"><div className="text-xs text-muted-foreground">Visites terminées</div><div className="text-2xl font-bold text-emerald-600">{totalDone}/{totalVisits}</div></Card>
-        <Card className="p-3"><div className="text-xs text-muted-foreground">Taux visites</div><div className="text-2xl font-bold">{totalVisits > 0 ? Math.round((totalDone / totalVisits) * 100) : 0}%</div></Card>
-        <Card className="p-3"><div className="text-xs text-muted-foreground">Quota global</div><div className="text-2xl font-bold">{totalTarget > 0 ? Math.round((totalQuota / totalTarget) * 100) : 0}%</div></Card>
+        <Card className="p-3"><div className="text-xs text-muted-foreground">{t("routePlan.activeAgents")}</div><div className="text-2xl font-bold">{totalAgents}</div></Card>
+        <Card className="p-3"><div className="text-xs text-muted-foreground">{t("routePlan.visitsCompleted")}</div><div className="text-2xl font-bold text-emerald-600">{totalDone}/{totalVisits}</div></Card>
+        <Card className="p-3"><div className="text-xs text-muted-foreground">{t("routePlan.visitRate")}</div><div className="text-2xl font-bold">{totalVisits > 0 ? Math.round((totalDone / totalVisits) * 100) : 0}%</div></Card>
+        <Card className="p-3"><div className="text-xs text-muted-foreground">{t("routePlan.globalQuota")}</div><div className="text-2xl font-bold">{totalTarget > 0 ? Math.round((totalQuota / totalTarget) * 100) : 0}%</div></Card>
       </div>
 
       {/* Agent Grid */}
@@ -390,7 +392,7 @@ export default function RoutePlanPage() {
       {filteredAgents.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <Users className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>Aucun vendeur trouvé pour cet entrepôt</p>
+          <p>{t("routePlan.noAgents")}</p>
         </div>
       )}
     </div>
