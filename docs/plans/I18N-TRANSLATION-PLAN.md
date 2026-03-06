@@ -76,12 +76,12 @@
 ### Phase 4 — Ventes & Clients (Priority: 🔴 Haute)
 | ID | Fichier | Namespace proposé | Status |
 |----|---------|-------------------|--------|
-| T4.01 | `sales/index.tsx` (OrdersPage) | `orders` (existant, étendre) | ⬜ |
-| T4.02 | `sales/CustomerDetailPage.tsx` | `customerDetail` | ⬜ |
-| T4.03 | `sales/RoutePlanPage.tsx` | `routePlan` | ⬜ |
-| T4.04 | `sales/RouteMapView.tsx` | `routeMap` | ⬜ |
-| T4.05 | `modules/sales/OrderFormDialog.tsx` | `orders` | ⬜ |
-| T4.06 | `modules/sales/OrderDetailDrawer.tsx` | `orders` | ⬜ |
+| T4.01 | `sales/index.tsx` (OrdersPage) | `orders` (existant, étendre) | ✅ |
+| T4.02 | `sales/CustomerDetailPage.tsx` | `customerDetail` | ✅ |
+| T4.03 | `sales/RoutePlanPage.tsx` | `routePlan` | ✅ |
+| T4.04 | `sales/RouteMapView.tsx` | `routePlan` | ✅ |
+| T4.05 | `modules/sales/OrderFormDialog.tsx` | `orders` | ✅ |
+| T4.06 | `modules/sales/OrderDetailDrawer.tsx` | `orders` | ✅ |
 
 ### Phase 5 — Fournisseurs & Achats (Priority: 🟡 Moyenne)
 | ID | Fichier | Namespace proposé | Status |
@@ -173,7 +173,7 @@ Pour chaque page :
 | Phase 1 — WMS Core | 11 | 10 | 91% |
 | Phase 2 — WMS Outbound | 7 | 7 | 100% |
 | Phase 3 — WMS Traçabilité | 7 | 7 | 100% |
-| Phase 4 — Ventes & Clients | 6 | 0 | 0% |
+| Phase 4 — Ventes & Clients | 6 | 6 | 100% |
 | Phase 5 — Fournisseurs & Achats | 7 | 0 | 0% |
 | Phase 6 — Comptabilité | 7 | 0 | 0% |
 | Phase 7 — Tarification | 6 | 0 | 0% |
@@ -181,7 +181,7 @@ Pour chaque page :
 | Phase 9 — Admin & Settings | 9 | 0 | 0% |
 | Phase 10 — Login & Nav | 5 | 0 | 0% |
 | Phase 11 — Portails | 3 lots | 0 | 0% |
-| **TOTAL** | **~73** | **24** | **33%** |
+| **TOTAL** | **~73** | **30** | **41%** |
 
 ---
 
