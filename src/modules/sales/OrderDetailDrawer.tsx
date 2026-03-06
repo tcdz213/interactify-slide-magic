@@ -1,4 +1,5 @@
-import { Eye, History, FileDown } from "lucide-react";
+import { History, FileDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { currency } from "@/data/mockData";
 import { exportOrderPDF } from "@/lib/pdfExport";
 import { Button } from "@/components/ui/button";
@@ -7,8 +8,24 @@ import type { SalesOrder } from "@/data/mockData";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import StatusBadge from "@/components/StatusBadge";
-import { NEXT_STATUS, NEXT_STATUS_TOOLTIP, STATUS_LABELS_FR, CHANNEL_LABELS, getStatusHistory } from "./orderStatus";
+import { NEXT_STATUS, getStatusHistory } from "./orderStatus";
 import type { useOrderForm } from "./useOrderForm";
+
+const STATUS_KEYS: Record<string, string> = {
+  Draft: "orders.statusDraft", Credit_Hold: "orders.statusCreditHold", Approved: "orders.statusApproved",
+  Picking: "orders.statusPicking", Packed: "orders.statusPacked", Shipped: "orders.statusShipped",
+  Partially_Delivered: "orders.statusPartiallyDelivered", Delivered: "orders.statusDelivered",
+  Invoiced: "orders.statusInvoiced", Cancelled: "orders.statusCancelled",
+};
+
+const CHANNEL_KEYS: Record<string, string> = {
+  Web: "orders.channelWeb", Phone: "orders.channelPhone", Manual: "orders.channelManual", Mobile_App: "orders.channelMobileApp",
+};
+
+const TOOLTIP_KEYS: Record<string, string> = {
+  Draft: "orders.tooltipApprove", Approved: "orders.tooltipPicking", Picking: "orders.tooltipPacked",
+  Packed: "orders.tooltipShip", Shipped: "orders.tooltipDeliver",
+};
 
 type FormHook = ReturnType<typeof useOrderForm>;
 
@@ -17,6 +34,7 @@ interface OrderDetailDrawerProps {
 }
 
 export function OrderDetailDrawer({ hook }: OrderDetailDrawerProps) {
+  const { t } = useTranslation();
   const {
     selectedOrder, setSelectedOrder,
     cancelDialogOrder, setCancelDialogOrder,
@@ -38,16 +56,16 @@ export function OrderDetailDrawer({ hook }: OrderDetailDrawerProps) {
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 text-sm mt-4">
-                <div><span className="text-muted-foreground">Client :</span> <span className="font-medium">{selectedOrder.customerName}</span></div>
-                <div><span className="text-muted-foreground">Vendeur :</span> {selectedOrder.salesRep}</div>
-                <div><span className="text-muted-foreground">Date :</span> {selectedOrder.orderDate}</div>
-                <div><span className="text-muted-foreground">Livraison :</span> {selectedOrder.deliveryDate}</div>
-                <div><span className="text-muted-foreground">Canal :</span> {CHANNEL_LABELS[selectedOrder.channel] ?? selectedOrder.channel}</div>
-                <div><span className="text-muted-foreground">Remise :</span> {selectedOrder.discountPct}%</div>
-                <div><span className="text-muted-foreground">Conditions :</span> {selectedOrder.paymentTerms.replace(/_/g, " ")}</div>
-                <div><span className="text-muted-foreground">Sous-total :</span> {currency(selectedOrder.subtotal)}</div>
-                <div><span className="text-muted-foreground">TVA :</span> {currency(selectedOrder.taxAmount)}</div>
-                <div className="col-span-2 text-lg font-bold">Total : {currency(selectedOrder.totalAmount)}</div>
+                <div><span className="text-muted-foreground">{t("orders.detailClient")}</span> <span className="font-medium">{selectedOrder.customerName}</span></div>
+                <div><span className="text-muted-foreground">{t("orders.detailSalesRep")}</span> {selectedOrder.salesRep}</div>
+                <div><span className="text-muted-foreground">{t("orders.detailDate")}</span> {selectedOrder.orderDate}</div>
+                <div><span className="text-muted-foreground">{t("orders.detailDelivery")}</span> {selectedOrder.deliveryDate}</div>
+                <div><span className="text-muted-foreground">{t("orders.detailChannel")}</span> {t(CHANNEL_KEYS[selectedOrder.channel] ?? selectedOrder.channel)}</div>
+                <div><span className="text-muted-foreground">{t("orders.detailDiscount")}</span> {selectedOrder.discountPct}%</div>
+                <div><span className="text-muted-foreground">{t("orders.detailTerms")}</span> {selectedOrder.paymentTerms.replace(/_/g, " ")}</div>
+                <div><span className="text-muted-foreground">{t("orders.detailSubtotal")}</span> {currency(selectedOrder.subtotal)}</div>
+                <div><span className="text-muted-foreground">{t("orders.detailTax")}</span> {currency(selectedOrder.taxAmount)}</div>
+                <div className="col-span-2 text-lg font-bold">{t("orders.detailTotal")} {currency(selectedOrder.totalAmount)}</div>
                 {selectedOrder.notes && <div className="col-span-2 text-muted-foreground italic">{selectedOrder.notes}</div>}
               </div>
               <div className="mt-4 flex gap-2">
@@ -58,16 +76,13 @@ export function OrderDetailDrawer({ hook }: OrderDetailDrawerProps) {
                     exportOrderPDF({
                       ...selectedOrder,
                       lines: selectedOrder.lines.map((l) => ({
-                        productName: l.productName,
-                        orderedQty: l.orderedQty,
-                        unitPrice: l.unitPrice,
-                        lineTotal: l.lineTotal,
+                        productName: l.productName, orderedQty: l.orderedQty, unitPrice: l.unitPrice, lineTotal: l.lineTotal,
                       })),
                     });
-                    toast({ title: "PDF exporté", description: `Commande ${selectedOrder.id}` });
+                    toast({ title: t("orders.pdfExported"), description: `${selectedOrder.id}` });
                   }}
                 >
-                  <FileDown className="h-3.5 w-3.5 mr-1" /> Exporter PDF
+                  <FileDown className="h-3.5 w-3.5 mr-1" /> {t("orders.exportPdf")}
                 </Button>
               </div>
               {NEXT_STATUS[selectedOrder.status] && canApprove("salesOrder") && (
@@ -82,21 +97,21 @@ export function OrderDetailDrawer({ hook }: OrderDetailDrawerProps) {
                     }}
                     className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                   >
-                    {NEXT_STATUS_TOOLTIP[selectedOrder.status] ?? `Passer à ${STATUS_LABELS_FR[NEXT_STATUS[selectedOrder.status]!] ?? NEXT_STATUS[selectedOrder.status]}`}
+                    {t(TOOLTIP_KEYS[selectedOrder.status] ?? "orders.advanceTo", { status: t(STATUS_KEYS[NEXT_STATUS[selectedOrder.status]!] ?? NEXT_STATUS[selectedOrder.status]!) })}
                   </button>
                 </div>
               )}
               <div className="mt-4">
-                <h4 className="text-sm font-semibold mb-2">Lignes de commande</h4>
+                <h4 className="text-sm font-semibold mb-2">{t("orders.orderLines")}</h4>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-2 px-2 text-muted-foreground">Produit</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Qté</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Réservé</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Expédié</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Prix U.</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Total</th>
+                      <th className="text-left py-2 px-2 text-muted-foreground">{t("orders.colProduct")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("orders.colQty")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("orders.colReserved")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("orders.colShipped")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("orders.colUnitPrice")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("orders.colLineTotal")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -122,15 +137,15 @@ export function OrderDetailDrawer({ hook }: OrderDetailDrawerProps) {
       <AlertDialog open={!!cancelDialogOrder} onOpenChange={() => setCancelDialogOrder(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Annuler la commande ?</AlertDialogTitle>
+            <AlertDialogTitle>{t("orders.cancelDialogTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir annuler la commande <span className="font-mono font-semibold">{cancelDialogOrder?.id}</span> pour {cancelDialogOrder?.customerName} ? Cette action est irréversible.
+              {t("orders.cancelDialogDesc", { id: cancelDialogOrder?.id, customer: cancelDialogOrder?.customerName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Non, garder</AlertDialogCancel>
+            <AlertDialogCancel>{t("orders.cancelNo")}</AlertDialogCancel>
             <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => cancelDialogOrder && handleCancel(cancelDialogOrder)}>
-              Oui, annuler
+              {t("orders.cancelYes")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -142,7 +157,7 @@ export function OrderDetailDrawer({ hook }: OrderDetailDrawerProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <History className="h-5 w-5 text-primary" />
-              Historique — {historyDialogOrder?.id}
+              {t("orders.historyTitle", { id: historyDialogOrder?.id })}
             </DialogTitle>
           </DialogHeader>
           {historyDialogOrder && (() => {
@@ -150,8 +165,8 @@ export function OrderDetailDrawer({ hook }: OrderDetailDrawerProps) {
             return entries.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                 <History className="h-8 w-8 mb-2 opacity-40" />
-                <p className="text-sm">Aucun changement de statut enregistré.</p>
-                <p className="text-xs mt-1">L'historique sera enregistré à partir des prochaines transitions.</p>
+                <p className="text-sm">{t("orders.historyEmpty")}</p>
+                <p className="text-xs mt-1">{t("orders.historyHint")}</p>
               </div>
             ) : (
               <div className="space-y-2 max-h-[50vh] overflow-auto">

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { ArrowLeft, Phone, Mail, MapPin, AlertTriangle, CreditCard, ShoppingCart, FileText, TrendingUp, Ban } from "lucide-react";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { currency } from "@/data/mockData";
@@ -7,9 +8,9 @@ import StatusBadge from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatDate } from "@/lib/utils";
-import { STATUS_LABELS_FR } from "@/modules/sales/orderStatus";
 
 export default function CustomerDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { customers, salesOrders, invoices, payments } = useWMSData();
@@ -36,8 +37,8 @@ export default function CustomerDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
         <Ban className="h-12 w-12 mb-3 opacity-40" />
-        <p>Client introuvable</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate("/sales/customers")}>Retour aux clients</Button>
+        <p>{t("customerDetail.notFound")}</p>
+        <Button variant="outline" className="mt-4" onClick={() => navigate("/sales/customers")}>{t("customerDetail.backToCustomers")}</Button>
       </div>
     );
   }
@@ -61,16 +62,16 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
-      {/* Debt warning banner (BR-2) */}
+      {/* Debt warning banner */}
       {overdueDays > 0 && (
         <div className={`flex items-center gap-3 rounded-xl border px-4 py-3 ${overdueDays >= 60 ? "border-destructive/40 bg-destructive/5 text-destructive" : "border-amber-400/40 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 dark:border-amber-800"}`}>
           <AlertTriangle className="h-5 w-5 shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-semibold">
-              {overdueDays >= 60 ? "⛔ Compte bloqué — Impayés > 60 jours" : "⚠️ Factures en retard"}
+              {overdueDays >= 60 ? t("customerDetail.accountBlocked") : t("customerDetail.lateInvoices")}
             </p>
             <p className="text-xs opacity-80">
-              {overdueInvoices.length} facture(s) impayée(s) · Retard max : {overdueDays} jours · Montant dû : {currency(totalOverdueAmount)}
+              {t("customerDetail.invoiceSummary", { count: overdueInvoices.length, days: overdueDays, amount: currency(totalOverdueAmount) })}
             </p>
           </div>
         </div>
@@ -79,11 +80,11 @@ export default function CustomerDetailPage() {
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
-          { label: "Crédit utilisé", value: currency(customer.creditUsed), sub: `/ ${currency(customer.creditLimit)}`, icon: CreditCard, color: creditColor },
-          { label: "% Crédit", value: `${creditPct}%`, sub: creditPct > 100 ? "DÉPASSÉ" : "disponible", icon: TrendingUp, color: creditColor },
-          { label: "Commandes", value: String(customerOrders.length), sub: `${customer.totalOrders} historiques`, icon: ShoppingCart, color: "text-primary" },
-          { label: "CA Total", value: currency(customer.totalRevenue), sub: customer.paymentTerms.replace(/_/g, " "), icon: FileText, color: "text-primary" },
-          { label: "Impayés", value: currency(totalOverdueAmount), sub: overdueInvoices.length > 0 ? `${overdueInvoices.length} facture(s)` : "Aucun", icon: AlertTriangle, color: totalOverdueAmount > 0 ? "text-destructive" : "text-emerald-500" },
+          { label: t("customerDetail.creditUsed"), value: currency(customer.creditUsed), sub: `/ ${currency(customer.creditLimit)}`, icon: CreditCard, color: creditColor },
+          { label: t("customerDetail.creditPct"), value: `${creditPct}%`, sub: creditPct > 100 ? t("customerDetail.exceeded") : t("customerDetail.available"), icon: TrendingUp, color: creditColor },
+          { label: t("customerDetail.orders"), value: String(customerOrders.length), sub: t("customerDetail.historical", { count: customer.totalOrders }), icon: ShoppingCart, color: "text-primary" },
+          { label: t("customerDetail.totalRevenue"), value: currency(customer.totalRevenue), sub: customer.paymentTerms.replace(/_/g, " "), icon: FileText, color: "text-primary" },
+          { label: t("customerDetail.unpaid"), value: currency(totalOverdueAmount), sub: overdueInvoices.length > 0 ? t("customerDetail.invoiceCount", { count: overdueInvoices.length }) : t("customerDetail.noUnpaid"), icon: AlertTriangle, color: totalOverdueAmount > 0 ? "text-destructive" : "text-emerald-500" },
         ].map((kpi) => (
           <div key={kpi.label} className="glass-card rounded-xl p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -98,7 +99,7 @@ export default function CustomerDetailPage() {
 
       {/* Contact info */}
       <div className="glass-card rounded-xl p-4">
-        <h3 className="text-sm font-semibold mb-3">Informations de contact</h3>
+        <h3 className="text-sm font-semibold mb-3">{t("customerDetail.contactInfo")}</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
           <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-muted-foreground" /> {customer.phone}</div>
           <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-muted-foreground" /> {customer.email}</div>
@@ -110,9 +111,9 @@ export default function CustomerDetailPage() {
       {/* Tabs */}
       <Tabs defaultValue="orders" className="w-full">
         <TabsList>
-          <TabsTrigger value="orders">Commandes ({customerOrders.length})</TabsTrigger>
-          <TabsTrigger value="invoices">Factures ({customerInvoices.length})</TabsTrigger>
-          <TabsTrigger value="payments">Paiements ({customerPayments.length})</TabsTrigger>
+          <TabsTrigger value="orders">{t("customerDetail.tabOrders", { count: customerOrders.length })}</TabsTrigger>
+          <TabsTrigger value="invoices">{t("customerDetail.tabInvoices", { count: customerInvoices.length })}</TabsTrigger>
+          <TabsTrigger value="payments">{t("customerDetail.tabPayments", { count: customerPayments.length })}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="orders">
@@ -120,11 +121,11 @@ export default function CustomerDetailPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Commande</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Date</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Vendeur</th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Total</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colOrder")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colDate")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colSalesRep")}</th>
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colTotal")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colStatus")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -138,7 +139,7 @@ export default function CustomerDetailPage() {
                   </tr>
                 ))}
                 {customerOrders.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Aucune commande</td></tr>
+                  <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">{t("customerDetail.noOrders")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -150,12 +151,12 @@ export default function CustomerDetailPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Facture</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Émission</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Échéance</th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Montant</th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Solde</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colInvoice")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colIssueDate")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colDueDate")}</th>
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colAmount")}</th>
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colBalance")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colStatus")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -173,7 +174,7 @@ export default function CustomerDetailPage() {
                   );
                 })}
                 {customerInvoices.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Aucune facture</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("customerDetail.noInvoices")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -185,12 +186,12 @@ export default function CustomerDetailPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Paiement</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Date</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Méthode</th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Montant</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Référence</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colPayment")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colDate")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colMethod")}</th>
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colAmount")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colStatus")}</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("customerDetail.colReference")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -205,7 +206,7 @@ export default function CustomerDetailPage() {
                   </tr>
                 ))}
                 {customerPayments.length === 0 && (
-                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">Aucun paiement</td></tr>
+                  <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{t("customerDetail.noPayments")}</td></tr>
                 )}
               </tbody>
             </table>
