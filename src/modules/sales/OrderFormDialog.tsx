@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Plus, Trash2, AlertTriangle, ClipboardCheck, Tag, BookOpen, ShieldAlert, Ban, CheckCircle2, XCircle, PackageCheck, Ruler, SquareIcon } from "lucide-react";
 import AnomalyWarningDialog from "@/components/AnomalyWarningDialog";
 import { useUnitConversion } from "@/hooks/useUnitConversion";
@@ -15,8 +16,12 @@ import { MarginBadge } from "@/modules/pricing/MarginBadge";
 import { DateFilter } from "@/components/DateFilter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/hooks/use-toast";
-import { CHANNEL_LABELS, TAX_RATE } from "./orderStatus";
+import { TAX_RATE } from "./orderStatus";
 import type { useOrderForm } from "./useOrderForm";
+
+const CHANNEL_KEYS: Record<string, string> = {
+  Web: "orders.channelWeb", Phone: "orders.channelPhone", Manual: "orders.channelManual", Mobile_App: "orders.channelMobileApp",
+};
 
 type FormHook = ReturnType<typeof useOrderForm>;
 
@@ -25,6 +30,7 @@ interface OrderFormDialogProps {
 }
 
 export function OrderFormDialog({ hook }: OrderFormDialogProps) {
+  const { t } = useTranslation();
   const {
     newOrderOpen, setNewOrderOpen,
     confirmDialogOpen, setConfirmDialogOpen,
@@ -122,15 +128,15 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
 
   const handleValidate = () => {
     if (!customer) {
-      toast({ title: "Client requis", description: "Veuillez sélectionner un client.", variant: "destructive" });
+      toast({ title: t("orders.formClientRequired"), description: t("orders.formClientRequiredDesc"), variant: "destructive" });
       return;
     }
     if (validLines.length === 0) {
-      toast({ title: "Lignes requises", description: "Ajoutez au moins une ligne avec produit, quantité et prix.", variant: "destructive" });
+      toast({ title: t("orders.formLinesRequired"), description: t("orders.formLinesRequiredDesc"), variant: "destructive" });
       return;
     }
     if (!canSubmit) {
-      toast({ title: "⛔ Commande bloquée", description: "Résolvez les erreurs avant de valider.", variant: "destructive" });
+      toast({ title: t("orders.formOrderBlocked"), description: t("orders.formOrderBlockedDesc"), variant: "destructive" });
       return;
     }
     setConfirmDialogOpen(true);
@@ -141,12 +147,12 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
       <Dialog open={newOrderOpen} onOpenChange={setNewOrderOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{hook.editingOrderId ? `Modifier commande ${hook.editingOrderId}` : "Nouvelle commande"}</DialogTitle>
+            <DialogTitle>{hook.editingOrderId ? t("orders.formEditTitle", { id: hook.editingOrderId }) : t("orders.formTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Client</Label>
+                <Label>{t("orders.formClient")}</Label>
                 <Select value={newOrderCustomerId} onValueChange={(v) => {
                   setNewOrderCustomerId(v);
                   setNewOrderLines((prev) => prev.map((l) => {
@@ -154,7 +160,7 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                     return { ...l, unitPrice: resolvePrice(l.productId, v), isNegotiated: checkNegotiated(l.productId, v) };
                   }));
                 }}>
-                  <SelectTrigger><SelectValue placeholder="Choisir un client" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("orders.formClientPlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {customers.filter((c) => c.status === "Active").map((c) => (
                       <SelectItem key={c.id} value={c.id}>{c.name} ({c.type})</SelectItem>
@@ -163,9 +169,9 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Vendeur</Label>
+                <Label>{t("orders.formSalesRep")}</Label>
                 <Select value={newOrderSalesRep} onValueChange={hook.setNewOrderSalesRep}>
-                  <SelectTrigger><SelectValue placeholder="Choisir un vendeur" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t("orders.formSalesRepPlaceholder")} /></SelectTrigger>
                   <SelectContent>
                     {salesReps.map((u) => (
                       <SelectItem key={u.id} value={u.name}>{u.name} ({u.roleLabel})</SelectItem>
@@ -174,30 +180,30 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Canal de vente</Label>
+                <Label>{t("orders.formChannel")}</Label>
                 <Select value={newOrderChannel} onValueChange={(v) => setNewOrderChannel(v as any)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(CHANNEL_LABELS).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    {Object.entries(CHANNEL_KEYS).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{t(v)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Date de commande</Label>
-                <DateFilter value={newOrderDate} onChange={setNewOrderDate} placeholder="Date commande" />
+                <Label>{t("orders.formOrderDate")}</Label>
+                <DateFilter value={newOrderDate} onChange={setNewOrderDate} placeholder={t("orders.formOrderDate")} />
               </div>
               <div className="space-y-2">
-                <Label>Date de livraison souhaitée</Label>
-                <DateFilter value={newOrderDeliveryDate} onChange={setNewOrderDeliveryDate} placeholder="Date livraison" />
+                <Label>{t("orders.formDeliveryDate")}</Label>
+                <DateFilter value={newOrderDeliveryDate} onChange={setNewOrderDeliveryDate} placeholder={t("orders.formDeliveryDate")} />
               </div>
               <div className="space-y-2">
-                <Label>Conditions de paiement</Label>
+                <Label>{t("orders.formPaymentTerms")}</Label>
                 <Select value={newOrderPaymentTerms} onValueChange={(v) => setNewOrderPaymentTerms(v as any)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Cash">Comptant</SelectItem>
+                    <SelectItem value="Cash">{t("orders.formPaymentCash")}</SelectItem>
                     <SelectItem value="Net_15">Net 15</SelectItem>
                     <SelectItem value="Net_30">Net 30</SelectItem>
                     <SelectItem value="Net_60">Net 60</SelectItem>
@@ -205,33 +211,33 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Remise globale (%)</Label>
+                <Label>{t("orders.formDiscount")}</Label>
                 <Input type="number" min={0} max={100} step={0.5} value={newOrderDiscountPct} onChange={(e) => setNewOrderDiscountPct(Number(e.target.value) || 0)} />
               </div>
               <div className="col-span-2 space-y-2">
-                <Label>Notes</Label>
-                <Input value={newOrderNotes} onChange={(e) => setNewOrderNotes(e.target.value)} placeholder="Notes optionnelles" />
+                <Label>{t("orders.formNotes")}</Label>
+                <Input value={newOrderNotes} onChange={(e) => setNewOrderNotes(e.target.value)} placeholder={t("orders.formNotesPlaceholder")} />
               </div>
             </div>
 
             {/* Order lines table */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label>Lignes de commande</Label>
+                <Label>{t("orders.orderLines")}</Label>
                 <Button type="button" variant="outline" size="sm" onClick={() => setNewOrderLines((prev) => [...prev, { productId: "", productName: "", orderedQty: 0, unitPrice: 0, unitCost: 0, unitAbbr: "", unitName: "", conversionFactor: 1 }])}>
-                  <Plus className="h-3.5 w-3.5 mr-1" /> Ajouter une ligne
+                  <Plus className="h-3.5 w-3.5 mr-1" /> {t("orders.formAddLine")}
                 </Button>
               </div>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b bg-muted/30">
-                      <th className="text-left p-2 text-xs font-medium text-muted-foreground">Produit</th>
-                      <th className="text-left p-2 text-xs font-medium text-muted-foreground w-24">Unité</th>
-                      <th className="text-right p-2 text-xs font-medium text-muted-foreground w-20">Stock</th>
-                      <th className="text-right p-2 text-xs font-medium text-muted-foreground w-24">Qté</th>
-                      <th className="text-right p-2 text-xs font-medium text-muted-foreground w-28">Prix unit.</th>
-                      <th className="text-right p-2 text-xs font-medium text-muted-foreground w-24">Total</th>
+                     <tr className="border-b bg-muted/30">
+                      <th className="text-left p-2 text-xs font-medium text-muted-foreground">{t("orders.formColProduct")}</th>
+                      <th className="text-left p-2 text-xs font-medium text-muted-foreground w-24">{t("orders.formColUnit")}</th>
+                      <th className="text-right p-2 text-xs font-medium text-muted-foreground w-20">{t("orders.formColStock")}</th>
+                      <th className="text-right p-2 text-xs font-medium text-muted-foreground w-24">{t("orders.formColQty")}</th>
+                      <th className="text-right p-2 text-xs font-medium text-muted-foreground w-28">{t("orders.formColUnitPrice")}</th>
+                      <th className="text-right p-2 text-xs font-medium text-muted-foreground w-24">{t("orders.formColTotal")}</th>
                       <th className="w-14" />
                     </tr>
                   </thead>
@@ -373,7 +379,7 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                             {/* R5: Decimal error */}
                             {isDecimalError && (
                               <p className="text-[10px] text-destructive mt-0.5">
-                                ⚠️ {line.unitAbbr} doit être un nombre entier
+                                ⚠️ {t("orders.formIntegerRequired", { unit: line.unitAbbr })}
                               </p>
                             )}
                           </td>
@@ -386,9 +392,9 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                               {line.productId && (
                                 <div className="mt-0.5 flex items-center justify-end gap-1">
                                   {line.isNegotiated ? (
-                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-primary"><Tag className="h-2.5 w-2.5" />Négocié</span>
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] font-medium text-primary"><Tag className="h-2.5 w-2.5" />{t("orders.formNegotiated")}</span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground"><BookOpen className="h-2.5 w-2.5" />Catalogue</span>
+                                    <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground"><BookOpen className="h-2.5 w-2.5" />{t("orders.formCatalog")}</span>
                                   )}
                                 </div>
                               )}
@@ -397,7 +403,7 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                               )}
                               {isOverStock && (
                                 <div className="text-[10px] text-destructive flex items-center justify-end gap-0.5">
-                                  <AlertTriangle className="h-3 w-3" /> Stock insuff.
+                                  <AlertTriangle className="h-3 w-3" /> {t("orders.formStockInsuff")}
                                 </div>
                               )}
                             </div>
@@ -426,17 +432,17 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
               />
               <label htmlFor="acceptPartial" className="text-sm cursor-pointer flex items-center gap-1.5">
                 <PackageCheck className="h-3.5 w-3.5 text-muted-foreground" />
-                Accepter la livraison partielle
+                {t("orders.formAcceptPartial")}
               </label>
             </div>
 
             {/* Summary preview */}
             {validLines.length > 0 && (
               <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-1 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Sous-total</span><span>{currency(subtotal)}</span></div>
-                {newOrderDiscountPct > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Remise ({newOrderDiscountPct}%)</span><span className="text-destructive">-{currency(subtotal - afterDiscount)}</span></div>}
-                <div className="flex justify-between"><span className="text-muted-foreground">TVA (15%)</span><span>{currency(taxAmount)}</span></div>
-                <div className="flex justify-between font-bold border-t border-border pt-1"><span>Total TTC</span><span>{currency(totalAmount)}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("orders.formSubtotal")}</span><span>{currency(subtotal)}</span></div>
+                {newOrderDiscountPct > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("orders.formDiscountLine", { pct: newOrderDiscountPct })}</span><span className="text-destructive">-{currency(subtotal - afterDiscount)}</span></div>}
+                <div className="flex justify-between"><span className="text-muted-foreground">{t("orders.formTax")}</span><span>{currency(taxAmount)}</span></div>
+                <div className="flex justify-between font-bold border-t border-border pt-1"><span>{t("orders.formTotalTTC")}</span><span>{currency(totalAmount)}</span></div>
               </div>
             )}
 
@@ -446,8 +452,8 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>
                   {debtInfo.blocked
-                    ? <><strong>⛔ Commande bloquée</strong> — {debtInfo.overdueCount} facture(s) impayée(s) depuis {debtInfo.overdueDays} jours ({currency(debtInfo.overdueAmount)}). Les commandes sont interdites au-delà de 60 jours.</>
-                    : <><strong>⚠️ Attention dette</strong> — {debtInfo.overdueCount} facture(s) en retard de {debtInfo.overdueDays} jours ({currency(debtInfo.overdueAmount)})</>
+                    ? <><strong>{t("orders.formDebtBlocked", { count: debtInfo.overdueCount, days: debtInfo.overdueDays, amount: currency(debtInfo.overdueAmount) })}</strong></>
+                    : <><strong>{t("orders.formDebtWarning", { count: debtInfo.overdueCount, days: debtInfo.overdueDays, amount: currency(debtInfo.overdueAmount) })}</strong></>
                   }
                 </span>
               </div>
@@ -458,10 +464,10 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
               <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                 <Ban className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Stock insuffisant — commande bloquée</strong>
+                  <strong>{t("orders.formStockBlocked")}</strong>
                   <ul className="mt-1 text-xs space-y-0.5">
                     {stockIssues.map((s, i) => (
-                      <li key={i}>• {s.productName}: {s.available} dispo / {s.requested} demandé</li>
+                      <li key={i}>• {t("orders.formStockLine", { name: s.productName, available: s.available, requested: s.requested })}</li>
                     ))}
                   </ul>
                 </div>
@@ -472,7 +478,7 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
             {isBelowMinOrder && (
               <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                 <Ban className="h-4 w-4 shrink-0" />
-                <span><strong>Montant minimum non atteint</strong> — Le type <em>{customer?.type}</em> requiert un minimum de {currency(minOrderValue)}. Actuel : {currency(totalAmount)}</span>
+                <span><strong>{t("orders.formMinOrder", { type: customer?.type, min: currency(minOrderValue), current: currency(totalAmount) })}</strong></span>
               </div>
             )}
 
@@ -481,10 +487,10 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
               <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                 <Ban className="h-4 w-4 shrink-0 mt-0.5" />
                 <div>
-                  <strong>Quantités décimales non autorisées</strong>
+                  <strong>{t("orders.formDecimalBlocked")}</strong>
                   <ul className="mt-1 text-xs space-y-0.5">
                     {decimalIssues.map((name, i) => (
-                      <li key={i}>• {name} : cette unité nécessite un nombre entier</li>
+                      <li key={i}>• {t("orders.formDecimalLine", { name })}</li>
                     ))}
                   </ul>
                 </div>
@@ -494,7 +500,7 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
             {customer && isCreditExceeded && !debtInfo.blocked && (
               <div className="flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 px-3 py-2 text-sm">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
-                <span>⚠️ Crédit sera dépassé — commande sera placée en <strong>Credit Hold</strong> ({currency(customer.creditUsed)} + {currency(totalAmount)} &gt; {currency(customer.creditLimit)})</span>
+                <span>{t("orders.formCreditWarning", { used: currency(customer.creditUsed), amount: currency(totalAmount), limit: currency(customer.creditLimit) })}</span>
               </div>
             )}
 
@@ -502,14 +508,14 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
             {hasNegativeMargin && (
               <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                 <ShieldAlert className="h-4 w-4 shrink-0" />
-                <span>Une ou plusieurs lignes ont une <strong>marge négative</strong>. La création est bloquée tant que les prix ne sont pas corrigés.</span>
+                <span>{t("orders.formNegativeMargin")}</span>
               </div>
             )}
 
             <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setNewOrderOpen(false)}>Annuler</Button>
+              <Button variant="outline" onClick={() => setNewOrderOpen(false)}>{t("orders.formCancel")}</Button>
               <Button onClick={handleValidate} disabled={!canSubmit}>
-                <ClipboardCheck className="h-4 w-4 mr-1" /> Vérifier & Créer
+                <ClipboardCheck className="h-4 w-4 mr-1" /> {t("orders.formValidate")}
               </Button>
             </div>
           </div>
@@ -520,17 +526,17 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
       <AlertDialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmer la commande</AlertDialogTitle>
+            <AlertDialogTitle>{t("orders.confirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div><span className="text-muted-foreground">Client :</span> <span className="font-medium">{customer?.name}</span></div>
-                  <div><span className="text-muted-foreground">Vendeur :</span> {newOrderSalesRep}</div>
-                  <div><span className="text-muted-foreground">Canal :</span> {CHANNEL_LABELS[newOrderChannel]}</div>
-                  <div><span className="text-muted-foreground">Paiement :</span> {newOrderPaymentTerms.replace(/_/g, " ")}</div>
+                  <div><span className="text-muted-foreground">{t("orders.confirmClient")}</span> <span className="font-medium">{customer?.name}</span></div>
+                  <div><span className="text-muted-foreground">{t("orders.confirmSalesRep")}</span> {newOrderSalesRep}</div>
+                  <div><span className="text-muted-foreground">{t("orders.confirmChannel")}</span> {t(CHANNEL_KEYS[newOrderChannel])}</div>
+                  <div><span className="text-muted-foreground">{t("orders.confirmPayment")}</span> {newOrderPaymentTerms.replace(/_/g, " ")}</div>
                 </div>
                 <div className="text-sm space-y-0.5">
-                  <p className="font-medium">{validLines.length} ligne(s) :</p>
+                  <p className="font-medium">{t("orders.confirmLines", { count: validLines.length })}</p>
                   {validLines.map((l, i) => (
                     <div key={i} className="flex justify-between text-xs text-muted-foreground">
                       <span>{l.productName} × {l.orderedQty} {l.unitAbbr}</span>
@@ -539,42 +545,42 @@ export function OrderFormDialog({ hook }: OrderFormDialogProps) {
                   ))}
                 </div>
                 <div className="rounded-lg border border-border bg-muted/30 p-2 space-y-0.5 text-sm">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Sous-total</span><span>{currency(subtotal)}</span></div>
-                  {newOrderDiscountPct > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Remise ({newOrderDiscountPct}%)</span><span className="text-destructive">-{currency(subtotal - afterDiscount)}</span></div>}
-                  <div className="flex justify-between"><span className="text-muted-foreground">TVA (15%)</span><span>{currency(taxAmount)}</span></div>
-                  <div className="flex justify-between font-bold border-t border-border pt-1"><span>Total TTC</span><span className="text-primary">{currency(totalAmount)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("orders.confirmSubtotal")}</span><span>{currency(subtotal)}</span></div>
+                  {newOrderDiscountPct > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{t("orders.confirmDiscount", { pct: newOrderDiscountPct })}</span><span className="text-destructive">-{currency(subtotal - afterDiscount)}</span></div>}
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t("orders.confirmTax")}</span><span>{currency(taxAmount)}</span></div>
+                  <div className="flex justify-between font-bold border-t border-border pt-1"><span>{t("orders.confirmTotalTTC")}</span><span className="text-primary">{currency(totalAmount)}</span></div>
                 </div>
 
                 {/* Order Review — Check results */}
                 <div className="rounded-lg border border-border bg-muted/20 p-2 space-y-1 text-xs">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Vérifications</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">{t("orders.confirmChecks")}</p>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                    <span>Stock disponible pour toutes les lignes</span>
+                    <span>{t("orders.confirmStockOk")}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     {isCreditExceeded
-                      ? <><XCircle className="h-3.5 w-3.5 text-amber-500" /><span className="text-amber-600 dark:text-amber-400">Crédit dépassé → statut <strong>Credit Hold</strong></span></>
-                      : <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /><span>Crédit OK ({Math.round(((customer?.creditUsed ?? 0) + totalAmount) / (customer?.creditLimit ?? 1) * 100)}%)</span></>
+                      ? <><XCircle className="h-3.5 w-3.5 text-amber-500" /><span className="text-amber-600 dark:text-amber-400">{t("orders.confirmCreditHold")}</span></>
+                      : <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /><span>{t("orders.confirmCreditOk", { pct: Math.round(((customer?.creditUsed ?? 0) + totalAmount) / (customer?.creditLimit ?? 1) * 100) })}</span></>
                     }
                   </div>
                   <div className="flex items-center gap-1.5">
                     {debtInfo.overdueDays > 0
-                      ? <><AlertTriangle className="h-3.5 w-3.5 text-amber-500" /><span className="text-amber-600 dark:text-amber-400">Facture(s) en retard : {debtInfo.overdueDays}j</span></>
-                      : <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /><span>Aucune dette en retard</span></>
+                      ? <><AlertTriangle className="h-3.5 w-3.5 text-amber-500" /><span className="text-amber-600 dark:text-amber-400">{t("orders.confirmDebtWarning", { days: debtInfo.overdueDays })}</span></>
+                      : <><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /><span>{t("orders.confirmDebtOk")}</span></>
                     }
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                    <span>Montant minimum respecté ({currency(minOrderValue)})</span>
+                    <span>{t("orders.confirmMinOrderOk", { min: currency(minOrderValue) })}</span>
                   </div>
                 </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Modifier</AlertDialogCancel>
-            <AlertDialogAction onClick={createOrder}>Confirmer la création</AlertDialogAction>
+            <AlertDialogCancel>{t("orders.confirmModify")}</AlertDialogCancel>
+            <AlertDialogAction onClick={createOrder}>{t("orders.confirmCreate")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
