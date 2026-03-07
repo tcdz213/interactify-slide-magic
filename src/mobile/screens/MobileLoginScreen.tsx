@@ -5,12 +5,14 @@ import { Delete, Fingerprint } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import BiometricPrompt from "@/mobile/components/BiometricPrompt";
+import { useTranslation } from "react-i18next";
 
 const PIN_LENGTH = 6;
 const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
 
 export default function MobileLoginScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [pin, setPin] = useState("");
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -31,11 +33,10 @@ export default function MobileLoginScreen() {
 
     if (next.length === PIN_LENGTH) {
       setLoading(true);
-      // Simulate auth delay
       setTimeout(() => {
         if (next === REP_PROFILE.pin) {
           localStorage.setItem("mobile_auth", JSON.stringify(REP_PROFILE));
-          toast({ title: `Bonjour, ${REP_PROFILE.name} 👋` });
+          toast({ title: t("mobile.hello", { name: REP_PROFILE.name.split(" ")[0] }) });
           navigate("/mobile/dashboard", { replace: true });
         } else {
           setError(true);
@@ -45,23 +46,20 @@ export default function MobileLoginScreen() {
         }
       }, 400);
     }
-  }, [pin, loading, navigate]);
+  }, [pin, loading, navigate, t]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-background px-6">
-      {/* Logo */}
       <div className="mb-8 text-center">
         <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-3">
           <span className="text-primary-foreground text-2xl font-bold">J</span>
         </div>
         <h1 className="text-xl font-bold text-foreground">JAWDA</h1>
-        <p className="text-sm text-muted-foreground mt-1">Application Vendeur</p>
+        <p className="text-sm text-muted-foreground mt-1">{t("mobile.sellerApp")}</p>
       </div>
 
-      {/* Rep name */}
       <p className="text-sm text-muted-foreground mb-6">{REP_PROFILE.name}</p>
 
-      {/* PIN dots */}
       <div className="flex gap-4 mb-2">
         {Array.from({ length: PIN_LENGTH }).map((_, i) => (
           <div
@@ -78,15 +76,13 @@ export default function MobileLoginScreen() {
         ))}
       </div>
 
-      {/* Error message */}
       <p className={cn(
         "text-xs text-destructive mb-6 h-4 transition-opacity",
         error ? "opacity-100" : "opacity-0"
       )}>
-        Code PIN incorrect
+        {t("mobile.pinIncorrect")}
       </p>
 
-      {/* Numpad */}
       <div className="grid grid-cols-3 gap-3 w-full max-w-[280px]">
         {KEYS.map((key, i) => {
           if (key === "") {
@@ -123,17 +119,15 @@ export default function MobileLoginScreen() {
         })}
       </div>
 
-      {/* Hint */}
-      <p className="text-[10px] text-muted-foreground/50 mt-8">PIN démo : 123456</p>
+      <p className="text-[10px] text-muted-foreground/50 mt-8">{t("mobile.demoPin")}</p>
 
-      {/* Biometric prompt */}
       <BiometricPrompt
         open={biometricOpen}
         onCancel={() => setBiometricOpen(false)}
         onSuccess={() => {
           setBiometricOpen(false);
           localStorage.setItem("mobile_auth", JSON.stringify(REP_PROFILE));
-          toast({ title: `Bonjour, ${REP_PROFILE.name} 👋` });
+          toast({ title: t("mobile.hello", { name: REP_PROFILE.name.split(" ")[0] }) });
           navigate("/mobile/dashboard", { replace: true });
         }}
       />

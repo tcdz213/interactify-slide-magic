@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useWarehouseScope } from "@/hooks/useWarehouseScope";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,9 +17,8 @@ import { Plus, Search, ArrowDownToLine, Trash2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import type { PutawayRule, PutawayRulePriority } from "@/data/mockDataPhase20_22";
 
-// Priority colors now in global StatusBadge map
-
 export default function PutawayRulesPage() {
+  const { t } = useTranslation();
   const { putawayRules, setPutawayRules, warehouses } = useWMSData();
   const { canOperateOn, operationalWarehouses } = useWarehouseScope();
   const { isSystemAdmin } = useAuth();
@@ -38,45 +38,45 @@ export default function PutawayRulesPage() {
   const openEdit = (r: PutawayRule) => { setEditRule(r); setForm({ name: r.name, warehouseId: r.warehouseId, conditionType: r.conditionType, conditionValue: r.conditionValue, targetZone: r.targetZone, targetLocationType: r.targetLocationType, priority: r.priority, isActive: r.isActive, notes: r.notes }); setShowForm(true); };
 
   const save = () => {
-    if (!form.name || !form.warehouseId || !form.conditionValue || !form.targetZone) { toast({ title: "Erreur", description: "Champs obligatoires manquants", variant: "destructive" }); return; }
+    if (!form.name || !form.warehouseId || !form.conditionValue || !form.targetZone) { toast({ title: t("putawayRules.error"), description: t("putawayRules.requiredFields"), variant: "destructive" }); return; }
     const wh = warehouses.find(w => w.id === form.warehouseId);
     if (editRule) {
       setPutawayRules((prev: PutawayRule[]) => prev.map(r => r.id === editRule.id ? { ...r, ...form, warehouseName: wh?.name || "", condition: `${form.conditionType} = ${form.conditionValue}` } : r));
-      toast({ title: "Règle modifiée" });
+      toast({ title: t("putawayRules.ruleModified") });
     } else {
       const nr: PutawayRule = { id: `PAR-${String(Date.now()).slice(-4)}`, ...form, warehouseName: wh?.name || "", condition: `${form.conditionType} = ${form.conditionValue}`, createdBy: "Utilisateur courant", createdAt: new Date().toISOString().slice(0, 10) };
       setPutawayRules((prev: PutawayRule[]) => [nr, ...prev]);
-      toast({ title: "Règle créée" });
+      toast({ title: t("putawayRules.ruleCreated") });
     }
     setShowForm(false);
   };
 
   const toggleActive = (id: string) => setPutawayRules((prev: PutawayRule[]) => prev.map(r => r.id === id ? { ...r, isActive: !r.isActive } : r));
-  const deleteRule = (id: string) => { setPutawayRules((prev: PutawayRule[]) => prev.filter(r => r.id !== id)); toast({ title: "Règle supprimée" }); };
+  const deleteRule = (id: string) => { setPutawayRules((prev: PutawayRule[]) => prev.filter(r => r.id !== id)); toast({ title: t("putawayRules.ruleDeleted") }); };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><ArrowDownToLine className="h-6 w-6" /> Règles de Putaway</h1>
-          <p className="text-sm text-muted-foreground mt-1">Moteur de règles pour assignation automatique des emplacements</p>
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2"><ArrowDownToLine className="h-6 w-6" /> {t("putawayRules.title")}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t("putawayRules.subtitle")}</p>
         </div>
         <div className="flex gap-2">
-          <div className="relative w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" /></div>
-          {isSystemAdmin && <Button onClick={openCreate} size="sm"><Plus className="h-4 w-4 mr-1" /> Nouvelle règle</Button>}
+          <div className="relative w-64"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder={t("common.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)} className="pl-9" /></div>
+          {isSystemAdmin && <Button onClick={openCreate} size="sm"><Plus className="h-4 w-4 mr-1" /> {t("putawayRules.newRule")}</Button>}
         </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{(putawayRules as PutawayRule[]).length}</div><p className="text-xs text-muted-foreground">Total règles</p></CardContent></Card>
-        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-green-600">{(putawayRules as PutawayRule[]).filter(r => r.isActive).length}</div><p className="text-xs text-muted-foreground">Actives</p></CardContent></Card>
-        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-muted-foreground">{(putawayRules as PutawayRule[]).filter(r => !r.isActive).length}</div><p className="text-xs text-muted-foreground">Inactives</p></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold">{(putawayRules as PutawayRule[]).length}</div><p className="text-xs text-muted-foreground">{t("putawayRules.totalRules")}</p></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-green-600">{(putawayRules as PutawayRule[]).filter(r => r.isActive).length}</div><p className="text-xs text-muted-foreground">{t("putawayRules.active")}</p></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-2xl font-bold text-muted-foreground">{(putawayRules as PutawayRule[]).filter(r => !r.isActive).length}</div><p className="text-xs text-muted-foreground">{t("putawayRules.inactive")}</p></CardContent></Card>
       </div>
 
       <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Nom</TableHead><TableHead>Entrepôt</TableHead><TableHead>Type</TableHead><TableHead>Condition</TableHead><TableHead>Zone cible</TableHead><TableHead>Priorité</TableHead><TableHead>Active</TableHead><TableHead>Actions</TableHead>
+            <TableHead>{t("putawayRules.colName")}</TableHead><TableHead>{t("putawayRules.colWarehouse")}</TableHead><TableHead>{t("putawayRules.colType")}</TableHead><TableHead>{t("putawayRules.colCondition")}</TableHead><TableHead>{t("putawayRules.colTargetZone")}</TableHead><TableHead>{t("putawayRules.colPriority")}</TableHead><TableHead>{t("putawayRules.colActive")}</TableHead><TableHead>{t("putawayRules.colActions")}</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {pag.paginatedItems.map(r => (
@@ -100,18 +100,18 @@ export default function PutawayRulesPage() {
       <DataTablePagination {...pag} totalItems={filtered.length} onPageChange={pag.setCurrentPage} onPageSizeChange={pag.setPageSize} />
 
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent><DialogHeader><DialogTitle>{editRule ? "Modifier règle" : "Nouvelle règle"}</DialogTitle></DialogHeader>
-          <FormSection title="Détails règle">
-            <FormField label="Nom"><Input className={formInputClass} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></FormField>
-            <FormField label="Entrepôt"><select className={formSelectClass} value={form.warehouseId} onChange={e => setForm(p => ({ ...p, warehouseId: e.target.value }))}>{operationalWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></FormField>
-            <FormField label="Type de condition"><select className={formSelectClass} value={form.conditionType} onChange={e => setForm(p => ({ ...p, conditionType: e.target.value as PutawayRule["conditionType"] }))}>{(["Category","Vendor","Temperature","Weight","Custom"] as const).map(t => <option key={t} value={t}>{t}</option>)}</select></FormField>
-            <FormField label="Valeur"><Input className={formInputClass} value={form.conditionValue} onChange={e => setForm(p => ({ ...p, conditionValue: e.target.value }))} placeholder="ex: Produits laitiers" /></FormField>
-            <FormField label="Zone cible"><Input className={formInputClass} value={form.targetZone} onChange={e => setForm(p => ({ ...p, targetZone: e.target.value }))} placeholder="ex: A" /></FormField>
-            <FormField label="Type emplacement"><select className={formSelectClass} value={form.targetLocationType} onChange={e => setForm(p => ({ ...p, targetLocationType: e.target.value }))}><option value="Chilled">Chilled</option><option value="Frozen">Frozen</option><option value="Ambient">Ambient</option><option value="Dry">Dry</option></select></FormField>
-            <FormField label="Priorité"><select className={formSelectClass} value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value as PutawayRulePriority }))}>{(["High","Medium","Low"] as const).map(p => <option key={p} value={p}>{p}</option>)}</select></FormField>
-            <FormField label="Notes"><Input className={formInputClass} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} /></FormField>
+        <DialogContent><DialogHeader><DialogTitle>{editRule ? t("putawayRules.editRule") : t("putawayRules.newRule")}</DialogTitle></DialogHeader>
+          <FormSection title={t("putawayRules.ruleDetails")}>
+            <FormField label={t("common.name")}><Input className={formInputClass} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} /></FormField>
+            <FormField label={t("common.warehouse")}><select className={formSelectClass} value={form.warehouseId} onChange={e => setForm(p => ({ ...p, warehouseId: e.target.value }))}>{operationalWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></FormField>
+            <FormField label={t("putawayRules.conditionType")}><select className={formSelectClass} value={form.conditionType} onChange={e => setForm(p => ({ ...p, conditionType: e.target.value as PutawayRule["conditionType"] }))}>{(["Category","Vendor","Temperature","Weight","Custom"] as const).map(ct => <option key={ct} value={ct}>{ct}</option>)}</select></FormField>
+            <FormField label={t("putawayRules.conditionValue")}><Input className={formInputClass} value={form.conditionValue} onChange={e => setForm(p => ({ ...p, conditionValue: e.target.value }))} placeholder={t("putawayRules.conditionValuePlaceholder")} /></FormField>
+            <FormField label={t("putawayRules.targetZone")}><Input className={formInputClass} value={form.targetZone} onChange={e => setForm(p => ({ ...p, targetZone: e.target.value }))} placeholder={t("putawayRules.targetZonePlaceholder")} /></FormField>
+            <FormField label={t("putawayRules.targetLocationType")}><select className={formSelectClass} value={form.targetLocationType} onChange={e => setForm(p => ({ ...p, targetLocationType: e.target.value }))}><option value="Chilled">Chilled</option><option value="Frozen">Frozen</option><option value="Ambient">Ambient</option><option value="Dry">Dry</option></select></FormField>
+            <FormField label={t("putawayRules.priority")}><select className={formSelectClass} value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value as PutawayRulePriority }))}>{(["High","Medium","Low"] as const).map(p => <option key={p} value={p}>{p}</option>)}</select></FormField>
+            <FormField label={t("common.notes")}><Input className={formInputClass} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} /></FormField>
           </FormSection>
-          <DialogFooter><Button variant="outline" onClick={() => setShowForm(false)}>Annuler</Button><Button onClick={save}>Enregistrer</Button></DialogFooter>
+          <DialogFooter><Button variant="outline" onClick={() => setShowForm(false)}>{t("common.cancel")}</Button><Button onClick={save}>{t("common.save")}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

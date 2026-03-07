@@ -3,6 +3,7 @@ import { BarChart3, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { currency } from "@/data/mockData";
 import type { QualityClaim, ReturnOrder } from "@/data/mockData";
+import { useTranslation } from "react-i18next";
 
 interface VendorScore {
   vendorId: string;
@@ -19,12 +20,12 @@ interface VendorScore {
 }
 
 export default function VendorScorecardPage() {
+  const { t } = useTranslation();
   const { qualityClaims, returns, grns, vendors } = useWMSData();
 
   const scorecards = useMemo(() => {
     const vendorMap = new Map<string, VendorScore>();
 
-    // Initialize from vendors that have claims or returns
     const relevantVendorIds = new Set<string>();
     qualityClaims.forEach((c: QualityClaim) => relevantVendorIds.add(c.vendorId));
     returns.filter((r: ReturnOrder) => r.type === "Vendor").forEach((r: ReturnOrder) => {
@@ -52,18 +53,16 @@ export default function VendorScorecardPage() {
       const totalClaimed = vendorClaims.reduce((s: number, c: QualityClaim) => s + c.claimedAmount, 0);
       const totalSettled = vendorClaims.reduce((s: number, c: QualityClaim) => s + (c.settledAmount || 0), 0);
 
-      // Count repeat offences (same root cause within claims)
       const rootCauseCounts = new Map<string, number>();
       vendorClaims.forEach((c: QualityClaim) => {
         if (c.rootCause) rootCauseCounts.set(c.rootCause, (rootCauseCounts.get(c.rootCause) || 0) + 1);
       });
       const repeatOffences = Array.from(rootCauseCounts.values()).filter(v => v > 1).length;
 
-      // Score: 100 base, deductions for issues
       let score = 100;
-      score -= Math.min(claimRate * 5, 30); // claim rate penalty
-      score -= Math.min(avgDays * 0.5, 15);  // resolution time penalty
-      score -= repeatOffences * 10;          // repeat offences penalty
+      score -= Math.min(claimRate * 5, 30);
+      score -= Math.min(avgDays * 0.5, 15);
+      score -= repeatOffences * 10;
       score -= vendorClaims.filter((c: QualityClaim) => c.priority === "Critical").length * 10;
       score = Math.max(0, Math.round(score));
 
@@ -86,7 +85,7 @@ export default function VendorScorecardPage() {
   }, [qualityClaims, returns, grns, vendors]);
 
   const statusColors = { Good: "text-success", Warning: "text-warning", Probation: "text-destructive" };
-  const statusLabels = { Good: "Bon", Warning: "Attention", Probation: "Probation" };
+  const statusLabels = { Good: t("vendorScorecard.statusGood"), Warning: t("vendorScorecard.statusWarning"), Probation: t("vendorScorecard.statusProbation") };
   const statusBg = { Good: "bg-success/10", Warning: "bg-warning/10", Probation: "bg-destructive/10" };
 
   return (
@@ -96,37 +95,35 @@ export default function VendorScorecardPage() {
           <BarChart3 className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Scorecard fournisseurs</h1>
-          <p className="text-sm text-muted-foreground">Performance qualité — réclamations, retours, SLA</p>
+          <h1 className="text-xl font-bold tracking-tight">{t("vendorScorecard.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("vendorScorecard.subtitle")}</p>
         </div>
       </div>
 
-      {/* Summary */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Fournisseurs évalués</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("vendorScorecard.vendorsEvaluated")}</p>
           <p className="text-xl font-semibold">{scorecards.length}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">En probation</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("vendorScorecard.onProbation")}</p>
           <p className="text-xl font-semibold text-destructive">{scorecards.filter(s => s.status === "Probation").length}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Score moyen</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("vendorScorecard.avgScore")}</p>
           <p className="text-xl font-semibold">{scorecards.length > 0 ? Math.round(scorecards.reduce((s, c) => s + c.overallScore, 0) / scorecards.length) : "—"}/100</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Montant total réclamé</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("vendorScorecard.totalClaimed")}</p>
           <p className="text-xl font-semibold text-primary">{currency(scorecards.reduce((s, c) => s + c.totalClaimedAmount, 0))}</p>
         </div>
       </div>
 
-      {/* Scorecards */}
       {scorecards.length === 0 ? (
         <div className="glass-card rounded-xl p-12 text-center text-muted-foreground">
           <BarChart3 className="h-12 w-12 mx-auto mb-3 opacity-50" />
-          <p className="font-medium">Aucune donnée de performance</p>
-          <p className="text-sm mt-1">Les scorecards apparaîtront dès qu'il y aura des réclamations ou retours fournisseurs.</p>
+          <p className="font-medium">{t("vendorScorecard.noData")}</p>
+          <p className="text-sm mt-1">{t("vendorScorecard.noDataDesc")}</p>
         </div>
       ) : (
         <div className="grid gap-4">
@@ -146,31 +143,30 @@ export default function VendorScorecardPage() {
               </div>
               <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-xs">
                 <div>
-                  <p className="text-muted-foreground">Réclamations</p>
+                  <p className="text-muted-foreground">{t("vendorScorecard.claims")}</p>
                   <p className="font-semibold">{sc.totalClaims}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Retours</p>
+                  <p className="text-muted-foreground">{t("vendorScorecard.returns")}</p>
                   <p className="font-semibold">{sc.totalReturns}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Taux réclamation</p>
+                  <p className="text-muted-foreground">{t("vendorScorecard.claimRate")}</p>
                   <p className="font-semibold">{sc.claimRate}%</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Résolution moy.</p>
-                  <p className="font-semibold">{sc.avgResolutionDays}j</p>
+                  <p className="text-muted-foreground">{t("vendorScorecard.avgResolution")}</p>
+                  <p className="font-semibold">{t("vendorScorecard.resolutionDays", { days: sc.avgResolutionDays })}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Récidives</p>
+                  <p className="text-muted-foreground">{t("vendorScorecard.repeatOffences")}</p>
                   <p className={`font-semibold ${sc.repeatOffences > 0 ? "text-destructive" : ""}`}>{sc.repeatOffences}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">Montant réglé</p>
+                  <p className="text-muted-foreground">{t("vendorScorecard.settledAmount")}</p>
                   <p className="font-semibold">{currency(sc.totalSettledAmount)}</p>
                 </div>
               </div>
-              {/* Score bar */}
               <div className="mt-3 h-2 rounded-full bg-muted overflow-hidden">
                 <div className={`h-full rounded-full transition-all ${sc.overallScore >= 70 ? "bg-success" : sc.overallScore >= 50 ? "bg-warning" : "bg-destructive"}`} style={{ width: `${sc.overallScore}%` }} />
               </div>

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import ExportDialog from "@/components/ExportDialog";
+import { useTranslation } from "react-i18next";
 
 const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444"];
 
@@ -23,19 +24,27 @@ interface ReportConfig {
   chartType: ChartType;
 }
 
-const DATA_SOURCES: Record<DataSource, { label: string; groupFields: string[]; metricFields: string[] }> = {
-  inventory: { label: "Inventaire", groupFields: ["category", "warehouseName", "zone"], metricFields: ["qtyOnHand", "qtyAvailable", "unitCostAvg"] },
-  products: { label: "Produits", groupFields: ["category", "uom"], metricFields: ["unitCost", "unitPrice", "reorderPoint"] },
-  salesOrders: { label: "Commandes ventes", groupFields: ["status", "customerName"], metricFields: ["totalAmount"] },
-  purchaseOrders: { label: "Bons de commande", groupFields: ["status", "vendorName"], metricFields: ["totalAmount"] },
-  payments: { label: "Paiements", groupFields: ["method", "status"], metricFields: ["amount"] },
-  cycleCounts: { label: "Comptages cycliques", groupFields: ["status", "warehouseId"], metricFields: ["totalVariance"] },
-};
-
-const AGG_LABELS: Record<AggFn, string> = { count: "Nombre", sum: "Somme", avg: "Moyenne", min: "Minimum", max: "Maximum" };
-
 export default function ReportBuilderPage() {
+  const { t } = useTranslation();
   const wms = useWMSData();
+
+  const DATA_SOURCES: Record<DataSource, { label: string; groupFields: string[]; metricFields: string[] }> = {
+    inventory: { label: t("reportBuilder.inventory"), groupFields: ["category", "warehouseName", "zone"], metricFields: ["qtyOnHand", "qtyAvailable", "unitCostAvg"] },
+    products: { label: t("reportBuilder.productsSource"), groupFields: ["category", "uom"], metricFields: ["unitCost", "unitPrice", "reorderPoint"] },
+    salesOrders: { label: t("reportBuilder.salesOrders"), groupFields: ["status", "customerName"], metricFields: ["totalAmount"] },
+    purchaseOrders: { label: t("reportBuilder.purchaseOrders"), groupFields: ["status", "vendorName"], metricFields: ["totalAmount"] },
+    payments: { label: t("reportBuilder.paymentsSource"), groupFields: ["method", "status"], metricFields: ["amount"] },
+    cycleCounts: { label: t("reportBuilder.cycleCounts"), groupFields: ["status", "warehouseId"], metricFields: ["totalVariance"] },
+  };
+
+  const AGG_LABELS: Record<AggFn, string> = {
+    count: t("reportBuilder.count"),
+    sum: t("reportBuilder.sum"),
+    avg: t("reportBuilder.avg"),
+    min: t("reportBuilder.min"),
+    max: t("reportBuilder.max"),
+  };
+
   const [config, setConfig] = useState<ReportConfig>({
     dataSource: "inventory",
     groupBy: "category",
@@ -84,7 +93,7 @@ export default function ReportBuilderPage() {
   const exportColumns = [
     { key: "name" as const, label: config.groupBy },
     { key: "value" as const, label: `${AGG_LABELS[config.aggFn]} ${config.metric}` },
-    { key: "count" as const, label: "Nombre" },
+    { key: "count" as const, label: t("reportBuilder.number") },
   ];
 
   return (
@@ -95,24 +104,24 @@ export default function ReportBuilderPage() {
             <FileSpreadsheet className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Générateur de rapports</h1>
-            <p className="text-sm text-muted-foreground">Créez des rapports personnalisés à partir de vos données WMS</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("reportBuilder.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("reportBuilder.subtitle")}</p>
           </div>
         </div>
         <Button variant="outline" size="sm" className="gap-1" onClick={() => setExportOpen(true)}>
-          <Download className="h-4 w-4" /> Exporter
+          <Download className="h-4 w-4" /> {t("reportBuilder.export")}
         </Button>
       </div>
 
       {/* Config panel */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Configuration du rapport</CardTitle>
+          <CardTitle className="text-base">{t("reportBuilder.reportConfig")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Source de données</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("reportBuilder.dataSource")}</label>
               <Select value={config.dataSource} onValueChange={(v) => {
                 const ds = v as DataSource;
                 const src = DATA_SOURCES[ds];
@@ -127,7 +136,7 @@ export default function ReportBuilderPage() {
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Regrouper par</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("reportBuilder.groupBy")}</label>
               <Select value={config.groupBy} onValueChange={(v) => setConfig({ ...config, groupBy: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -136,7 +145,7 @@ export default function ReportBuilderPage() {
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Métrique</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("reportBuilder.metric")}</label>
               <Select value={config.metric} onValueChange={(v) => setConfig({ ...config, metric: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -145,7 +154,7 @@ export default function ReportBuilderPage() {
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Agrégation</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("reportBuilder.aggregation")}</label>
               <Select value={config.aggFn} onValueChange={(v) => setConfig({ ...config, aggFn: v as AggFn })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -154,13 +163,13 @@ export default function ReportBuilderPage() {
               </Select>
             </div>
             <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Visualisation</label>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t("reportBuilder.visualization")}</label>
               <Select value={config.chartType} onValueChange={(v) => setConfig({ ...config, chartType: v as ChartType })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="table">Tableau</SelectItem>
-                  <SelectItem value="bar">Barres</SelectItem>
-                  <SelectItem value="pie">Camembert</SelectItem>
+                  <SelectItem value="table">{t("reportBuilder.tableView")}</SelectItem>
+                  <SelectItem value="bar">{t("reportBuilder.bars")}</SelectItem>
+                  <SelectItem value="pie">{t("reportBuilder.pie")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -173,9 +182,9 @@ export default function ReportBuilderPage() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">
-              {AGG_LABELS[config.aggFn]} de {config.metric} par {config.groupBy}
+              {AGG_LABELS[config.aggFn]} {t("common.of", { defaultValue: "de" })} {config.metric} {t("reportBuilder.groupBy").toLowerCase()} {config.groupBy}
             </CardTitle>
-            <Badge variant="outline">{reportData.length} groupes · {rawData.length} enregistrements</Badge>
+            <Badge variant="outline">{reportData.length} {t("reportBuilder.groups")} · {rawData.length} {t("reportBuilder.records")}</Badge>
           </div>
         </CardHeader>
         <CardContent>
@@ -215,7 +224,7 @@ export default function ReportBuilderPage() {
                   <tr className="border-b border-border bg-muted/30">
                     <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">{config.groupBy}</th>
                     <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">{AGG_LABELS[config.aggFn]} {config.metric}</th>
-                    <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Nombre</th>
+                    <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">{t("reportBuilder.number")}</th>
                   </tr>
                 </thead>
                 <tbody>

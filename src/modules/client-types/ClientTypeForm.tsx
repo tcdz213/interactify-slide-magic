@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { clientTypeSchema, type ClientTypeFormValues, type ClientType } from "./clientType.schema";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ interface ClientTypeFormProps {
 }
 
 export function ClientTypeForm({ open, onOpenChange, clientType, onSave }: ClientTypeFormProps) {
+  const { t } = useTranslation();
   const form = useForm<ClientTypeFormValues>({
     resolver: zodResolver(clientTypeSchema),
     defaultValues: {
@@ -37,21 +39,21 @@ export function ClientTypeForm({ open, onOpenChange, clientType, onSave }: Clien
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>{clientType ? "Modifier le type client" : "Nouveau type client"}</DialogTitle>
+          <DialogTitle>{clientType ? t("clientTypes.form.editTitle") : t("clientTypes.form.createTitle")}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField control={form.control} name="name" render={({ field }) => (
               <FormItem>
-                <FormLabel>Nom *</FormLabel>
-                <FormControl><Input placeholder="Ex: Grossiste" {...field} /></FormControl>
+                <FormLabel>{t("clientTypes.form.name")}</FormLabel>
+                <FormControl><Input placeholder={t("clientTypes.form.namePlaceholder")} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl><Textarea placeholder="Description du type client..." {...field} /></FormControl>
+                <FormLabel>{t("clientTypes.form.description")}</FormLabel>
+                <FormControl><Textarea placeholder={t("clientTypes.form.descPlaceholder")} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
@@ -59,27 +61,27 @@ export function ClientTypeForm({ open, onOpenChange, clientType, onSave }: Clien
               <FormField control={form.control} name="isDefault" render={({ field }) => (
                 <FormItem className="flex items-center gap-2 space-y-0">
                   <FormControl><Switch checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                  <FormLabel className="cursor-pointer">Type par défaut</FormLabel>
+                  <FormLabel className="cursor-pointer">{t("clientTypes.form.isDefault")}</FormLabel>
                 </FormItem>
               )} />
               <FormField control={form.control} name="status" render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>Statut</FormLabel>
+                  <FormLabel>{t("clientTypes.form.status")}</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="active">Actif</SelectItem>
-                      <SelectItem value="inactive">Inactif</SelectItem>
+                      <SelectItem value="active">{t("clientTypes.form.active")}</SelectItem>
+                      <SelectItem value="inactive">{t("clientTypes.form.inactive")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </FormItem>
               )} />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-              <Button type="submit">{clientType ? "Enregistrer" : "Créer"}</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("clientTypes.form.cancel")}</Button>
+              <Button type="submit">{clientType ? t("clientTypes.form.save") : t("clientTypes.form.create")}</Button>
             </DialogFooter>
           </form>
         </Form>

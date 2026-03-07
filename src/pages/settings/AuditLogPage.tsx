@@ -1,4 +1,5 @@
 import { useMemo, useState, Fragment, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { ScrollText, Search, Clock, User, ChevronDown, ChevronRight, ArrowRight, Download } from "lucide-react";
 import { WarehouseScopeBanner } from "@/components/WarehouseScopeBanner";
 import { Button } from "@/components/ui/button";
@@ -54,6 +55,7 @@ const actionColors: Record<string, string> = {
 };
 
 export default function AuditLogPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [moduleFilter, setModuleFilter] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -92,13 +94,13 @@ export default function AuditLogPage() {
           <ScrollText className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Journal d'audit</h1>
-          <p className="text-sm text-muted-foreground">Historique complet avec diff avant/après — immuable</p>
+          <h1 className="text-xl font-bold tracking-tight">{t("auditLog.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("auditLog.subtitle")}</p>
         </div>
       </div>
 
       <div className="flex items-center justify-end">
-        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-2"><Download className="h-4 w-4" /> Exporter</Button>
+        <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-2"><Download className="h-4 w-4" /> {t("auditLog.export")}</Button>
       </div>
 
       <ExportDialog open={exportOpen} onOpenChange={setExportOpen} data={filtered} columns={auditExportCols} filename="audit-log" />
@@ -107,12 +109,12 @@ export default function AuditLogPage() {
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher…"
+            placeholder={t("auditLog.searchPlaceholder")}
             className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-4 text-sm" />
         </div>
         <div className="flex gap-1 flex-wrap">
           <Button variant={moduleFilter === "all" ? "default" : "outline"} size="sm"
-            onClick={() => setModuleFilter("all")}>Tous</Button>
+            onClick={() => setModuleFilter("all")}>{t("auditLog.all")}</Button>
           {modules.map((m) => (
             <Button key={m} variant={moduleFilter === m ? "default" : "outline"} size="sm"
               onClick={() => setModuleFilter(m)}>{m}</Button>
@@ -125,12 +127,12 @@ export default function AuditLogPage() {
           <thead>
             <tr className="border-b border-border bg-muted/30">
               <th className="px-2 py-3 w-8"></th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Horodatage</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Action</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Module</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Entité</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Utilisateur</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Détails</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("auditLog.timestamp")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("auditLog.action")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("auditLog.module")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("auditLog.entity")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("auditLog.user")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("auditLog.details")}</th>
             </tr>
           </thead>
           <tbody>
@@ -162,7 +164,7 @@ export default function AuditLogPage() {
                   <tr className="bg-muted/10">
                     <td colSpan={7} className="px-8 py-3">
                       <div className="text-xs space-y-1.5">
-                        <p className="font-semibold text-muted-foreground mb-2">Changements (avant → après)</p>
+                        <p className="font-semibold text-muted-foreground mb-2">{t("auditLog.changes")}</p>
                         {e.diff.map((d) => (
                           <div key={d.field} className="flex items-center gap-2">
                             <span className="font-medium text-foreground w-32 shrink-0">{d.field}</span>
@@ -182,9 +184,9 @@ export default function AuditLogPage() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        {filtered.length} entrée{filtered.length > 1 ? "s" : ""} affichée{filtered.length > 1 ? "s" : ""}
-        {" · "}{auditEntries.filter(e => e.diff).length} avec diff avant/après
-        {" · "}Persisté en localStorage
+        {filtered.length} {t("auditLog.entries")}
+        {" · "}{auditEntries.filter(e => e.diff).length} {t("auditLog.withDiff")}
+        {" · "}{t("auditLog.persistedLocal")}
       </p>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { users as initialUsers, warehouses, USER_ROLE_LEVEL, GOVERNANCE_LABELS } from "@/data/mockData";
 import type { User, UserRole, GovernancePermission } from "@/data/mockData";
 import {
@@ -24,37 +25,6 @@ import UserFormDialog from "@/components/settings/UserFormDialog";
 import DeleteUserDialog from "@/components/settings/DeleteUserDialog";
 import { Card, CardContent } from "@/components/ui/card";
 
-// ── Document type display labels ──────────────────────────────────────────
-const DOC_LABELS: Record<DocumentType, string> = {
-    grn: "GRN (Réception)",
-    stockAdjustment: "Ajustement stock",
-    stockTransfer: "Transfert stock",
-    cycleCount: "Comptage cyclique",
-    purchaseOrder: "Bon de commande",
-    salesOrder: "Commande client",
-    invoice: "Facture",
-    payment: "Paiement",
-    writeOff: "Write-off / Dépréciation",
-};
-
-// ── Hierarchy levels for the org tree ─────────────────────────────────────
-const LEVEL_CONFIG = [
-    { level: 1, label: "Direction Générale", color: "bg-purple-500", textColor: "text-purple-700", borderColor: "border-purple-200", bgColor: "bg-purple-50/50" },
-    { level: 2, label: "Direction Fonctionnelle", color: "bg-indigo-500", textColor: "text-indigo-700", borderColor: "border-indigo-200", bgColor: "bg-indigo-50/50" },
-    { level: 3, label: "Management Opérationnel", color: "bg-blue-500", textColor: "text-blue-700", borderColor: "border-blue-200", bgColor: "bg-blue-50/50" },
-    { level: 4, label: "Spécialistes & Superviseurs", color: "bg-cyan-500", textColor: "text-cyan-700", borderColor: "border-cyan-200", bgColor: "bg-cyan-50/50" },
-    { level: 5, label: "Exécution Terrain", color: "bg-slate-400", textColor: "text-slate-700", borderColor: "border-slate-200", bgColor: "bg-slate-50/50" },
-];
-
-// ── Governance rules ───────────────────────────────────────────────────────
-const GOVERNANCE_RULES = [
-    { title: "Règle 1 — Un entrepôt = un responsable principal", desc: "Chaque entrepôt doit avoir un responsable clairement identifié.", icon: Building2, color: "text-blue-600" },
-    { title: "Règle 2 — Séparation des tâches", desc: "Le créateur d'une transaction ne peut jamais être son propre approbateur.", icon: ShieldCheck, color: "text-indigo-600" },
-    { title: "Règle 3 — Escalade sur impact financier", desc: "Le niveau d'approbation est proportionnel à l'impact : ≤0.5% auto, ≤2% manager, ≤5% finance, >5% DG.", icon: AlertTriangle, color: "text-amber-600" },
-    { title: "Règle 4 — Périmètre géographique strict", desc: "Un responsable d'entrepôt ne peut ni voir, ni approuver, ni modifier le stock d'un autre entrepôt.", icon: ShieldOff, color: "text-red-600" },
-    { title: "Règle 5 — Gouvernance système indépendante", desc: "Les permissions système (admin, config, édition) sont un axe indépendant du rôle opérationnel.", icon: Crown, color: "text-purple-600" },
-];
-
 // ── Permission row ─────────────────────────────────────────────────────────
 function PermCheck({ allowed }: { allowed: boolean }) {
     return allowed
@@ -63,7 +33,19 @@ function PermCheck({ allowed }: { allowed: boolean }) {
 }
 
 // ── User detail panel ──────────────────────────────────────────────────────
-function UserDetailPanel({ user, onClose }: { user: User; onClose: () => void }) {
+function UserDetailPanel({ user, onClose, t }: { user: User; onClose: () => void; t: (key: string, opts?: any) => string }) {
+    const DOC_LABELS: Record<DocumentType, string> = {
+        grn: "GRN",
+        stockAdjustment: t("userManagement.document") + " — Stock",
+        stockTransfer: t("common.warehouse") + " Transfer",
+        cycleCount: t("nav.cycleCount"),
+        purchaseOrder: t("nav.purchaseOrders"),
+        salesOrder: t("nav.orders"),
+        invoice: t("nav.invoices"),
+        payment: t("nav.payments"),
+        writeOff: "Write-off",
+    };
+
     const docs: DocumentType[] = ["grn", "stockAdjustment", "stockTransfer", "cycleCount", "purchaseOrder", "salesOrder", "invoice", "payment", "writeOff"];
     const perms = ROLE_PERMISSIONS_DISPLAY[user.role];
     const isFullAccess = user.assignedWarehouseIds === "all";
@@ -91,17 +73,17 @@ function UserDetailPanel({ user, onClose }: { user: User; onClose: () => void })
                 <div className="space-y-4">
                     {/* Accountability */}
                     <div className="rounded-lg bg-muted/40 border border-border p-3 text-sm text-muted-foreground">
-                        <p className="font-medium text-foreground mb-0.5 flex items-center gap-1.5"><Info className="h-3.5 w-3.5" /> Périmètre de responsabilité</p>
+                        <p className="font-medium text-foreground mb-0.5 flex items-center gap-1.5"><Info className="h-3.5 w-3.5" /> {t("userManagement.responsibilityScope")}</p>
                         <p className="text-xs">{user.accountabilityScope}</p>
                     </div>
 
                     {/* Assigned warehouses */}
                     <div>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Entrepôts assignés</p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("userManagement.assignedWarehouses")}</p>
                         <div className="flex flex-wrap gap-2">
                             {isFullAccess && (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border bg-purple-50 text-purple-700 border-purple-200">
-                                    <Building2 className="h-3.5 w-3.5" /> Accès à tous les entrepôts
+                                    <Building2 className="h-3.5 w-3.5" /> {t("userManagement.allWarehousesAccess")}
                                 </span>
                             )}
                             {assignedWHs.map((wh) => (
@@ -116,22 +98,22 @@ function UserDetailPanel({ user, onClose }: { user: User; onClose: () => void })
 
                     {/* Approval threshold */}
                     <div>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Seuil d'approbation</p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("userManagement.approvalThreshold")}</p>
                         {user.approvalThresholdPct !== null ? (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
-                                <ShieldCheck className="h-3.5 w-3.5" /> Jusqu'à {user.approvalThresholdPct}%
+                                <ShieldCheck className="h-3.5 w-3.5" /> {t("userManagement.upTo", { pct: user.approvalThresholdPct })}
                             </span>
                         ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border bg-slate-50 text-slate-600 border-slate-200">
-                                <ShieldOff className="h-3.5 w-3.5" /> Aucune autorité
+                                <ShieldOff className="h-3.5 w-3.5" /> {t("userManagement.noAuthority")}
                             </span>
                         )}
-                        <p className="text-xs text-muted-foreground mt-1">Auto-approbation : <strong className="text-destructive">Toujours interdite</strong></p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("userManagement.selfApproval")} : <strong className="text-destructive">{t("userManagement.alwaysForbidden")}</strong></p>
                     </div>
 
                     {/* Governance */}
                     <div>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5"><Crown className="h-3 w-3" /> Gouvernance (Couche 3)</p>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5"><Crown className="h-3 w-3" /> {t("userManagement.governanceLayer3")}</p>
                         {user.governancePermissions.length > 0 ? (
                             <div className="flex flex-wrap gap-1.5">
                                 {user.governancePermissions.map((perm) => (
@@ -143,7 +125,7 @@ function UserDetailPanel({ user, onClose }: { user: User; onClose: () => void })
                             </div>
                         ) : (
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border bg-slate-50 text-slate-500 border-slate-200">
-                                <ShieldOff className="h-3.5 w-3.5" /> Opérationnel uniquement
+                                <ShieldOff className="h-3.5 w-3.5" /> {t("userManagement.operationalOnly")}
                             </span>
                         )}
                     </div>
@@ -151,15 +133,15 @@ function UserDetailPanel({ user, onClose }: { user: User; onClose: () => void })
 
                 {/* Right column — Permission matrix */}
                 <div>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Matrice de permissions (Couche 1)</p>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{t("userManagement.permissionMatrix")}</p>
                     <div className="rounded-lg border border-border overflow-hidden">
                         <table className="w-full text-xs">
                             <thead className="bg-muted/50">
                                 <tr>
-                                    <th className="text-left font-semibold px-3 py-2">Document</th>
-                                    <th className="text-center font-semibold px-2 py-2">Lire</th>
-                                    <th className="text-center font-semibold px-2 py-2">Créer</th>
-                                    <th className="text-center font-semibold px-2 py-2">Approuver</th>
+                                    <th className="text-left font-semibold px-3 py-2">{t("userManagement.document")}</th>
+                                    <th className="text-center font-semibold px-2 py-2">{t("userManagement.read")}</th>
+                                    <th className="text-center font-semibold px-2 py-2">{t("userManagement.create")}</th>
+                                    <th className="text-center font-semibold px-2 py-2">{t("userManagement.approve")}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -192,10 +174,20 @@ export default function UserManagementPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const [roleFilter, setRoleFilter] = useState<string>("all");
     const [whFilter, setWhFilter] = useState<string>("all");
+    const { t } = useTranslation();
     const { hasGovernance, isSystemAdmin } = useAuth();
     const { toast } = useToast();
 
     const canManageUsers = isSystemAdmin || hasGovernance("MANAGE_USERS") || hasGovernance("SYSTEM_ADMIN");
+
+    // ── Hierarchy levels for the org tree ─────────────────────────────────────
+    const LEVEL_CONFIG = [
+        { level: 1, label: t("userManagement.hierarchy") + " — L1", color: "bg-purple-500", textColor: "text-purple-700", borderColor: "border-purple-200", bgColor: "bg-purple-50/50" },
+        { level: 2, label: t("userManagement.hierarchy") + " — L2", color: "bg-indigo-500", textColor: "text-indigo-700", borderColor: "border-indigo-200", bgColor: "bg-indigo-50/50" },
+        { level: 3, label: t("userManagement.hierarchy") + " — L3", color: "bg-blue-500", textColor: "text-blue-700", borderColor: "border-blue-200", bgColor: "bg-blue-50/50" },
+        { level: 4, label: t("userManagement.hierarchy") + " — L4", color: "bg-cyan-500", textColor: "text-cyan-700", borderColor: "border-cyan-200", bgColor: "bg-cyan-50/50" },
+        { level: 5, label: t("userManagement.hierarchy") + " — L5", color: "bg-slate-400", textColor: "text-slate-700", borderColor: "border-slate-200", bgColor: "bg-slate-50/50" },
+    ];
 
     const filteredUsers = useMemo(() => {
         let result = [...usersList].sort((a, b) => USER_ROLE_LEVEL[a.role] - USER_ROLE_LEVEL[b.role]);
@@ -228,10 +220,10 @@ export default function UserManagementPage() {
             if (idx >= 0) {
                 const updated = [...prev];
                 updated[idx] = user;
-                toast({ title: "Utilisateur modifié", description: `${user.name} a été mis à jour.` });
+                toast({ title: t("userManagement.userModified"), description: t("userManagement.userModifiedDesc", { name: user.name }) });
                 return updated;
             }
-            toast({ title: "Utilisateur créé", description: `${user.name} a été ajouté.` });
+            toast({ title: t("userManagement.userCreated"), description: t("userManagement.userCreatedDesc", { name: user.name }) });
             return [...prev, user];
         });
         setSelectedUser(null);
@@ -240,7 +232,7 @@ export default function UserManagementPage() {
     const handleDeleteUser = (userId: string) => {
         setUsersList((prev) => prev.filter((u) => u.id !== userId));
         if (selectedUser?.id === userId) setSelectedUser(null);
-        toast({ title: "Utilisateur supprimé", description: "L'utilisateur a été supprimé définitivement.", variant: "destructive" });
+        toast({ title: t("userManagement.userDeleted"), description: t("userManagement.userDeletedDesc"), variant: "destructive" });
     };
 
     const openEdit = (user: User) => { setEditingUser(user); setFormOpen(true); };
@@ -256,16 +248,16 @@ export default function UserManagementPage() {
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2.5">
                         <Users2 className="h-6 w-6 text-primary" />
-                        Gestion des Utilisateurs & Accès
+                        {t("userManagement.title")}
                     </h1>
                     <p className="text-muted-foreground text-sm mt-1">
-                        Structure organisationnelle, périmètres d'accès et règles de gouvernance
+                        {t("userManagement.subtitle")}
                     </p>
                 </div>
                 {canManageUsers && (
                     <Button onClick={openCreate}>
                         <Plus className="mr-1.5 h-4 w-4" />
-                        Ajouter un utilisateur
+                        {t("userManagement.addUser")}
                     </Button>
                 )}
             </div>
@@ -277,7 +269,7 @@ export default function UserManagementPage() {
                         <Users2 className="h-8 w-8 text-blue-600" />
                         <div>
                             <p className="text-2xl font-bold text-blue-700">{stats.total}</p>
-                            <p className="text-xs text-blue-600">Utilisateurs</p>
+                            <p className="text-xs text-blue-600">{t("userManagement.users")}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -286,7 +278,7 @@ export default function UserManagementPage() {
                         <BarChart3 className="h-8 w-8 text-emerald-600" />
                         <div>
                             <p className="text-2xl font-bold text-emerald-700">{stats.roles}</p>
-                            <p className="text-xs text-emerald-600">Rôles distincts</p>
+                            <p className="text-xs text-emerald-600">{t("userManagement.distinctRoles")}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -295,7 +287,7 @@ export default function UserManagementPage() {
                         <ShieldCheck className="h-8 w-8 text-amber-600" />
                         <div>
                             <p className="text-2xl font-bold text-amber-700">{stats.withApproval}</p>
-                            <p className="text-xs text-amber-600">Avec autorité approbation</p>
+                            <p className="text-xs text-amber-600">{t("userManagement.withApproval")}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -304,7 +296,7 @@ export default function UserManagementPage() {
                         <Crown className="h-8 w-8 text-purple-600" />
                         <div>
                             <p className="text-2xl font-bold text-purple-700">{stats.withGov}</p>
-                            <p className="text-xs text-purple-600">Avec gouvernance</p>
+                            <p className="text-xs text-purple-600">{t("userManagement.withGovernance")}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -322,7 +314,7 @@ export default function UserManagementPage() {
                                 activeTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            {{ hierarchy: "🏢 Hiérarchie", users: "👥 Utilisateurs", governance: "📋 Gouvernance" }[tab]}
+                            {{ hierarchy: `🏢 ${t("userManagement.hierarchy")}`, users: `👥 ${t("userManagement.users")}`, governance: `📋 ${t("userManagement.governance")}` }[tab]}
                         </button>
                     ))}
                 </div>
@@ -336,7 +328,7 @@ export default function UserManagementPage() {
                         <div className="relative flex-1 min-w-[200px] max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input
-                                placeholder="Rechercher un utilisateur..."
+                                placeholder={t("userManagement.searchPlaceholder")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-9"
@@ -347,7 +339,7 @@ export default function UserManagementPage() {
                             onChange={(e) => setRoleFilter(e.target.value)}
                             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                         >
-                            <option value="all">Tous les rôles</option>
+                            <option value="all">{t("userManagement.allRoles")}</option>
                             {uniqueRoles.map((r) => (
                                 <option key={r} value={r}>{r}</option>
                             ))}
@@ -357,24 +349,24 @@ export default function UserManagementPage() {
                             onChange={(e) => setWhFilter(e.target.value)}
                             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
                         >
-                            <option value="all">Tous les entrepôts</option>
+                            <option value="all">{t("userManagement.allWarehouses")}</option>
                             {warehouses.map((wh) => (
                                 <option key={wh.id} value={wh.id}>{getWarehouseShortName(wh.id)}</option>
                             ))}
                         </select>
-                        <span className="text-xs text-muted-foreground">{filteredUsers.length} résultat(s)</span>
+                        <span className="text-xs text-muted-foreground">{filteredUsers.length} {t("common.results")}</span>
                     </div>
 
                     <div className="rounded-xl border border-border overflow-hidden">
                         <table className="w-full text-sm">
                             <thead className="bg-muted/50 border-b border-border">
                                 <tr>
-                                    <th className="text-left font-semibold px-4 py-3">Utilisateur</th>
-                                    <th className="text-left font-semibold px-4 py-3">Rôle</th>
-                                    <th className="text-left font-semibold px-4 py-3">Entrepôts</th>
-                                    <th className="text-left font-semibold px-4 py-3">Approbation</th>
-                                    <th className="text-center font-semibold px-4 py-3">Gouvernance</th>
-                                    {canManageUsers && <th className="text-center font-semibold px-4 py-3">Actions</th>}
+                                    <th className="text-left font-semibold px-4 py-3">{t("userManagement.users")}</th>
+                                    <th className="text-left font-semibold px-4 py-3">{t("common.type")}</th>
+                                    <th className="text-left font-semibold px-4 py-3">{t("common.warehouse")}</th>
+                                    <th className="text-left font-semibold px-4 py-3">{t("userManagement.approve")}</th>
+                                    <th className="text-center font-semibold px-4 py-3">{t("userManagement.governance")}</th>
+                                    {canManageUsers && <th className="text-center font-semibold px-4 py-3">{t("common.actions")}</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -408,7 +400,7 @@ export default function UserManagementPage() {
                                                 <div className="flex flex-wrap gap-1">
                                                     {isFullAccess ? (
                                                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border bg-purple-50 text-purple-700 border-purple-200">
-                                                            <Building2 className="h-3 w-3" /> Tous
+                                                            <Building2 className="h-3 w-3" /> {t("common.all")}
                                                         </span>
                                                     ) : (
                                                         (user.assignedWarehouseIds as string[]).map((whId) => (
@@ -456,7 +448,7 @@ export default function UserManagementPage() {
                         </table>
                     </div>
 
-                    {selectedUser && <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} />}
+                    {selectedUser && <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} t={t} />}
                 </div>
             )}
 
@@ -464,7 +456,7 @@ export default function UserManagementPage() {
             {activeTab === "hierarchy" && (
                 <div className="space-y-3">
                     <p className="text-sm text-muted-foreground">
-                        Vue arborescente de la structure organisationnelle. Cliquez sur un utilisateur pour voir son détail.
+                        {t("userManagement.subtitle")}
                     </p>
                     {LEVEL_CONFIG.map(({ level, label, color, textColor, borderColor, bgColor }) => {
                         const levelUsers = sortedUsers.filter((u) => USER_ROLE_LEVEL[u.role] === level);
@@ -479,9 +471,9 @@ export default function UserManagementPage() {
                                         <div className={cn("h-2.5 w-2.5 rounded-full", color)} />
                                     </div>
                                     <span className={cn("text-xs font-bold uppercase tracking-wider", textColor)}>
-                                        Niveau {level} — {label}
+                                        {label}
                                     </span>
-                                    <span className="text-[10px] text-muted-foreground ml-auto">{levelUsers.length} utilisateur(s)</span>
+                                    <span className="text-[10px] text-muted-foreground ml-auto">{levelUsers.length} {t("userManagement.users").toLowerCase()}</span>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                                     {levelUsers.map((user) => {
@@ -502,7 +494,7 @@ export default function UserManagementPage() {
                                                     <div className="flex flex-wrap gap-1 mt-1">
                                                         {isFullAccess ? (
                                                             <span className="inline-flex items-center gap-1 px-1 py-px rounded text-[10px] font-medium border bg-purple-50 text-purple-700 border-purple-200">
-                                                                <Building2 className="h-2.5 w-2.5" /> Tous
+                                                                <Building2 className="h-2.5 w-2.5" /> {t("common.all")}
                                                             </span>
                                                         ) : (
                                                             (user.assignedWarehouseIds as string[]).map((whId) => (
@@ -520,56 +512,21 @@ export default function UserManagementPage() {
                             </div>
                         );
                     })}
-                    {selectedUser && <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} />}
+                    {selectedUser && <UserDetailPanel user={selectedUser} onClose={() => setSelectedUser(null)} t={t} />}
                 </div>
             )}
 
             {/* ── TAB: Governance ── */}
             {activeTab === "governance" && (
                 <div className="space-y-6">
-                    {/* Rules */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {GOVERNANCE_RULES.map((rule) => (
-                            <div key={rule.title} className="rounded-xl border border-border bg-card p-4 space-y-2">
-                                <div className={cn("flex items-center gap-2 font-semibold text-sm", rule.color)}>
-                                    <rule.icon className="h-4 w-4 shrink-0" />
-                                    {rule.title}
-                                </div>
-                                <p className="text-sm text-muted-foreground">{rule.desc}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* 3-Layer Architecture */}
-                    <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-                        <h2 className="text-base font-semibold flex items-center gap-2">
-                            <Crown className="h-4 w-4 text-purple-500" />
-                            Architecture de permissions — 3 couches indépendantes
-                        </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div className="rounded-lg border-2 border-blue-200 bg-blue-50/50 p-3 space-y-1.5">
-                                <p className="text-xs font-bold text-blue-700 uppercase tracking-wider">Couche 1 — Rôle</p>
-                                <p className="text-xs text-blue-600">Quelles actions l'utilisateur peut effectuer</p>
-                            </div>
-                            <div className="rounded-lg border-2 border-emerald-200 bg-emerald-50/50 p-3 space-y-1.5">
-                                <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Couche 2 — Périmètre</p>
-                                <p className="text-xs text-emerald-600">Sur quels entrepôts l'utilisateur peut opérer</p>
-                            </div>
-                            <div className="rounded-lg border-2 border-purple-200 bg-purple-50/50 p-3 space-y-1.5">
-                                <p className="text-xs font-bold text-purple-700 uppercase tracking-wider">Couche 3 — Gouvernance</p>
-                                <p className="text-xs text-purple-600">Capacités système indépendantes</p>
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Governance matrix */}
                     <div>
-                        <h2 className="text-base font-semibold mb-3 flex items-center gap-2"><Lock className="h-4 w-4 text-purple-500" /> Permissions de gouvernance</h2>
+                        <h2 className="text-base font-semibold mb-3 flex items-center gap-2"><Lock className="h-4 w-4 text-purple-500" /> {t("userManagement.governance")}</h2>
                         <div className="rounded-xl border border-border overflow-hidden">
                             <table className="w-full text-sm">
                                 <thead className="bg-muted/50 border-b border-border">
                                     <tr>
-                                        <th className="text-left font-semibold px-4 py-3">Utilisateur</th>
+                                        <th className="text-left font-semibold px-4 py-3">{t("userManagement.users")}</th>
                                         {(Object.keys(GOVERNANCE_LABELS) as GovernancePermission[]).map((perm) => (
                                             <th key={perm} className="text-center font-semibold px-2 py-3 text-[10px]">{GOVERNANCE_LABELS[perm]}</th>
                                         ))}
@@ -599,14 +556,14 @@ export default function UserManagementPage() {
 
                     {/* Approval escalation */}
                     <div>
-                        <h2 className="text-base font-semibold mb-3 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-500" /> Matrice d'escalade</h2>
+                        <h2 className="text-base font-semibold mb-3 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-500" /> {t("userManagement.approvalThreshold")}</h2>
                         <div className="rounded-xl border border-border overflow-hidden">
                             <table className="w-full text-sm">
                                 <thead className="bg-muted/50 border-b border-border">
                                     <tr>
-                                        <th className="text-left font-semibold px-4 py-3">Seuil</th>
-                                        <th className="text-left font-semibold px-4 py-3">Niveau</th>
-                                        <th className="text-left font-semibold px-4 py-3">Rôles</th>
+                                        <th className="text-left font-semibold px-4 py-3">{t("alertRules.colThreshold")}</th>
+                                        <th className="text-left font-semibold px-4 py-3">{t("common.type")}</th>
+                                        <th className="text-left font-semibold px-4 py-3">{t("common.type")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -623,7 +580,7 @@ export default function UserManagementPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 {tier.requiredRoles.length === 0 ? (
-                                                    <span className="text-xs text-emerald-600 font-medium">Automatique</span>
+                                                    <span className="text-xs text-emerald-600 font-medium">{t("approvalWorkflows.always")}</span>
                                                 ) : (
                                                     <div className="flex flex-wrap gap-1">
                                                         {tier.requiredRoles.map((role) => (
@@ -641,15 +598,15 @@ export default function UserManagementPage() {
 
                     {/* Warehouse accountability */}
                     <div>
-                        <h2 className="text-base font-semibold mb-3 flex items-center gap-2"><Building2 className="h-4 w-4 text-blue-500" /> Responsabilité par entrepôt</h2>
+                        <h2 className="text-base font-semibold mb-3 flex items-center gap-2"><Building2 className="h-4 w-4 text-blue-500" /> {t("userManagement.assignedWarehouses")}</h2>
                         <div className="rounded-xl border border-border overflow-hidden">
                             <table className="w-full text-sm">
                                 <thead className="bg-muted/50 border-b border-border">
                                     <tr>
-                                        <th className="text-left font-semibold px-4 py-3">Entrepôt</th>
-                                        <th className="text-left font-semibold px-4 py-3">Ville</th>
-                                        <th className="text-left font-semibold px-4 py-3">Responsable</th>
-                                        <th className="text-left font-semibold px-4 py-3">Équipe</th>
+                                        <th className="text-left font-semibold px-4 py-3">{t("common.warehouse")}</th>
+                                        <th className="text-left font-semibold px-4 py-3">{t("common.city")}</th>
+                                        <th className="text-left font-semibold px-4 py-3">{t("userManagement.users")}</th>
+                                        <th className="text-left font-semibold px-4 py-3">{t("userManagement.users")}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -671,7 +628,7 @@ export default function UserManagementPage() {
                                                             <span className="font-medium text-sm">{manager.name}</span>
                                                         </div>
                                                     ) : (
-                                                        <span className="text-muted-foreground text-xs">Non assigné</span>
+                                                        <span className="text-muted-foreground text-xs">—</span>
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3">

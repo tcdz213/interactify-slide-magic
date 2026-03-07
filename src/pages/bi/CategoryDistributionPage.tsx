@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { BarChart3 } from "lucide-react";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import {
@@ -26,6 +27,7 @@ const CAT_COLORS = [
 
 export default function CategoryDistributionPage() {
   const { products, sectors, productCategories, subCategories, inventory } = useWMSData();
+  const { t } = useTranslation();
 
   const activeProducts = useMemo(() => products.filter(p => !p.isDeleted && p.isActive), [products]);
 
@@ -133,26 +135,26 @@ export default function CategoryDistributionPage() {
           <BarChart3 className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Répartition par catégorie</h1>
+          <h1 className="text-xl font-bold tracking-tight">{t("biCategory.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Analyse BI — {activeProducts.length} produits actifs
+            {t("biCategory.subtitle", { count: activeProducts.length })}
           </p>
         </div>
       </div>
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <KPI label="Secteurs actifs" value={totalSectors} />
-        <KPI label="Catégories utilisées" value={totalCategories} />
-        <KPI label="Sous-catégories" value={totalSubcats} />
-        <KPI label="Produits actifs" value={activeProducts.length} />
+        <KPI label={t("biCategory.activeSectors")} value={totalSectors} />
+        <KPI label={t("biCategory.categoriesUsed")} value={totalCategories} />
+        <KPI label={t("biCategory.subCategories")} value={totalSubcats} />
+        <KPI label={t("biCategory.activeProducts")} value={activeProducts.length} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Pie: Products by Sector */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-1">Produits par secteur</h3>
-          <p className="text-xs text-muted-foreground mb-4">Distribution sectorielle</p>
+          <h3 className="text-sm font-semibold mb-1">{t("biCategory.productsBySector")}</h3>
+          <p className="text-xs text-muted-foreground mb-4">{t("biCategory.sectorDistribution")}</p>
           <ResponsiveContainer width="100%" height={260}>
             <PieChart>
               <Pie
@@ -190,8 +192,8 @@ export default function CategoryDistributionPage() {
 
         {/* Bar: Stock Value by Sector */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-1">Valeur stock par secteur</h3>
-          <p className="text-xs text-muted-foreground mb-4">En milliers DZD</p>
+          <h3 className="text-sm font-semibold mb-1">{t("biCategory.stockValueBySector")}</h3>
+          <p className="text-xs text-muted-foreground mb-4">{t("biCategory.inThousandsDZD")}</p>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={stockBySector}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -213,8 +215,8 @@ export default function CategoryDistributionPage() {
 
       {/* Bar: Products by Category (full width) */}
       <div className="glass-card rounded-xl p-5">
-        <h3 className="text-sm font-semibold mb-1">Produits par catégorie</h3>
-        <p className="text-xs text-muted-foreground mb-4">Top {byCategory.length} catégories</p>
+        <h3 className="text-sm font-semibold mb-1">{t("biCategory.productsByCategory")}</h3>
+        <p className="text-xs text-muted-foreground mb-4">{t("biCategory.topCategories", { count: byCategory.length })}</p>
         <ResponsiveContainer width="100%" height={Math.max(250, byCategory.length * 28)}>
           <BarChart data={byCategory} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
@@ -244,7 +246,7 @@ export default function CategoryDistributionPage() {
                 <span className="text-xl">{sector.icon}</span>
                 <div>
                   <p className="text-sm font-semibold">{sector.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{sectorCats.length} catégories · {sectorProds.length} produits</p>
+                  <p className="text-[10px] text-muted-foreground">{sectorCats.length} {t("biCategory.categories")} · {sectorProds.length} {t("biCategory.products")}</p>
                 </div>
               </div>
               <div className="space-y-1">
@@ -267,7 +269,7 @@ export default function CategoryDistributionPage() {
                   );
                 })}
                 {sectorCats.length > 5 && (
-                  <p className="text-[10px] text-muted-foreground text-center">+{sectorCats.length - 5} autres</p>
+                  <p className="text-[10px] text-muted-foreground text-center">+{sectorCats.length - 5} {t("biCategory.others")}</p>
                 )}
               </div>
             </div>

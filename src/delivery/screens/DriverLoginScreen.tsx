@@ -4,23 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 import { MOCK_DRIVER, vehicles } from "../data/mockDeliveryData";
+import { useTranslation } from "react-i18next";
 
 export default function DriverLoginScreen() {
   const [pin, setPin] = useState("");
   const [vehicleId, setVehicleId] = useState("");
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleLogin = () => {
     if (pin !== MOCK_DRIVER.pin) {
-      toast({ title: "PIN incorrect", variant: "destructive" });
+      toast({ title: t("delivery.pinIncorrect"), variant: "destructive" });
       return;
     }
     if (!vehicleId) {
-      toast({ title: "Sélectionnez un véhicule", variant: "destructive" });
+      toast({ title: t("delivery.selectVehicleError"), variant: "destructive" });
       return;
     }
     localStorage.setItem("delivery_auth", JSON.stringify({ driverId: MOCK_DRIVER.id, vehicleId }));
-    toast({ title: "✅ Connecté", description: `Bonjour ${MOCK_DRIVER.name}` });
+    toast({ title: t("delivery.connected"), description: t("delivery.welcomeDriver", { name: MOCK_DRIVER.name }) });
     navigate("/delivery/vehicle-check", { replace: true });
   };
 
@@ -33,14 +35,13 @@ export default function DriverLoginScreen() {
           <div className="h-16 w-16 rounded-2xl bg-primary mx-auto flex items-center justify-center">
             <span className="text-2xl">🚚</span>
           </div>
-          <h1 className="text-xl font-bold">JAWDA Livraison</h1>
-          <p className="text-sm text-muted-foreground">Application Chauffeur</p>
+          <h1 className="text-xl font-bold">{t("delivery.driverLogin")}</h1>
+          <p className="text-sm text-muted-foreground">{t("delivery.driverApp")}</p>
         </div>
 
         <div className="rounded-xl border border-border bg-card p-6 space-y-4">
-          {/* PIN input */}
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Code PIN</label>
+            <label className="text-sm font-medium mb-1.5 block">{t("delivery.pinLabel")}</label>
             <div className="flex gap-2 justify-center">
               {[0, 1, 2, 3].map((i) => (
                 <div
@@ -70,15 +71,14 @@ export default function DriverLoginScreen() {
                 </button>
               ))}
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2 text-center">PIN démo : 1234</p>
+            <p className="text-[10px] text-muted-foreground mt-2 text-center">{t("delivery.demoPin")}</p>
           </div>
 
-          {/* Vehicle selector */}
           <div>
-            <label className="text-sm font-medium mb-1.5 block">Véhicule</label>
+            <label className="text-sm font-medium mb-1.5 block">{t("delivery.vehicle")}</label>
             <Select value={vehicleId} onValueChange={setVehicleId}>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionner un véhicule" />
+                <SelectValue placeholder={t("delivery.selectVehicle")} />
               </SelectTrigger>
               <SelectContent>
                 {availableVehicles.map((v) => (
@@ -91,7 +91,7 @@ export default function DriverLoginScreen() {
           </div>
 
           <Button onClick={handleLogin} className="w-full" disabled={pin.length !== 4 || !vehicleId}>
-            Commencer la journée →
+            {t("delivery.startDay")}
           </Button>
         </div>
       </div>

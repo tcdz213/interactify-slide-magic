@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { MapPin, Navigation, Clock } from "lucide-react";
 import { todayTrip } from "../data/mockDeliveryData";
 import { StopStatusBadge, DeliveryProgressBar, SLABadge } from "../components/DeliveryComponents";
@@ -8,24 +9,22 @@ const currency = (v: number) =>
 
 export default function TodayTripScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const trip = todayTrip;
   const delivered = trip.stops.filter((s) => s.status === "delivered" || s.status === "partially_delivered").length;
   const refused = trip.stops.filter((s) => s.status === "refused").length;
 
   return (
     <div className="p-4 space-y-4 pb-6 animate-fade-in">
-      {/* Header */}
       <div>
-        <h1 className="text-lg font-bold">Ma tournée</h1>
+        <h1 className="text-lg font-bold">{t("delivery.trip.title")}</h1>
         <p className="text-xs text-muted-foreground">
-          {new Date(trip.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" })} · {trip.stops.length} arrêts
+          {new Date(trip.date).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long" })} · {t("delivery.trip.stops", { count: trip.stops.length })}
         </p>
       </div>
 
-      {/* Progress */}
       <DeliveryProgressBar delivered={delivered} total={trip.stops.length} />
 
-      {/* Stops list */}
       <div className="space-y-2">
         {trip.stops.map((stop) => {
           const isCurrent = stop.status === "in_progress";
@@ -42,7 +41,6 @@ export default function TodayTripScreen() {
               }`}
             >
               <div className="flex items-start gap-3">
-                {/* Sequence */}
                 <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                   isDone
                     ? stop.status === "refused"
@@ -79,7 +77,7 @@ export default function TodayTripScreen() {
                   {isCurrent && (
                     <div className="flex gap-2 mt-2">
                       <span className="text-[10px] px-2 py-1 rounded-lg bg-primary/10 text-primary font-medium flex items-center gap-1">
-                        <Navigation className="h-3 w-3" /> Naviguer
+                        <Navigation className="h-3 w-3" /> {t("delivery.trip.navigate")}
                       </span>
                     </div>
                   )}
@@ -96,19 +94,18 @@ export default function TodayTripScreen() {
         })}
       </div>
 
-      {/* Summary bar */}
       <div className="rounded-xl border border-border bg-card p-3 grid grid-cols-3 gap-2 text-center">
         <div>
           <p className="text-lg font-bold text-primary">{delivered}</p>
-          <p className="text-[10px] text-muted-foreground">Livré</p>
+          <p className="text-[10px] text-muted-foreground">{t("delivery.trip.delivered")}</p>
         </div>
         <div>
           <p className="text-lg font-bold text-destructive">{refused}</p>
-          <p className="text-[10px] text-muted-foreground">Retours</p>
+          <p className="text-[10px] text-muted-foreground">{t("delivery.trip.returns")}</p>
         </div>
         <div>
           <p className="text-lg font-bold">{currency(trip.totalCollected)}</p>
-          <p className="text-[10px] text-muted-foreground">Encaissé</p>
+          <p className="text-[10px] text-muted-foreground">{t("delivery.trip.collected")}</p>
         </div>
       </div>
     </div>

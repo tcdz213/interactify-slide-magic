@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useTranslation } from "react-i18next";
 
 type ExceptionSeverity = "critical" | "high" | "medium" | "low";
 type ExceptionResolution = "pending" | "accepted" | "credit_note" | "po_amended" | "supplier_return" | "escalated";
@@ -54,16 +55,8 @@ const SEVERITY_COLORS: Record<ExceptionSeverity, string> = {
   low: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
 };
 
-const RESOLUTION_LABELS: Record<ExceptionResolution, string> = {
-  pending: "En attente",
-  accepted: "Variance acceptée",
-  credit_note: "Avoir demandé",
-  po_amended: "PO modifié",
-  supplier_return: "Retour fournisseur",
-  escalated: "Escaladé",
-};
-
 export default function MatchExceptionsPage() {
+  const { t } = useTranslation();
   const { purchaseOrders, grns, invoices, productUnitConversions } = useWMSData();
   const [filterSeverity, setFilterSeverity] = useState<"all" | ExceptionSeverity>("all");
   const [filterResolution, setFilterResolution] = useState<"all" | ExceptionResolution>("all");
@@ -72,8 +65,16 @@ export default function MatchExceptionsPage() {
   const [resolveAction, setResolveAction] = useState<ExceptionResolution>("accepted");
   const [resolveNotes, setResolveNotes] = useState("");
 
-  // Generate exceptions from 3-way match results
-  const { exceptions, setExceptions, matchSummaries } = useMemo(() => {
+  const RESOLUTION_LABELS: Record<ExceptionResolution, string> = {
+    pending: t("matchExceptions.resLabelPending"),
+    accepted: t("matchExceptions.resLabelAccepted"),
+    credit_note: t("matchExceptions.resLabelCreditNote"),
+    po_amended: t("matchExceptions.resLabelPoAmended"),
+    supplier_return: t("matchExceptions.resLabelSupplierReturn"),
+    escalated: t("matchExceptions.resLabelEscalated"),
+  };
+
+  const { exceptions, matchSummaries } = useMemo(() => {
     const summaries: ThreeWayMatchSummary[] = [];
     const excs: MatchException[] = [];
     
@@ -81,20 +82,14 @@ export default function MatchExceptionsPage() {
       if (grn.status !== "Approved") continue;
       const po = purchaseOrders.find(p => p.id === grn.poId);
       if (!po) continue;
-
-      // Find matching invoice (vendor invoice for this PO)
       const invoice = invoices.find(i => i.orderId === po.id) ?? null;
       
       const invData = invoice ? {
         id: invoice.id,
         taxAmount: invoice.taxAmount,
         lines: po.lines.map(pl => ({
-          productId: pl.productId,
-          qty: pl.qty,
-          unitAbbr: pl.unitAbbr,
-          conversionFactor: pl.conversionFactor,
-          unitCost: pl.unitCost,
-          lineTotal: pl.lineTotal,
+          productId: pl.productId, qty: pl.qty, unitAbbr: pl.unitAbbr,
+          conversionFactor: pl.conversionFactor, unitCost: pl.unitCost, lineTotal: pl.lineTotal,
         })),
       } : null;
 
@@ -110,25 +105,17 @@ export default function MatchExceptionsPage() {
           
           excs.push({
             id: `EXC-${grn.id}-${line.productId}`,
-            poId: po.id,
-            grnId: grn.id,
-            invoiceId: invoice?.id,
-            productId: line.productId,
-            productName: line.productName,
-            exceptionType: line.issues.join("; "),
-            severity,
-            variancePct: maxVar,
-            varianceAmount: maxAmt,
-            resolution: "pending",
-            notes: "",
-            createdAt,
+            poId: po.id, grnId: grn.id, invoiceId: invoice?.id,
+            productId: line.productId, productName: line.productName,
+            exceptionType: line.issues.join("; "), severity,
+            variancePct: maxVar, varianceAmount: maxAmt,
+            resolution: "pending", notes: "", createdAt,
             slaDeadline: getSlaDeadline(createdAt, severity),
           });
         }
       }
     }
-
-    return { exceptions: excs, setExceptions: () => {}, matchSummaries: summaries };
+    return { exceptions: excs, matchSummaries: summaries };
   }, [grns, purchaseOrders, invoices, productUnitConversions]);
 
   const [localResolutions, setLocalResolutions] = useState<Record<string, { resolution: ExceptionResolution; notes: string }>>({});
@@ -156,14 +143,14 @@ export default function MatchExceptionsPage() {
       ...prev,
       [resolveDialog.id]: { resolution: resolveAction, notes: resolveNotes },
     }));
-    toast({ title: "Exception résolue", description: `${resolveDialog.id} — ${RESOLUTION_LABELS[resolveAction]}` });
+    toast({ title: t("matchExceptions.exceptionResolved"), description: `${resolveDialog.id} — ${RESOLUTION_LABELS[resolveAction]}` });
     setResolveDialog(null);
     setResolveNotes("");
   };
 
   const slaRemaining = (deadline: string) => {
     const diff = new Date(deadline).getTime() - Date.now();
-    if (diff < 0) return "Dépassé";
+    if (diff < 0) return t("matchExceptions.exceeded");
     const hours = Math.floor(diff / 3600000);
     if (hours < 24) return `${hours}h`;
     return `${Math.floor(hours / 24)}j ${hours % 24}h`;
@@ -173,61 +160,58 @@ export default function MatchExceptionsPage() {
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><AlertTriangle className="h-6 w-6 text-amber-500" /> File d'exceptions — Rapprochement</h1>
-          <p className="text-muted-foreground text-sm">Écarts PO ↔ GRN ↔ Facture nécessitant une résolution</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><AlertTriangle className="h-6 w-6 text-amber-500" /> {t("matchExceptions.title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("matchExceptions.subtitle")}</p>
         </div>
       </div>
 
-      {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">Total exceptions</div><div className="text-2xl font-bold">{allExceptions.length}</div></CardContent></Card>
-        <Card className="border-amber-200 dark:border-amber-800"><CardContent className="pt-4"><div className="text-sm text-muted-foreground">En attente</div><div className="text-2xl font-bold text-amber-600">{pending}</div></CardContent></Card>
-        <Card className="border-red-200 dark:border-red-800"><CardContent className="pt-4"><div className="text-sm text-muted-foreground">Critiques</div><div className="text-2xl font-bold text-red-600">{critical}</div></CardContent></Card>
-        <Card className="border-destructive/30"><CardContent className="pt-4"><div className="text-sm text-muted-foreground">SLA dépassé</div><div className="text-2xl font-bold text-destructive">{overdueSla}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">{t("matchExceptions.totalExceptions")}</div><div className="text-2xl font-bold">{allExceptions.length}</div></CardContent></Card>
+        <Card className="border-amber-200 dark:border-amber-800"><CardContent className="pt-4"><div className="text-sm text-muted-foreground">{t("matchExceptions.pending")}</div><div className="text-2xl font-bold text-amber-600">{pending}</div></CardContent></Card>
+        <Card className="border-red-200 dark:border-red-800"><CardContent className="pt-4"><div className="text-sm text-muted-foreground">{t("matchExceptions.critical")}</div><div className="text-2xl font-bold text-red-600">{critical}</div></CardContent></Card>
+        <Card className="border-destructive/30"><CardContent className="pt-4"><div className="text-sm text-muted-foreground">{t("matchExceptions.slaExceeded")}</div><div className="text-2xl font-bold text-destructive">{overdueSla}</div></CardContent></Card>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-2 items-center">
-        <div className="relative"><Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" /><input className="pl-8 pr-3 py-2 border rounded-md text-sm bg-background w-56" placeholder="Rechercher PO, produit…" value={search} onChange={e => setSearch(e.target.value)} /></div>
+        <div className="relative"><Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" /><input className="pl-8 pr-3 py-2 border rounded-md text-sm bg-background w-56" placeholder={t("matchExceptions.search")} value={search} onChange={e => setSearch(e.target.value)} /></div>
         <select className="border rounded-md px-3 py-2 text-sm bg-background" value={filterSeverity} onChange={e => setFilterSeverity(e.target.value as any)}>
-          <option value="all">Toutes sévérités</option>
-          <option value="critical">Critique</option>
-          <option value="high">Haute</option>
-          <option value="medium">Moyenne</option>
-          <option value="low">Basse</option>
+          <option value="all">{t("matchExceptions.allSeverities")}</option>
+          <option value="critical">{t("matchExceptions.severityCritical")}</option>
+          <option value="high">{t("matchExceptions.severityHigh")}</option>
+          <option value="medium">{t("matchExceptions.severityMedium")}</option>
+          <option value="low">{t("matchExceptions.severityLow")}</option>
         </select>
         <select className="border rounded-md px-3 py-2 text-sm bg-background" value={filterResolution} onChange={e => setFilterResolution(e.target.value as any)}>
-          <option value="all">Tous statuts</option>
-          <option value="pending">En attente</option>
-          <option value="accepted">Accepté</option>
-          <option value="credit_note">Avoir</option>
-          <option value="po_amended">PO modifié</option>
-          <option value="supplier_return">Retour</option>
-          <option value="escalated">Escaladé</option>
+          <option value="all">{t("matchExceptions.allStatuses")}</option>
+          <option value="pending">{t("matchExceptions.resPending")}</option>
+          <option value="accepted">{t("matchExceptions.resAccepted")}</option>
+          <option value="credit_note">{t("matchExceptions.resCreditNote")}</option>
+          <option value="po_amended">{t("matchExceptions.resPoAmended")}</option>
+          <option value="supplier_return">{t("matchExceptions.resReturn")}</option>
+          <option value="escalated">{t("matchExceptions.resEscalated")}</option>
         </select>
       </div>
 
-      {/* Table */}
       {filtered.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <CheckCircle className="mx-auto h-12 w-12 text-emerald-400 mb-3" />
-          <p className="font-medium">Aucune exception trouvée</p>
-          <p className="text-sm">Tous les rapprochements sont conformes</p>
+          <p className="font-medium">{t("matchExceptions.noExceptions")}</p>
+          <p className="text-sm">{t("matchExceptions.allMatch")}</p>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead className="bg-muted/60">
               <tr>
-                <th className="px-3 py-2 text-left font-medium">ID</th>
-                <th className="px-3 py-2 text-left font-medium">PO / GRN</th>
-                <th className="px-3 py-2 text-left font-medium">Produit</th>
-                <th className="px-3 py-2 text-left font-medium">Type d'écart</th>
-                <th className="px-3 py-2 text-center font-medium">Sévérité</th>
-                <th className="px-3 py-2 text-right font-medium">Écart %</th>
-                <th className="px-3 py-2 text-center font-medium">SLA</th>
-                <th className="px-3 py-2 text-center font-medium">Résolution</th>
-                <th className="px-3 py-2 text-center font-medium">Action</th>
+                <th className="px-3 py-2 text-left font-medium">{t("matchExceptions.colId")}</th>
+                <th className="px-3 py-2 text-left font-medium">{t("matchExceptions.colPoGrn")}</th>
+                <th className="px-3 py-2 text-left font-medium">{t("matchExceptions.colProduct")}</th>
+                <th className="px-3 py-2 text-left font-medium">{t("matchExceptions.colVarianceType")}</th>
+                <th className="px-3 py-2 text-center font-medium">{t("matchExceptions.colSeverity")}</th>
+                <th className="px-3 py-2 text-right font-medium">{t("matchExceptions.colVariancePct")}</th>
+                <th className="px-3 py-2 text-center font-medium">{t("matchExceptions.colSla")}</th>
+                <th className="px-3 py-2 text-center font-medium">{t("matchExceptions.colResolution")}</th>
+                <th className="px-3 py-2 text-center font-medium">{t("matchExceptions.colAction")}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -250,7 +234,7 @@ export default function MatchExceptionsPage() {
                   <td className="px-3 py-2 text-center">
                     {exc.resolution === "pending" && (
                       <Button size="sm" variant="outline" onClick={() => { setResolveDialog(exc); setResolveAction("accepted"); setResolveNotes(""); }}>
-                        Résoudre
+                        {t("matchExceptions.resolve")}
                       </Button>
                     )}
                   </td>
@@ -261,35 +245,34 @@ export default function MatchExceptionsPage() {
         </div>
       )}
 
-      {/* Resolve Dialog */}
       <Dialog open={!!resolveDialog} onOpenChange={() => setResolveDialog(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Résoudre l'exception</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("matchExceptions.resolveTitle")}</DialogTitle></DialogHeader>
           {resolveDialog && (
             <div className="space-y-4">
               <div className="text-sm"><strong>PO:</strong> {resolveDialog.poId} | <strong>GRN:</strong> {resolveDialog.grnId}</div>
-              <div className="text-sm"><strong>Produit:</strong> {resolveDialog.productName}</div>
+              <div className="text-sm"><strong>{t("matchExceptions.colProduct")}:</strong> {resolveDialog.productName}</div>
               <div className="text-sm text-muted-foreground">{resolveDialog.exceptionType}</div>
               
               <div>
-                <label className="text-sm font-medium">Action de résolution</label>
+                <label className="text-sm font-medium">{t("matchExceptions.resolutionAction")}</label>
                 <select className="w-full mt-1 border rounded-md px-3 py-2 text-sm bg-background" value={resolveAction} onChange={e => setResolveAction(e.target.value as ExceptionResolution)}>
-                  <option value="accepted">Accepter la variance (imputer au compte d'écart)</option>
-                  <option value="credit_note">Demander un avoir au fournisseur</option>
-                  <option value="po_amended">Modifier le PO (avec approbation)</option>
-                  <option value="supplier_return">Retour fournisseur</option>
-                  <option value="escalated">Escalader au management</option>
+                  <option value="accepted">{t("matchExceptions.acceptVariance")}</option>
+                  <option value="credit_note">{t("matchExceptions.requestCredit")}</option>
+                  <option value="po_amended">{t("matchExceptions.amendPo")}</option>
+                  <option value="supplier_return">{t("matchExceptions.supplierReturn")}</option>
+                  <option value="escalated">{t("matchExceptions.escalateManagement")}</option>
                 </select>
               </div>
               <div>
-                <label className="text-sm font-medium">Notes</label>
-                <textarea className="w-full mt-1 border rounded-md px-3 py-2 text-sm bg-background" rows={3} value={resolveNotes} onChange={e => setResolveNotes(e.target.value)} placeholder="Justification de la résolution…" />
+                <label className="text-sm font-medium">{t("matchExceptions.notesLabel")}</label>
+                <textarea className="w-full mt-1 border rounded-md px-3 py-2 text-sm bg-background" rows={3} value={resolveNotes} onChange={e => setResolveNotes(e.target.value)} placeholder={t("matchExceptions.notesPlaceholder")} />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResolveDialog(null)}>Annuler</Button>
-            <Button onClick={handleResolve}>Confirmer</Button>
+            <Button variant="outline" onClick={() => setResolveDialog(null)}>{t("matchExceptions.cancel")}</Button>
+            <Button onClick={handleResolve}>{t("matchExceptions.confirm")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

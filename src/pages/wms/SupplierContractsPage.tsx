@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 type ContractStatus = "Active" | "Draft" | "Expired" | "Pending_Renewal" | "Cancelled";
 
@@ -73,6 +74,7 @@ const initialContracts: SupplierContract[] = [
 ];
 
 export default function SupplierContractsPage() {
+  const { t } = useTranslation();
   const { toast } = useToast();
   const [contracts, setContracts] = useState(initialContracts);
   const [search, setSearch] = useState("");
@@ -104,16 +106,14 @@ export default function SupplierContractsPage() {
     draft: contracts.filter((c) => c.status === "Draft").length,
   }), [contracts]);
 
-  // B6 — Using StatusBadge component instead of inline styles
-
   const createContract = () => {
     const vendor = vendors.find((v) => v.id === newForm.vendorId);
     if (!vendor) {
-      toast({ title: "Fournisseur requis", variant: "destructive" });
+      toast({ title: t("supplierContracts.vendorRequired"), variant: "destructive" });
       return;
     }
     if (!newForm.endDate) {
-      toast({ title: "Date de fin requise", variant: "destructive" });
+      toast({ title: t("supplierContracts.endDateRequired"), variant: "destructive" });
       return;
     }
     const newContract: SupplierContract = {
@@ -133,7 +133,7 @@ export default function SupplierContractsPage() {
       products: [],
     };
     setContracts((prev) => [...prev, newContract]);
-    toast({ title: "Contrat créé", description: `${newContract.id} — ${vendor.name}` });
+    toast({ title: t("supplierContracts.contractCreated"), description: `${newContract.id} — ${vendor.name}` });
     setNewOpen(false);
   };
 
@@ -145,21 +145,21 @@ export default function SupplierContractsPage() {
             <FileText className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Contrats Fournisseurs</h1>
-            <p className="text-sm text-muted-foreground">Gérer les accords commerciaux, conditions et tarifs négociés</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("supplierContracts.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("supplierContracts.subtitle")}</p>
           </div>
         </div>
         <Button onClick={() => setNewOpen(true)}>
-          <Plus className="mr-1.5 h-3.5 w-3.5" /> Nouveau contrat
+          <Plus className="mr-1.5 h-3.5 w-3.5" /> {t("supplierContracts.newContract")}
         </Button>
       </div>
 
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Total", value: stats.total, color: "" },
-          { label: "Actifs", value: stats.active, color: "text-success" },
-          { label: "Expirés / Renouvellement", value: stats.expired, color: "text-warning" },
-          { label: "Brouillons", value: stats.draft, color: "text-muted-foreground" },
+          { label: t("supplierContracts.total"), value: stats.total, color: "" },
+          { label: t("supplierContracts.active"), value: stats.active, color: "text-success" },
+          { label: t("supplierContracts.expiredRenewal"), value: stats.expired, color: "text-warning" },
+          { label: t("supplierContracts.drafts"), value: stats.draft, color: "text-muted-foreground" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-lg p-3 border border-border/50">
             <p className="text-xs text-muted-foreground uppercase tracking-wider">{s.label}</p>
@@ -174,7 +174,7 @@ export default function SupplierContractsPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Rechercher…"
+          placeholder={t("supplierContracts.search")}
           className="h-9 w-full rounded-lg border border-input bg-background pl-9 pr-4 text-sm"
         />
       </div>
@@ -183,14 +183,14 @@ export default function SupplierContractsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Contrat</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Fournisseur</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Période</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Conditions</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Cmd min.</th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">Remise</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Statut</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">Actions</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("supplierContracts.colContract")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("supplierContracts.colVendor")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("supplierContracts.colPeriod")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("supplierContracts.colTerms")}</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("supplierContracts.colMinOrder")}</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground">{t("supplierContracts.colDiscount")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("supplierContracts.colStatus")}</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground">{t("supplierContracts.colActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -208,7 +208,7 @@ export default function SupplierContractsPage() {
                 <td className="px-4 py-3">
                   <div className="flex gap-1">
                     <Button variant="outline" size="sm" onClick={() => setSelected(c)}>
-                      <Eye className="h-3 w-3 mr-1" /> Voir
+                      <Eye className="h-3 w-3 mr-1" /> {t("supplierContracts.view")}
                     </Button>
                     {c.status === "Draft" && (
                       <Button
@@ -216,10 +216,10 @@ export default function SupplierContractsPage() {
                         size="sm"
                         onClick={() => {
                           setContracts((prev) => prev.map((x) => (x.id === c.id ? { ...x, status: "Active" } : x)));
-                          toast({ title: "Contrat activé", description: c.id });
+                          toast({ title: t("supplierContracts.contractActivated"), description: c.id });
                         }}
                       >
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> Activer
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> {t("supplierContracts.activate")}
                       </Button>
                     )}
                   </div>
@@ -242,24 +242,24 @@ export default function SupplierContractsPage() {
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-3 text-sm mt-4">
-                <div><span className="text-muted-foreground">Période :</span> {selected.startDate} → {selected.endDate}</div>
-                <div><span className="text-muted-foreground">Conditions :</span> {selected.paymentTerms.replace(/_/g, " ")}</div>
-                <div><span className="text-muted-foreground">Délai livraison :</span> {selected.leadTimeDays} jours</div>
-                <div><span className="text-muted-foreground">Commande min :</span> {currency(selected.minOrderValue)}</div>
-                <div><span className="text-muted-foreground">Remise :</span> {selected.discountPct}%</div>
-                <div><span className="text-muted-foreground">Pénalité retard :</span> {selected.penaltyLatePct}%</div>
-                <div><span className="text-muted-foreground">Renouvellement auto :</span> {selected.autoRenew ? "Oui" : "Non"}</div>
+                <div><span className="text-muted-foreground">{t("supplierContracts.period")}</span> {selected.startDate} → {selected.endDate}</div>
+                <div><span className="text-muted-foreground">{t("supplierContracts.terms")}</span> {selected.paymentTerms.replace(/_/g, " ")}</div>
+                <div><span className="text-muted-foreground">{t("supplierContracts.leadTime")}</span> {t("supplierContracts.leadTimeDays", { days: selected.leadTimeDays })}</div>
+                <div><span className="text-muted-foreground">{t("supplierContracts.minOrder")}</span> {currency(selected.minOrderValue)}</div>
+                <div><span className="text-muted-foreground">{t("supplierContracts.discount")}</span> {selected.discountPct}%</div>
+                <div><span className="text-muted-foreground">{t("supplierContracts.latePenalty")}</span> {selected.penaltyLatePct}%</div>
+                <div><span className="text-muted-foreground">{t("supplierContracts.autoRenew")}</span> {selected.autoRenew ? t("supplierContracts.yes") : t("supplierContracts.no")}</div>
                 {selected.notes && <div className="col-span-2 text-muted-foreground italic">{selected.notes}</div>}
               </div>
               {selected.products.length > 0 && (
                 <div className="mt-4">
-                  <h4 className="text-sm font-semibold mb-2">Produits contractualisés</h4>
+                  <h4 className="text-sm font-semibold mb-2">{t("supplierContracts.contractedProducts")}</h4>
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left py-2 px-2 text-muted-foreground">Produit</th>
-                        <th className="text-right py-2 px-2 text-muted-foreground">Prix négocié</th>
-                        <th className="text-right py-2 px-2 text-muted-foreground">Qté min.</th>
+                        <th className="text-left py-2 px-2 text-muted-foreground">{t("supplierContracts.colProduct")}</th>
+                        <th className="text-right py-2 px-2 text-muted-foreground">{t("supplierContracts.colAgreedPrice")}</th>
+                        <th className="text-right py-2 px-2 text-muted-foreground">{t("supplierContracts.colMinQty")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -283,13 +283,13 @@ export default function SupplierContractsPage() {
       <Dialog open={newOpen} onOpenChange={setNewOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nouveau contrat fournisseur</DialogTitle>
+            <DialogTitle>{t("supplierContracts.newContractTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
-              <Label>Fournisseur</Label>
+              <Label>{t("supplierContracts.vendor")}</Label>
               <Select value={newForm.vendorId} onValueChange={(v) => setNewForm((p) => ({ ...p, vendorId: v }))}>
-                <SelectTrigger><SelectValue placeholder="Choisir un fournisseur" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t("supplierContracts.selectVendor")} /></SelectTrigger>
                 <SelectContent>
                   {vendors.map((v) => (
                     <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>
@@ -299,31 +299,31 @@ export default function SupplierContractsPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Date début</Label>
-                <DateFilter value={newForm.startDate} onChange={(v) => setNewForm((p) => ({ ...p, startDate: v }))} placeholder="Date début" />
+                <Label>{t("supplierContracts.startDate")}</Label>
+                <DateFilter value={newForm.startDate} onChange={(v) => setNewForm((p) => ({ ...p, startDate: v }))} placeholder={t("supplierContracts.startDate")} />
               </div>
               <div className="space-y-2">
-                <Label>Date fin</Label>
-                <DateFilter value={newForm.endDate} onChange={(v) => setNewForm((p) => ({ ...p, endDate: v }))} placeholder="Date fin" />
+                <Label>{t("supplierContracts.endDate")}</Label>
+                <DateFilter value={newForm.endDate} onChange={(v) => setNewForm((p) => ({ ...p, endDate: v }))} placeholder={t("supplierContracts.endDate")} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Commande minimum (DZD)</Label>
+                <Label>{t("supplierContracts.minOrderDZD")}</Label>
                 <Input type="number" min={0} value={newForm.minOrderValue} onChange={(e) => setNewForm((p) => ({ ...p, minOrderValue: Number(e.target.value) || 0 }))} />
               </div>
               <div className="space-y-2">
-                <Label>Remise (%)</Label>
+                <Label>{t("supplierContracts.discountPct")}</Label>
                 <Input type="number" min={0} max={50} step={0.5} value={newForm.discountPct} onChange={(e) => setNewForm((p) => ({ ...p, discountPct: Number(e.target.value) || 0 }))} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Notes</Label>
-              <Input value={newForm.notes} onChange={(e) => setNewForm((p) => ({ ...p, notes: e.target.value }))} placeholder="Notes optionnelles" />
+              <Label>{t("supplierContracts.notes")}</Label>
+              <Input value={newForm.notes} onChange={(e) => setNewForm((p) => ({ ...p, notes: e.target.value }))} placeholder={t("supplierContracts.notesPlaceholder")} />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setNewOpen(false)}>Annuler</Button>
-              <Button onClick={createContract}>Créer le contrat</Button>
+              <Button variant="outline" onClick={() => setNewOpen(false)}>{t("supplierContracts.cancel")}</Button>
+              <Button onClick={createContract}>{t("supplierContracts.createContract")}</Button>
             </div>
           </div>
         </DialogContent>

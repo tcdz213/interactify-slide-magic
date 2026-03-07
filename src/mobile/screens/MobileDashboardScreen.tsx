@@ -14,12 +14,14 @@ import {
   useDeltaSync,
 } from "@/mobile/hooks/useMobileData";
 import { MobileSkeletonDashboard } from "@/mobile/components/MobileSkeletons";
+import { useTranslation } from "react-i18next";
 
 const currency = (v: number) =>
   v.toLocaleString("fr-DZ", { maximumFractionDigits: 0 }) + " DZD";
 
 export default function MobileDashboardScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data: orders = [], isLoading: loadingOrders } = useMobileOrders();
   const { data: customers = [] } = useMobileCustomers();
   const { data: routePlan = [] } = useMobileRoute();
@@ -32,8 +34,8 @@ export default function MobileDashboardScreen() {
 
   const handleRefresh = useCallback(async () => {
     await performDeltaSync();
-    toast({ title: "🔄 Tableau de bord actualisé" });
-  }, [performDeltaSync]);
+    toast({ title: t("mobile.dashboard.refreshed") });
+  }, [performDeltaSync, t]);
 
   if (loadingOrders || !rep) return <MobileSkeletonDashboard />;
 
@@ -51,10 +53,9 @@ export default function MobileDashboardScreen() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="px-4 pt-4 pb-6 space-y-5">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-lg font-bold text-foreground">Bonjour, {rep.name.split(" ")[0]} 👋</h1>
+            <h1 className="text-lg font-bold text-foreground">{t("mobile.hello", { name: rep.name.split(" ")[0] })}</h1>
             <p className="text-xs text-muted-foreground capitalize">{today}</p>
           </div>
           <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
@@ -62,15 +63,13 @@ export default function MobileDashboardScreen() {
           </div>
         </div>
 
-        {/* KPI Grid */}
         <div className="grid grid-cols-2 gap-3">
-          <KpiTile icon={ShoppingCart} label="Commandes" value={String(todayOrders)} sub={`${pendingOrders} en attente`} color="primary" onClick={() => navigate("/mobile/more")} />
-          <KpiTile icon={TrendingUp} label="Objectif" value={`${quotaPct}%`} sub={currency(rep.quotaCurrent)} color="info" />
-          <KpiTile icon={MapPin} label="Visites" value={`${visitsCompleted}/${visitsTotal}`} sub="Aujourd'hui" color="success" onClick={() => navigate("/mobile/route")} />
-          <KpiTile icon={Users} label="Clients" value={String(customers.length)} sub="Portefeuille" color="warning" onClick={() => navigate("/mobile/customers")} />
+          <KpiTile icon={ShoppingCart} label={t("mobile.dashboard.orders")} value={String(todayOrders)} sub={`${pendingOrders} ${t("mobile.dashboard.pending")}`} color="primary" onClick={() => navigate("/mobile/more")} />
+          <KpiTile icon={TrendingUp} label={t("mobile.dashboard.objective")} value={`${quotaPct}%`} sub={currency(rep.quotaCurrent)} color="info" />
+          <KpiTile icon={MapPin} label={t("mobile.dashboard.visits")} value={`${visitsCompleted}/${visitsTotal}`} sub={t("mobile.dashboard.today")} color="success" onClick={() => navigate("/mobile/route")} />
+          <KpiTile icon={Users} label={t("mobile.dashboard.clients")} value={String(customers.length)} sub={t("mobile.dashboard.portfolio")} color="warning" onClick={() => navigate("/mobile/customers")} />
         </div>
 
-        {/* Next Visit Card */}
         {nextVisit && (
           <button
             onClick={() => navigate("/mobile/route")}
@@ -78,7 +77,7 @@ export default function MobileDashboardScreen() {
           >
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-4 w-4 text-primary" />
-              <span className="text-xs font-semibold text-primary">Prochaine visite</span>
+              <span className="text-xs font-semibold text-primary">{t("mobile.dashboard.nextVisit")}</span>
             </div>
             <div className="flex items-center justify-between">
               <div>
@@ -93,15 +92,13 @@ export default function MobileDashboardScreen() {
           </button>
         )}
 
-        {/* Pipeline */}
         {pipelineValue > 0 && (
           <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">📊 Pipeline du jour</span>
+            <span className="text-xs font-medium text-muted-foreground">{t("mobile.dashboard.dayPipeline")}</span>
             <span className="text-sm font-bold text-foreground">{currency(pipelineValue)}</span>
           </div>
         )}
 
-        {/* Offline queue indicator */}
         {pendingSync > 0 && (
           <button
             onClick={() => navigate("/mobile/offline-queue")}
@@ -109,27 +106,26 @@ export default function MobileDashboardScreen() {
           >
             <WifiOff className="h-4 w-4 text-amber-600" />
             <span className="text-xs font-medium text-amber-700 flex-1 text-left">
-              {pendingSync} action(s) en attente de synchronisation
+              {t("mobile.dashboard.pendingSync", { count: pendingSync })}
             </span>
             <ChevronRight className="h-4 w-4 text-amber-500" />
           </button>
         )}
 
-        {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => navigate("/mobile/new-order")}
             className="bg-primary text-primary-foreground rounded-xl p-4 flex items-center gap-3 active:opacity-90 transition-opacity min-h-[56px]"
           >
             <ShoppingCart className="h-5 w-5" />
-            <span className="font-semibold text-sm">Nouvelle Commande</span>
+            <span className="font-semibold text-sm">{t("mobile.dashboard.newOrder")}</span>
           </button>
           <button
             onClick={() => navigate("/mobile/customers")}
             className="bg-card border border-border rounded-xl p-4 flex items-center gap-3 active:bg-muted transition-colors min-h-[56px]"
           >
             <Users className="h-5 w-5 text-primary" />
-            <span className="font-semibold text-sm text-foreground">Mes Clients</span>
+            <span className="font-semibold text-sm text-foreground">{t("mobile.dashboard.myClients")}</span>
           </button>
         </div>
       </div>

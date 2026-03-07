@@ -5,6 +5,7 @@ import { ArrowLeft, LogOut, ClipboardList, WifiOff, Settings, User, ChevronRight
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { getPendingActions } from "@/services/offlineSync";
+import { useTranslation } from "react-i18next";
 
 const currency = (v: number) => v.toLocaleString("fr-DZ", { maximumFractionDigits: 0 }) + " DZD";
 
@@ -21,6 +22,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function MobileMoreScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
@@ -34,13 +36,11 @@ export default function MobileMoreScreen() {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header */}
       <div className="px-4 pt-4 pb-3">
-        <h1 className="text-lg font-bold text-foreground">Plus</h1>
+        <h1 className="text-lg font-bold text-foreground">{t("mobile.more.title")}</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-4">
-        {/* Profile card */}
         <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-3">
           <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold">{REP_PROFILE.avatar}</span>
@@ -51,11 +51,10 @@ export default function MobileMoreScreen() {
           </div>
         </div>
 
-        {/* Recent orders */}
         <div>
           <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
             <ClipboardList className="h-4 w-4" />
-            Mes commandes récentes
+            {t("mobile.more.recentOrders")}
           </h3>
           <div className="space-y-2">
             {mockOrders.map(o => (
@@ -73,13 +72,12 @@ export default function MobileMoreScreen() {
           </div>
         </div>
 
-        {/* Menu */}
         <div className="space-y-1">
           {[
-            { icon: History, label: "Historique commandes", onClick: () => navigate("/mobile/orders") },
-            { icon: WifiOff, label: "File d'attente hors ligne", badge: String(pendingCount), onClick: () => navigate("/mobile/offline-queue") },
-            { icon: Settings, label: "Paramètres" },
-            { icon: User, label: "Mon profil" },
+            { icon: History, label: t("mobile.more.orderHistory"), onClick: () => navigate("/mobile/orders") },
+            { icon: WifiOff, label: t("mobile.more.offlineQueue"), badge: String(pendingCount), onClick: () => navigate("/mobile/offline-queue") },
+            { icon: Settings, label: t("mobile.more.settings") },
+            { icon: User, label: t("mobile.more.myProfile") },
           ].map(({ icon: Icon, label, badge, onClick }) => (
             <button key={label} onClick={onClick} className="w-full flex items-center gap-3 bg-card border border-border rounded-lg p-3 active:bg-muted transition-colors">
               <Icon className="h-4 w-4 text-muted-foreground" />
@@ -90,10 +88,9 @@ export default function MobileMoreScreen() {
           ))}
         </div>
 
-        {/* Logout */}
         <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 text-destructive font-semibold text-sm py-3 active:opacity-70 min-h-[48px]">
           <LogOut className="h-4 w-4" />
-          Déconnexion
+          {t("mobile.more.logout")}
         </button>
       </div>
     </div>

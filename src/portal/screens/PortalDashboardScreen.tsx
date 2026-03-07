@@ -3,6 +3,7 @@ import { ShoppingCart, FileText, Bell, TrendingUp, Package } from "lucide-react"
 import CreditGauge from "../components/CreditGauge";
 import PortalStatusBadge from "../components/PortalStatusBadge";
 import { PORTAL_CUSTOMER, portalOrders, portalInvoices, portalNotifications } from "../data/mockPortalData";
+import { useTranslation } from "react-i18next";
 
 const currency = (v: number) =>
   new Intl.NumberFormat("fr-DZ", { style: "decimal", maximumFractionDigits: 0 }).format(v) + " DZD";
@@ -14,8 +15,9 @@ const formatDate = (d: string) => {
 
 export default function PortalDashboardScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const now = new Date();
-  const greeting = now.getHours() < 12 ? "☀️ Bonjour" : now.getHours() < 18 ? "🌤 Bon après-midi" : "🌙 Bonsoir";
+  const greeting = now.getHours() < 12 ? t("portal.dashboard.goodMorning") : now.getHours() < 18 ? t("portal.dashboard.goodAfternoon") : t("portal.dashboard.goodEvening");
   const dateStr = now.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
 
   const recentOrders = portalOrders.slice(0, 3);
@@ -25,20 +27,17 @@ export default function PortalDashboardScreen() {
 
   return (
     <div className="p-4 space-y-4 pb-6 animate-fade-in">
-      {/* Header */}
       <div>
         <h1 className="text-lg font-bold">{greeting}, {PORTAL_CUSTOMER.name}</h1>
         <p className="text-xs text-muted-foreground capitalize">{dateStr}</p>
       </div>
 
-      {/* Credit Gauge */}
       <CreditGauge used={PORTAL_CUSTOMER.creditUsed} limit={PORTAL_CUSTOMER.creditLimit} />
 
-      {/* Quick KPIs */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { icon: ShoppingCart, label: "Commandes", value: String(portalOrders.length), color: "text-primary", onClick: () => navigate("/portal/orders") },
-          { icon: FileText, label: "Factures dues", value: currency(pendingTotal), color: pendingTotal > 0 ? "text-destructive" : "text-primary", onClick: () => navigate("/portal/invoices") },
+          { icon: ShoppingCart, label: t("portal.dashboard.orders"), value: String(portalOrders.length), color: "text-primary", onClick: () => navigate("/portal/orders") },
+          { icon: FileText, label: t("portal.dashboard.invoicesDue"), value: currency(pendingTotal), color: pendingTotal > 0 ? "text-destructive" : "text-primary", onClick: () => navigate("/portal/invoices") },
         ].map((kpi) => (
           <button
             key={kpi.label}
@@ -52,14 +51,13 @@ export default function PortalDashboardScreen() {
         ))}
       </div>
 
-      {/* Recent Orders */}
       <div>
         <div className="flex items-center justify-between mb-2">
           <h2 className="text-sm font-semibold flex items-center gap-1.5">
-            <Package className="h-4 w-4 text-muted-foreground" /> Dernières commandes
+            <Package className="h-4 w-4 text-muted-foreground" /> {t("portal.dashboard.recentOrders")}
           </h2>
           <button onClick={() => navigate("/portal/orders")} className="text-xs text-primary hover:underline">
-            Voir tout →
+            {t("portal.dashboard.viewAll")}
           </button>
         </div>
         <div className="space-y-2">
@@ -80,24 +78,22 @@ export default function PortalDashboardScreen() {
         </div>
       </div>
 
-      {/* Pending Invoices */}
       {pendingInvoices.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-sm font-semibold flex items-center gap-1.5">
-              <FileText className="h-4 w-4 text-muted-foreground" /> Factures en attente
+              <FileText className="h-4 w-4 text-muted-foreground" /> {t("portal.dashboard.pendingInvoices")}
             </h2>
             <button onClick={() => navigate("/portal/invoices")} className="text-xs text-primary hover:underline">
-              Voir tout →
+              {t("portal.dashboard.viewAll")}
             </button>
           </div>
           <div className="rounded-xl border border-border bg-card p-3">
-            <p className="text-xs text-muted-foreground">{pendingInvoices.length} facture(s) · {currency(pendingTotal)}</p>
+            <p className="text-xs text-muted-foreground">{t("portal.dashboard.invoiceCount", { count: pendingInvoices.length, total: currency(pendingTotal) })}</p>
           </div>
         </div>
       )}
 
-      {/* Notifications */}
       {unreadNotifs.length > 0 && (
         <button
           onClick={() => navigate("/portal/notifications")}
@@ -105,18 +101,17 @@ export default function PortalDashboardScreen() {
         >
           <Bell className="h-5 w-5 text-amber-600" />
           <div className="flex-1">
-            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">{unreadNotifs.length} notification(s)</p>
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">{t("portal.dashboard.notifications", { count: unreadNotifs.length })}</p>
             <p className="text-[10px] text-amber-600 dark:text-amber-500">{unreadNotifs[0]?.title}</p>
           </div>
         </button>
       )}
 
-      {/* Place Order CTA */}
       <button
         onClick={() => navigate("/portal/place-order")}
         className="w-full rounded-xl bg-primary text-primary-foreground py-3 text-sm font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
       >
-        <ShoppingCart className="h-4 w-4" /> Passer une commande
+        <ShoppingCart className="h-4 w-4" /> {t("portal.dashboard.placeOrder")}
       </button>
     </div>
   );

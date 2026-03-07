@@ -4,10 +4,12 @@ import { useWMSData } from "@/contexts/WMSDataContext";
 import { currency } from "@/data/mockData";
 import { WarehouseScopeBanner } from "@/components/WarehouseScopeBanner";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import { useTranslation } from "react-i18next";
 
 const COLORS = ["hsl(160,84%,39%)", "hsl(217,91%,60%)", "hsl(38,92%,50%)", "hsl(280,65%,60%)", "hsl(340,75%,55%)"];
 
 export default function ReportsOverviewPage() {
+  const { t } = useTranslation();
   const { inventory, salesOrders, cycleCounts, stockAdjustments, payments, invoices } = useWMSData();
 
   const accuracyData = useMemo(() => {
@@ -36,12 +38,12 @@ export default function ReportsOverviewPage() {
     const slow = inventory.filter((i: any) => i.daysSinceMovement > 30 && i.daysSinceMovement <= 90).length;
     const dead = inventory.filter((i: any) => i.daysSinceMovement > 90).length;
     return [
-      { name: "Rapide (<7j)", value: fast, color: "hsl(160,84%,39%)" },
-      { name: "Moyen (7-30j)", value: medium, color: "hsl(217,91%,60%)" },
-      { name: "Lent (30-90j)", value: slow, color: "hsl(38,92%,50%)" },
-      { name: "Dead stock (>90j)", value: dead, color: "hsl(340,75%,55%)" },
+      { name: t("reportsOverview.fast"), value: fast, color: "hsl(160,84%,39%)" },
+      { name: t("reportsOverview.medium"), value: medium, color: "hsl(217,91%,60%)" },
+      { name: t("reportsOverview.slow"), value: slow, color: "hsl(38,92%,50%)" },
+      { name: t("reportsOverview.deadStock"), value: dead, color: "hsl(340,75%,55%)" },
     ];
-  }, [inventory]);
+  }, [inventory, t]);
 
   const adjustmentValue = stockAdjustments.filter((a: any) => a.status === "Approved").reduce((s: number, a: any) => s + a.valueLoss, 0);
 
@@ -53,32 +55,32 @@ export default function ReportsOverviewPage() {
           <BarChart3 className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Rapports WMS</h1>
-          <p className="text-sm text-muted-foreground">Précision inventaire, valorisation, rotation, productivité</p>
+          <h1 className="text-xl font-bold tracking-tight">{t("reportsOverview.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("reportsOverview.subtitle")}</p>
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Précision inventaire</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reportsOverview.inventoryAccuracy")}</p>
           <p className="text-xl font-semibold text-success">{accuracyData.accuracy}%</p>
-          <p className="text-[10px] text-muted-foreground">{accuracyData.counts} comptages</p>
+          <p className="text-[10px] text-muted-foreground">{accuracyData.counts} {t("reportsOverview.counts")}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Valorisation stock</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reportsOverview.stockValuation")}</p>
           <p className="text-xl font-semibold text-primary">{currency(totalStockValue)}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Sous seuil</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reportsOverview.belowThreshold")}</p>
           <p className="text-xl font-semibold text-warning">{lowStockCount}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Exp. &lt;30j</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reportsOverview.expiring30d")}</p>
           <p className="text-xl font-semibold text-destructive">{expiringSoon}</p>
         </div>
         <div className="glass-card rounded-lg p-3 border border-border/50">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider">Pertes approuvées</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">{t("reportsOverview.approvedLosses")}</p>
           <p className="text-xl font-semibold text-destructive">{currency(adjustmentValue)}</p>
         </div>
       </div>
@@ -86,12 +88,12 @@ export default function ReportsOverviewPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Valuation by category */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-4">Valorisation par catégorie</h3>
+          <h3 className="text-sm font-semibold mb-4">{t("reportsOverview.valuationByCategory")}</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={valuationData}>
               <XAxis dataKey="name" tick={{ fontSize: 10 }} />
               <YAxis tick={{ fontSize: 10 }} tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
-              <Tooltip formatter={(v: number) => [currency(v), "Valeur"]} />
+              <Tooltip formatter={(v: number) => [currency(v), t("reportsOverview.value")]} />
               <Bar dataKey="value" fill="hsl(160,84%,39%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -99,13 +101,13 @@ export default function ReportsOverviewPage() {
 
         {/* Movement analysis */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-4">Rotation des articles</h3>
+          <h3 className="text-sm font-semibold mb-4">{t("reportsOverview.articleRotation")}</h3>
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
               <Pie data={movementData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={3} dataKey="value">
                 {movementData.map((d, i) => <Cell key={i} fill={d.color} />)}
               </Pie>
-              <Tooltip formatter={(v: number) => [`${v} articles`, ""]} />
+              <Tooltip formatter={(v: number) => [`${v} ${t("reportsOverview.articles")}`, ""]} />
             </PieChart>
           </ResponsiveContainer>
           <div className="space-y-1 mt-2">
@@ -125,16 +127,16 @@ export default function ReportsOverviewPage() {
       {/* Shortage table */}
       <div className="glass-card rounded-xl p-5">
         <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-warning" /> Pénuries de stock
+          <AlertTriangle className="h-4 w-4 text-warning" /> {t("reportsOverview.stockShortages")}
         </h3>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">Produit</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Disponible</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Seuil</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Déficit</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">Exp. (jours)</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">{t("reportsOverview.colProduct")}</th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">{t("reportsOverview.colAvailable")}</th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">{t("reportsOverview.colThreshold")}</th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">{t("reportsOverview.colDeficit")}</th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">{t("reportsOverview.colExpDays")}</th>
             </tr>
           </thead>
           <tbody>

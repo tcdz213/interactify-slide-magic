@@ -3,23 +3,24 @@ import { Home, ShoppingCart, FileText, CreditCard, Menu, Bell } from "lucide-rea
 import { cn } from "@/lib/utils";
 import { portalNotifications } from "@/portal/data/mockPortalData";
 import { PORTAL_CUSTOMER } from "@/portal/data/mockPortalData";
-
-const NAV_ITEMS = [
-  { path: "/portal/dashboard", icon: Home, label: "Accueil" },
-  { path: "/portal/orders", icon: ShoppingCart, label: "Commandes" },
-  { path: "/portal/invoices", icon: FileText, label: "Factures" },
-  { path: "/portal/payments", icon: CreditCard, label: "Paiements" },
-  { path: "/portal/more", icon: Menu, label: "Plus" },
-];
+import { useTranslation } from "react-i18next";
 
 export default function PortalLayout() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const unreadCount = portalNotifications.filter((n) => !n.read).length;
+
+  const NAV_ITEMS = [
+    { path: "/portal/dashboard", icon: Home, label: t("portal.nav.home") },
+    { path: "/portal/orders", icon: ShoppingCart, label: t("portal.nav.orders") },
+    { path: "/portal/invoices", icon: FileText, label: t("portal.nav.invoices") },
+    { path: "/portal/payments", icon: CreditCard, label: t("portal.nav.payments") },
+    { path: "/portal/more", icon: Menu, label: t("portal.nav.more") },
+  ];
 
   return (
     <div className="flex flex-col h-[100dvh] bg-background overflow-hidden">
-      {/* Top header */}
       <header className="shrink-0 border-b border-border bg-card px-4 py-3 flex items-center gap-3">
         <div
           className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold cursor-pointer"
@@ -44,12 +45,10 @@ export default function PortalLayout() {
         </button>
       </header>
 
-      {/* Screen content */}
       <main className="flex-1 overflow-y-auto overscroll-y-contain">
         <Outlet />
       </main>
 
-      {/* Bottom Navigation */}
       <nav className="shrink-0 border-t border-border bg-card">
         <div className="flex items-center justify-around h-16">
           {NAV_ITEMS.map(({ path, icon: Icon, label }) => {

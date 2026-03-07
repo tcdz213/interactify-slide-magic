@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, TrendingUp, DollarSign, ShieldAlert, BarChart3 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { calcMargin } from "@/modules/pricing/pricing.types";
+import { useTranslation } from "react-i18next";
 
 interface MarginLine {
   orderId: string;
@@ -32,6 +33,7 @@ interface MarginLine {
 }
 
 export default function MarginHistoryPage() {
+  const { t } = useTranslation();
   const { salesOrders, products } = useWMSData();
   const { currentUser } = useAuth();
   const showFinancials = currentUser ? canViewFinancials(currentUser) : false;
@@ -46,12 +48,11 @@ export default function MarginHistoryPage() {
     for (const order of salesOrders) {
       if (!completedStatuses.includes(order.status)) continue;
       if (period !== "all") {
-        const orderMonth = order.orderDate.slice(0, 7); // YYYY-MM
+        const orderMonth = order.orderDate.slice(0, 7);
         if (orderMonth !== period) continue;
       }
 
       for (const line of order.lines) {
-        // Use unitCostAtSale if available, otherwise fall back to current product cost
         const product = products.find((p: any) => p.id === line.productId);
         const costAtSale = (line as any).unitCostAtSale ?? product?.unitCost ?? 0;
         const lineTotal = line.lineTotal;
@@ -119,9 +120,9 @@ export default function MarginHistoryPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <ShieldAlert className="h-16 w-16 text-muted-foreground" />
-        <h2 className="text-xl font-semibold">Accès restreint</h2>
+        <h2 className="text-xl font-semibold">{t("marginHistory.restrictedAccess")}</h2>
         <p className="text-muted-foreground text-center max-w-md">
-          Ce rapport est réservé aux rôles financiers.
+          {t("marginHistory.restrictedMessage")}
         </p>
       </div>
     );
@@ -130,8 +131,8 @@ export default function MarginHistoryPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Marge Historique</h1>
-        <p className="text-muted-foreground text-sm">Rentabilité par commande — coût au moment de la vente</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("marginHistory.title")}</h1>
+        <p className="text-muted-foreground text-sm">{t("marginHistory.subtitle")}</p>
       </div>
 
       {/* KPIs */}
@@ -143,7 +144,7 @@ export default function MarginHistoryPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{currency(totalRevenue)}</p>
-              <p className="text-xs text-muted-foreground">CA Total</p>
+              <p className="text-xs text-muted-foreground">{t("marginHistory.totalRevenue")}</p>
             </div>
           </CardContent>
         </Card>
@@ -154,7 +155,7 @@ export default function MarginHistoryPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{currency(totalCost)}</p>
-              <p className="text-xs text-muted-foreground">Coût Total</p>
+              <p className="text-xs text-muted-foreground">{t("marginHistory.totalCost")}</p>
             </div>
           </CardContent>
         </Card>
@@ -165,7 +166,7 @@ export default function MarginHistoryPage() {
             </div>
             <div>
               <p className="text-xl font-bold">{currency(totalProfit)}</p>
-              <p className="text-xs text-muted-foreground">Marge Brute</p>
+              <p className="text-xs text-muted-foreground">{t("marginHistory.grossMargin")}</p>
             </div>
           </CardContent>
         </Card>
@@ -178,7 +179,7 @@ export default function MarginHistoryPage() {
               <p className={`text-xl font-bold ${avgMargin < 15 ? "text-destructive" : avgMargin < 30 ? "text-warning" : "text-green-600"}`}>
                 {avgMargin.toFixed(1)}%
               </p>
-              <p className="text-xs text-muted-foreground">Marge Moyenne</p>
+              <p className="text-xs text-muted-foreground">{t("marginHistory.avgMargin")}</p>
             </div>
           </CardContent>
         </Card>
@@ -187,7 +188,7 @@ export default function MarginHistoryPage() {
       {/* Chart */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Top 10 produits par marge brute</CardTitle>
+          <CardTitle className="text-base">{t("marginHistory.top10ByMargin")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-64">
@@ -199,7 +200,7 @@ export default function MarginHistoryPage() {
                 <Tooltip
                   formatter={(v: number, name: string) => [
                     name === "margin" ? `${v.toFixed(1)}%` : currency(v),
-                    name === "profit" ? "Marge" : name === "revenue" ? "CA" : "% Marge",
+                    name === "profit" ? t("marginHistory.margin") : name === "revenue" ? t("marginHistory.revenue") : t("marginHistory.pctMargin"),
                   ]}
                 />
                 <Bar dataKey="profit" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
@@ -213,18 +214,18 @@ export default function MarginHistoryPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
-            <CardTitle className="text-lg">Détail par ligne de commande</CardTitle>
+            <CardTitle className="text-lg">{t("marginHistory.detailByLine")}</CardTitle>
             <div className="flex gap-2">
               <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher…" className="pl-9 w-48" value={search} onChange={(e) => setSearch(e.target.value)} />
+                <Input placeholder={t("marginHistory.searchPlaceholder")} className="pl-9 w-48" value={search} onChange={(e) => setSearch(e.target.value)} />
               </div>
               <Select value={period} onValueChange={setPeriod}>
                 <SelectTrigger className="w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes périodes</SelectItem>
+                  <SelectItem value="all">{t("marginHistory.allPeriods")}</SelectItem>
                   {periods.map((p) => (
                     <SelectItem key={p} value={p}>{p}</SelectItem>
                   ))}
@@ -237,15 +238,15 @@ export default function MarginHistoryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Commande</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Produit</TableHead>
-                <TableHead className="text-right">Qté</TableHead>
-                <TableHead className="text-right">PV</TableHead>
-                <TableHead className="text-right">Coût</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-                <TableHead className="text-right">Marge</TableHead>
+                <TableHead>{t("marginHistory.colOrder")}</TableHead>
+                <TableHead>{t("marginHistory.colClient")}</TableHead>
+                <TableHead>{t("marginHistory.colDate")}</TableHead>
+                <TableHead>{t("marginHistory.colProduct")}</TableHead>
+                <TableHead className="text-right">{t("marginHistory.colQty")}</TableHead>
+                <TableHead className="text-right">{t("marginHistory.colSP")}</TableHead>
+                <TableHead className="text-right">{t("marginHistory.colCost")}</TableHead>
+                <TableHead className="text-right">{t("marginHistory.colTotal")}</TableHead>
+                <TableHead className="text-right">{t("marginHistory.colMargin")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -268,7 +269,7 @@ export default function MarginHistoryPage() {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">Aucune donnée</TableCell>
+                  <TableCell colSpan={9} className="text-center text-muted-foreground py-8">{t("marginHistory.noData")}</TableCell>
                 </TableRow>
               )}
             </TableBody>

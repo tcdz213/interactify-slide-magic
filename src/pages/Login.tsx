@@ -12,16 +12,16 @@ import { cn } from "@/lib/utils";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 
 const LEVEL_COLORS = [
-  "border-l-purple-500",   // L1 — CEO
-  "border-l-indigo-500",   // L2 — Directors
-  "border-l-blue-500",     // L3 — Managers
-  "border-l-cyan-400",     // L4 — Specialists
-  "border-l-slate-400",    // L5 — Operators
+  "border-l-purple-500",
+  "border-l-indigo-500",
+  "border-l-blue-500",
+  "border-l-cyan-400",
+  "border-l-slate-400",
 ];
 
-// Demo PINs for each user (in production, these would be hashed in DB)
 const USER_PINS: Record<string, string> = {
   U001: "1234", U002: "2345", U003: "3456", U004: "4567", U005: "5678",
   U006: "6789", U007: "7890", U008: "8901", U009: "9012", U010: "0123",
@@ -33,6 +33,7 @@ type LoginStep = "select" | "pin";
 export default function Login() {
   const { currentUser, login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [ready, setReady] = useState(false);
   const [step, setStep] = useState<LoginStep>("select");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
@@ -49,7 +50,6 @@ export default function Login() {
     return () => clearTimeout(t);
   }, []);
 
-  // Check if WebAuthn is available
   useEffect(() => {
     if (window.PublicKeyCredential) {
       PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable?.()
@@ -72,19 +72,18 @@ export default function Login() {
     const correctPin = USER_PINS[selectedUserId] ?? "0000";
     if (value === correctPin) {
       login(selectedUserId);
-      toast({ title: "Connexion réussie", description: `Bienvenue, ${selectedUser?.name}` });
+      toast({ title: t("login.loginSuccess"), description: t("login.welcome", { name: selectedUser?.name }) });
     } else {
       setPinError(true);
       setPin("");
       setTimeout(() => setPinError(false), 1500);
-      toast({ title: "Code PIN incorrect", description: "Veuillez réessayer.", variant: "destructive" });
+      toast({ title: t("login.pinError"), description: t("login.pinRetry"), variant: "destructive" });
     }
-  }, [selectedUserId, selectedUser, login]);
+  }, [selectedUserId, selectedUser, login, t]);
 
   const handleBiometric = useCallback(async () => {
     if (!selectedUserId) return;
     try {
-      // Simulate biometric — in production this uses WebAuthn navigator.credentials.get()
       const credential = await navigator.credentials?.create({
         publicKey: {
           challenge: new Uint8Array(32),
@@ -102,13 +101,12 @@ export default function Login() {
 
       if (credential) {
         login(selectedUserId);
-        toast({ title: "Authentification biométrique réussie", description: `Bienvenue, ${selectedUser?.name}` });
+        toast({ title: t("login.biometricSuccess"), description: t("login.welcome", { name: selectedUser?.name }) });
       }
     } catch {
-      // Biometric failed or cancelled — fall back to PIN
-      toast({ title: "Authentification biométrique annulée", description: "Utilisez votre code PIN.", variant: "destructive" });
+      toast({ title: t("login.biometricCancelled"), description: t("login.biometricFallback"), variant: "destructive" });
     }
-  }, [selectedUserId, selectedUser, login]);
+  }, [selectedUserId, selectedUser, login, t]);
 
   const handleBack = () => {
     setStep("select");
@@ -121,13 +119,11 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-[0.03]" style={{
         backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--foreground)) 1px, transparent 0)`,
         backgroundSize: '32px 32px'
       }} />
 
-      {/* Glow orbs */}
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-[0.06]"
         style={{ background: 'radial-gradient(circle, hsl(var(--primary)), transparent 70%)' }} />
       <div className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full opacity-[0.04]"
@@ -144,21 +140,20 @@ export default function Login() {
             <Warehouse className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
-            Jawda
+            {t("login.title")}
           </h1>
           <p className="text-xs font-semibold tracking-widest uppercase text-primary mt-1.5">
-            Warehouse Management System
+            {t("login.subtitle")}
           </p>
           <p className="text-sm text-muted-foreground mt-3 max-w-md mx-auto">
             {step === "select"
-              ? "Sélectionnez un profil pour simuler son périmètre d'accès et ses autorisations"
-              : `Authentification de ${selectedUser?.name}`}
+              ? t("login.selectProfile")
+              : t("login.authFor", { name: selectedUser?.name })}
           </p>
         </div>
 
         {step === "select" && (
           <>
-            {/* Governance legend */}
             <div className={cn(
               "mb-6 rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm px-4 py-3 text-xs text-muted-foreground flex items-start gap-2.5 transition-all duration-500 delay-200",
               ready ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
@@ -167,13 +162,11 @@ export default function Login() {
                 <ShieldCheck className="h-3.5 w-3.5 text-primary" />
               </div>
               <span>
-                <strong className="text-foreground">Séparation des tâches :</strong>{" "}
-                Chaque rôle dispose d'un périmètre géographique et d'un seuil d'approbation définis.
-                L'auto-approbation est interdite.
+                <strong className="text-foreground">{t("login.sodNotice")}</strong>{" "}
+                {t("login.sodDesc")}
               </span>
             </div>
 
-            {/* User grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               {usersByLevel.map((user, i) => {
                 const level = getRoleLevel(user.role);
@@ -194,20 +187,17 @@ export default function Login() {
                       ready ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
                     )}
                     style={{ transitionDelay: ready ? `${300 + i * 40}ms` : '0ms' }}
-                    aria-label={`Se connecter en tant que ${user.name}, ${user.roleLabel}`}
+                    aria-label={t("login.loginAs", { name: user.name, role: user.roleLabel })}
                   >
-                    {/* Avatar */}
                     <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0 mt-0.5 ring-1 ring-primary/10 group-hover:ring-primary/30 transition-all">
                       {user.avatar}
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-sm leading-tight truncate group-hover:text-primary transition-colors">
                         {user.name}
                       </p>
 
-                      {/* Role badge */}
                       <span className={cn(
                         "inline-flex items-center mt-1 px-1.5 py-0.5 rounded text-[10px] font-semibold border",
                         getRoleBadgeStyle(user.role)
@@ -215,12 +205,11 @@ export default function Login() {
                         {user.roleLabel}
                       </span>
 
-                      {/* Warehouse chips */}
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {isFullAccess ? (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border bg-purple-50 text-purple-700 border-purple-200">
                             <Building2 className="h-2.5 w-2.5" />
-                            Tous les entrepôts
+                            {t("login.allWarehouses")}
                           </span>
                         ) : (
                           (user.assignedWarehouseIds as string[]).map((whId) => (
@@ -240,7 +229,7 @@ export default function Login() {
                         {user.approvalThresholdPct !== null && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
                             <ShieldCheck className="h-2.5 w-2.5" />
-                            Approuve ≤{user.approvalThresholdPct}%
+                            {t("login.approves", { pct: user.approvalThresholdPct })}
                           </span>
                         )}
                       </div>
@@ -254,13 +243,11 @@ export default function Login() {
 
         {step === "pin" && selectedUser && (
           <div className="flex flex-col items-center gap-6">
-            {/* Back button */}
             <Button variant="ghost" size="sm" onClick={handleBack} className="self-start">
               <ArrowLeft className="h-4 w-4 mr-1" />
-              Retour
+              {t("login.back")}
             </Button>
 
-            {/* Selected user card */}
             <div className="flex items-center gap-4 rounded-xl border bg-card px-6 py-4 w-full max-w-sm">
               <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center text-lg font-bold text-primary ring-2 ring-primary/20">
                 {selectedUser.avatar}
@@ -276,11 +263,10 @@ export default function Login() {
               </div>
             </div>
 
-            {/* PIN Entry */}
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                 <KeyRound className="h-4 w-4" />
-                Entrez votre code PIN
+                {t("login.enterPin")}
               </div>
 
               <div className={cn(
@@ -306,21 +292,20 @@ export default function Login() {
 
               {pinError && (
                 <p className="text-sm text-destructive font-medium animate-in fade-in">
-                  Code PIN incorrect. Réessayez.
+                  {t("login.pinIncorrect")}
                 </p>
               )}
 
               <p className="text-xs text-muted-foreground">
-                PIN de démo : <code className="bg-muted px-1.5 py-0.5 rounded font-mono">{USER_PINS[selectedUserId!]}</code>
+                {t("login.demoPin")} <code className="bg-muted px-1.5 py-0.5 rounded font-mono">{USER_PINS[selectedUserId!]}</code>
               </p>
             </div>
 
-            {/* Biometric button */}
             {biometricAvailable && (
               <div className="flex flex-col items-center gap-2 pt-2">
                 <div className="flex items-center gap-3">
                   <div className="h-px flex-1 bg-border w-16" />
-                  <span className="text-xs text-muted-foreground">ou</span>
+                  <span className="text-xs text-muted-foreground">{t("login.or")}</span>
                   <div className="h-px flex-1 bg-border w-16" />
                 </div>
 
@@ -331,26 +316,24 @@ export default function Login() {
                   onClick={handleBiometric}
                 >
                   <Fingerprint className="h-6 w-6 text-primary" />
-                  Authentification biométrique
+                  {t("login.biometric")}
                 </Button>
               </div>
             )}
           </div>
         )}
 
-        {/* Footer */}
         <div className={cn(
           "flex items-center justify-center gap-2 mt-6 transition-all duration-500 delay-700",
           ready ? "opacity-100" : "opacity-0"
         )}>
           <Fingerprint className="h-3 w-3 text-muted-foreground/50" />
           <p className="text-[11px] text-muted-foreground/60">
-            Jawda · Environnement de démonstration
+            {t("login.demoEnv")}
           </p>
         </div>
       </div>
 
-      {/* Shake animation */}
       <style>{`
         @keyframes shake {
           0%, 100% { transform: translateX(0); }

@@ -3,6 +3,7 @@ import { Bell, CheckCircle, AlertTriangle, Clock, Info, X, Eye } from "lucide-re
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useTranslation } from "react-i18next";
 
 export interface AppNotification {
   id: string;
@@ -24,20 +25,19 @@ const SEVERITY_COLOR: Record<string, string> = {
 
 export default function NotificationCenter() {
   const { purchaseOrders, invoices, grns } = useWMSData();
+  const { t } = useTranslation();
 
-  // Generate notifications from data state
   const generated = useMemo(() => {
     const notifs: AppNotification[] = [];
     const now = new Date();
 
-    // Pending approval POs
     const pendingPOs = purchaseOrders.filter(p => p.status === "Draft");
     if (pendingPOs.length > 0) {
       notifs.push({
         id: "notif-po-pending",
         type: "approval_pending",
-        title: "POs en attente d'approbation",
-        message: `${pendingPOs.length} bon(s) de commande en brouillon nécessitent une soumission`,
+        title: t("notifications.poPending"),
+        message: t("notifications.poPendingMsg", { count: pendingPOs.length }),
         timestamp: now.toISOString(),
         read: false,
         severity: "warning",
@@ -45,14 +45,13 @@ export default function NotificationCenter() {
       });
     }
 
-    // Overdue invoices
     const overdueInvs = invoices.filter(i => i.status === "Overdue");
     if (overdueInvs.length > 0) {
       notifs.push({
         id: "notif-inv-overdue",
         type: "invoice_due",
-        title: "Factures en retard",
-        message: `${overdueInvs.length} facture(s) dépassent leur échéance de paiement`,
+        title: t("notifications.invoiceOverdue"),
+        message: t("notifications.invoiceOverdueMsg", { count: overdueInvs.length }),
         timestamp: now.toISOString(),
         read: false,
         severity: "critical",
@@ -60,14 +59,13 @@ export default function NotificationCenter() {
       });
     }
 
-    // GRNs pending QC
     const pendingQC = grns.filter(g => g.status === "QC_Pending");
     if (pendingQC.length > 0) {
       notifs.push({
         id: "notif-grn-qc",
         type: "grn_posted",
-        title: "GRN en attente de QC",
-        message: `${pendingQC.length} réception(s) nécessitent une inspection qualité`,
+        title: t("notifications.grnQcPending"),
+        message: t("notifications.grnQcPendingMsg", { count: pendingQC.length }),
         timestamp: now.toISOString(),
         read: false,
         severity: "warning",
@@ -75,26 +73,24 @@ export default function NotificationCenter() {
       });
     }
 
-    // Approved GRNs today
     const todayGrns = grns.filter(g => g.status === "Approved" && g.receivedAt.startsWith(now.toISOString().slice(0, 10)));
     if (todayGrns.length > 0) {
       notifs.push({
         id: "notif-grn-today",
         type: "info",
-        title: "Réceptions du jour",
-        message: `${todayGrns.length} GRN(s) approuvé(s) aujourd'hui`,
+        title: t("notifications.grnToday"),
+        message: t("notifications.grnTodayMsg", { count: todayGrns.length }),
         timestamp: now.toISOString(),
         read: false,
         severity: "info",
       });
     }
 
-    // Budget warning (simulate)
     notifs.push({
       id: "notif-budget",
       type: "budget_exceeded",
-      title: "Alerte budget Q1",
-      message: "Le centre de coût 'Achats Construction' atteint 85% du budget trimestriel",
+      title: t("notifications.budgetAlert"),
+      message: t("notifications.budgetAlertMsg"),
       timestamp: new Date(Date.now() - 3600000).toISOString(),
       read: false,
       severity: "warning",
@@ -102,7 +98,7 @@ export default function NotificationCenter() {
     });
 
     return notifs;
-  }, [purchaseOrders, invoices, grns]);
+  }, [purchaseOrders, invoices, grns, t]);
 
   const [readIds, setReadIds] = useState<Set<string>>(new Set());
   
@@ -127,17 +123,17 @@ export default function NotificationCenter() {
       <SheetContent className="w-[380px] sm:w-[420px]">
         <SheetHeader>
           <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2"><Bell className="h-5 w-5" /> Notifications</SheetTitle>
+            <SheetTitle className="flex items-center gap-2"><Bell className="h-5 w-5" /> {t("notifications.title")}</SheetTitle>
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" onClick={markAllRead} className="text-xs">
-                Tout marquer lu
+                {t("notifications.markAllRead")}
               </Button>
             )}
           </div>
         </SheetHeader>
         <div className="mt-4 space-y-2 max-h-[calc(100vh-120px)] overflow-y-auto">
           {notifications.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground text-sm">Aucune notification</div>
+            <div className="text-center py-8 text-muted-foreground text-sm">{t("notifications.empty")}</div>
           ) : (
             notifications.map(notif => {
               const Icon = SEVERITY_ICON[notif.severity];
@@ -159,7 +155,7 @@ export default function NotificationCenter() {
                         </span>
                         {notif.link && (
                           <a href={notif.link} className="text-[10px] text-primary hover:underline" onClick={e => e.stopPropagation()}>
-                            Voir →
+                            {t("notifications.see")}
                           </a>
                         )}
                       </div>

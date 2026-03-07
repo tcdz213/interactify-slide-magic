@@ -3,6 +3,7 @@
  * Profitability by product, client, and period.
  */
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { canViewFinancials } from "@/lib/rbac";
@@ -19,6 +20,7 @@ const COLORS = ["hsl(var(--primary))", "hsl(160,84%,39%)", "hsl(38,92%,50%)", "h
 export default function ProfitabilityDashboard() {
   const { salesOrders, products } = useWMSData();
   const { currentUser } = useAuth();
+  const { t } = useTranslation();
   const showFinancials = currentUser ? canViewFinancials(currentUser) : false;
 
   const completedOrders = useMemo(
@@ -92,9 +94,9 @@ export default function ProfitabilityDashboard() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <ShieldAlert className="h-16 w-16 text-muted-foreground" />
-        <h2 className="text-xl font-semibold">Accès restreint</h2>
+        <h2 className="text-xl font-semibold">{t("biProfitability.restrictedAccess")}</h2>
         <p className="text-muted-foreground text-center max-w-md">
-          Ce dashboard est réservé aux rôles financiers.
+          {t("biProfitability.restrictedMessage")}
         </p>
       </div>
     );
@@ -103,41 +105,41 @@ export default function ProfitabilityDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Rentabilité</h1>
-        <p className="text-muted-foreground text-sm">Analyse par produit, client et période</p>
+        <h1 className="text-2xl font-bold text-foreground">{t("biProfitability.title")}</h1>
+        <p className="text-muted-foreground text-sm">{t("biProfitability.subtitle")}</p>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card><CardContent className="pt-4 pb-4">
-          <p className="text-xs text-muted-foreground">CA Total</p>
+          <p className="text-xs text-muted-foreground">{t("biProfitability.totalRevenue")}</p>
           <p className="text-xl font-bold">{currency(totalRevenue)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 pb-4">
-          <p className="text-xs text-muted-foreground">Marge Brute</p>
+          <p className="text-xs text-muted-foreground">{t("biProfitability.grossMargin")}</p>
           <p className="text-xl font-bold text-green-600">{currency(totalProfit)}</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 pb-4">
-          <p className="text-xs text-muted-foreground">Marge Moyenne</p>
+          <p className="text-xs text-muted-foreground">{t("biProfitability.avgMargin")}</p>
           <p className={`text-xl font-bold ${avgMargin < 20 ? "text-destructive" : "text-green-600"}`}>{avgMargin.toFixed(1)}%</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 pb-4">
-          <p className="text-xs text-muted-foreground">Commandes livrées</p>
+          <p className="text-xs text-muted-foreground">{t("biProfitability.deliveredOrders")}</p>
           <p className="text-xl font-bold">{completedOrders.length}</p>
         </CardContent></Card>
       </div>
 
       <Tabs defaultValue="product">
         <TabsList>
-          <TabsTrigger value="product" className="gap-1"><Package className="h-3.5 w-3.5" /> Par Produit</TabsTrigger>
-          <TabsTrigger value="client" className="gap-1"><Users className="h-3.5 w-3.5" /> Par Client</TabsTrigger>
-          <TabsTrigger value="period" className="gap-1"><Calendar className="h-3.5 w-3.5" /> Par Période</TabsTrigger>
+          <TabsTrigger value="product" className="gap-1"><Package className="h-3.5 w-3.5" /> {t("biProfitability.byProduct")}</TabsTrigger>
+          <TabsTrigger value="client" className="gap-1"><Users className="h-3.5 w-3.5" /> {t("biProfitability.byClient")}</TabsTrigger>
+          <TabsTrigger value="period" className="gap-1"><Calendar className="h-3.5 w-3.5" /> {t("biProfitability.byPeriod")}</TabsTrigger>
         </TabsList>
 
         {/* By Product */}
         <TabsContent value="product" className="space-y-4">
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-base">Marge par produit</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-base">{t("biProfitability.marginByProduct")}</CardTitle></CardHeader>
             <CardContent>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -146,7 +148,7 @@ export default function ProfitabilityDashboard() {
                     <XAxis type="number" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
                     <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
                     <Tooltip formatter={(v: number) => currency(v)} />
-                    <Bar dataKey="profit" name="Marge" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="profit" name={t("biProfitability.margin")} fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -155,12 +157,12 @@ export default function ProfitabilityDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Produit</TableHead>
-                <TableHead className="text-right">Qté vendue</TableHead>
-                <TableHead className="text-right">CA</TableHead>
-                <TableHead className="text-right">Coût</TableHead>
-                <TableHead className="text-right">Marge</TableHead>
-                <TableHead className="text-right">%</TableHead>
+                <TableHead>{t("biProfitability.colProduct")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colQtySold")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colRevenue")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colCost")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colMargin")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colPct")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -183,7 +185,7 @@ export default function ProfitabilityDashboard() {
         {/* By Client */}
         <TabsContent value="client" className="space-y-4">
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-base">Rentabilité par client</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-base">{t("biProfitability.profitabilityByClient")}</CardTitle></CardHeader>
             <CardContent>
               <div className="h-72">
                 <ResponsiveContainer width="100%" height="100%">
@@ -201,11 +203,11 @@ export default function ProfitabilityDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead className="text-right">Commandes</TableHead>
-                <TableHead className="text-right">CA</TableHead>
-                <TableHead className="text-right">Marge</TableHead>
-                <TableHead className="text-right">%</TableHead>
+                <TableHead>{t("biProfitability.colClient")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colOrders")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colRevenue")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colMargin")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colPct")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -227,7 +229,7 @@ export default function ProfitabilityDashboard() {
         {/* By Period */}
         <TabsContent value="period" className="space-y-4">
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-base">Tendance mensuelle</CardTitle></CardHeader>
+            <CardHeader className="pb-2"><CardTitle className="text-base">{t("biProfitability.monthlyTrend")}</CardTitle></CardHeader>
             <CardContent>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
@@ -236,8 +238,8 @@ export default function ProfitabilityDashboard() {
                     <XAxis dataKey="period" tick={{ fontSize: 11 }} />
                     <YAxis tickFormatter={(v) => `${(v / 1000000).toFixed(1)}M`} tick={{ fontSize: 11 }} />
                     <Tooltip formatter={(v: number) => currency(v)} />
-                    <Bar dataKey="revenue" name="CA" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="profit" name="Marge" fill="hsl(160,84%,39%)" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="revenue" name={t("biProfitability.revenue")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="profit" name={t("biProfitability.margin")} fill="hsl(160,84%,39%)" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -246,12 +248,12 @@ export default function ProfitabilityDashboard() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Période</TableHead>
-                <TableHead className="text-right">Commandes</TableHead>
-                <TableHead className="text-right">CA</TableHead>
-                <TableHead className="text-right">Coût</TableHead>
-                <TableHead className="text-right">Marge</TableHead>
-                <TableHead className="text-right">%</TableHead>
+                <TableHead>{t("biProfitability.colPeriod")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colOrders")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colRevenue")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colCost")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colMargin")}</TableHead>
+                <TableHead className="text-right">{t("biProfitability.colPct")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

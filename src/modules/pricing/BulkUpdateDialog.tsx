@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ interface BulkUpdateDialogProps {
 }
 
 export function BulkUpdateDialog({ open, onOpenChange, selectedCount, onApply, previewData = [] }: BulkUpdateDialogProps) {
+  const { t } = useTranslation();
   const [pct, setPct] = useState<string>("5");
 
   const pctVal = parseFloat(pct);
@@ -52,32 +54,31 @@ export function BulkUpdateDialog({ open, onOpenChange, selectedCount, onApply, p
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Mise à jour en masse</DialogTitle>
-          <DialogDescription>{selectedCount} prix sélectionnés</DialogDescription>
+          <DialogTitle>{t("pricing.bulkUpdateDialog.title")}</DialogTitle>
+          <DialogDescription>{t("pricing.bulkUpdateDialog.selectedCount", { count: selectedCount })}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
-          <Label>Variation en pourcentage (%)</Label>
+          <Label>{t("pricing.bulkUpdateDialog.percentChange")}</Label>
           <Input
             type="number"
             value={pct}
             onChange={(e) => setPct(e.target.value)}
-            placeholder="Ex: 5 pour +5%, -3 pour -3%"
+            placeholder={t("pricing.bulkUpdateDialog.placeholder")}
           />
           <p className="text-xs text-muted-foreground">
-            Positif = augmentation, négatif = réduction. Les prix mis à jour passeront en statut "En attente".
+            {t("pricing.bulkUpdateDialog.hint")}
           </p>
         </div>
 
-        {/* Preview table */}
         {preview.length > 0 && (
           <div className="flex-1 overflow-auto border rounded-lg mt-2">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">Produit</th>
-                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Ancien prix</th>
-                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Nouveau prix</th>
-                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">Marge</th>
+                  <th className="text-left px-3 py-2 font-medium text-muted-foreground">{t("pricing.bulkUpdateDialog.product")}</th>
+                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">{t("pricing.bulkUpdateDialog.oldPrice")}</th>
+                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">{t("pricing.bulkUpdateDialog.newPrice")}</th>
+                  <th className="text-right px-3 py-2 font-medium text-muted-foreground">{t("pricing.bulkUpdateDialog.margin")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -102,15 +103,15 @@ export function BulkUpdateDialog({ open, onOpenChange, selectedCount, onApply, p
             </table>
             {preview.length > 10 && (
               <p className="text-xs text-muted-foreground text-center py-2">
-                + {preview.length - 10} autres produit(s)
+                {t("pricing.bulkUpdateDialog.moreProducts", { count: preview.length - 10 })}
               </p>
             )}
           </div>
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-          <Button onClick={handleApply} disabled={!isValid}>Appliquer ({pct}%)</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t("pricing.bulkUpdateDialog.cancel")}</Button>
+          <Button onClick={handleApply} disabled={!isValid}>{t("pricing.bulkUpdateDialog.apply", { pct })}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

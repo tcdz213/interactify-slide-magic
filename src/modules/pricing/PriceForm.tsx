@@ -1,6 +1,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ interface PriceFormProps {
 }
 
 export function PriceForm({ open, onOpenChange, price, productName, cost, onSave }: PriceFormProps) {
+  const { t } = useTranslation();
   const form = useForm<PriceFormValues>({
     resolver: zodResolver(priceSchema),
     defaultValues: {
@@ -42,14 +44,14 @@ export function PriceForm({ open, onOpenChange, price, productName, cost, onSave
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle>Prix — {productName}</DialogTitle>
+          <DialogTitle>{t("pricing.priceForm.title", { product: productName })}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit((v) => { onSave(v); onOpenChange(false); })} className="space-y-4">
             <div className="flex items-center gap-3">
               <FormField control={form.control} name="unitPrice" render={({ field }) => (
                 <FormItem className="flex-1">
-                  <FormLabel>Prix unitaire (DZD) *</FormLabel>
+                  <FormLabel>{t("pricing.priceForm.unitPrice")}</FormLabel>
                   <FormControl><Input type="number" {...field} /></FormControl>
                   <FormMessage />
                 </FormItem>
@@ -60,27 +62,27 @@ export function PriceForm({ open, onOpenChange, price, productName, cost, onSave
             </div>
             <FormField control={form.control} name="minQty" render={({ field }) => (
               <FormItem>
-                <FormLabel>Quantité minimum</FormLabel>
-                <FormControl><Input type="number" placeholder="Optionnel" {...field} /></FormControl>
+                <FormLabel>{t("pricing.priceForm.minQty")}</FormLabel>
+                <FormControl><Input type="number" placeholder={t("pricing.priceForm.minQtyPlaceholder")} {...field} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />
             <FormField control={form.control} name="approvalStatus" render={({ field }) => (
               <FormItem>
-                <FormLabel>Statut d'approbation</FormLabel>
+                <FormLabel>{t("pricing.priceForm.approvalStatus")}</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl><SelectTrigger><SelectValue /></SelectTrigger></FormControl>
                   <SelectContent>
-                    <SelectItem value="draft">Brouillon</SelectItem>
-                    <SelectItem value="pending">En attente</SelectItem>
-                    <SelectItem value="approved">Approuvé</SelectItem>
+                    <SelectItem value="draft">{t("pricing.priceForm.draft")}</SelectItem>
+                    <SelectItem value="pending">{t("pricing.priceForm.pending")}</SelectItem>
+                    <SelectItem value="approved">{t("pricing.priceForm.approved")}</SelectItem>
                   </SelectContent>
                 </Select>
               </FormItem>
             )} />
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Annuler</Button>
-              <Button type="submit">Enregistrer</Button>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t("pricing.priceForm.cancel")}</Button>
+              <Button type="submit">{t("pricing.priceForm.save")}</Button>
             </DialogFooter>
           </form>
         </Form>

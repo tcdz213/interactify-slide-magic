@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { Receipt, CreditCard, FileText, Eye, Search, Send, Download, AlertTriangle, ArrowUpDown, TrendingUp, TrendingDown } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { currency, users } from "@/data/mockData";
@@ -36,6 +37,7 @@ function dueDateFromTerms(issueDate: string, paymentTerms: string): string {
 }
 
 export function InvoicesPage() {
+  const { t } = useTranslation();
   const { invoices, setInvoices, salesOrders, setSalesOrders } = useWMSData();
   const { canCreate: canCreateDoc } = useAuth();
   const canCreateInvoice = canCreateDoc("invoice");
@@ -57,22 +59,19 @@ export function InvoicesPage() {
   const totalOutstanding = invoices.reduce((s, i) => s + i.balance, 0);
   const totalOverdue = invoices.filter(i => i.status === "Overdue").reduce((s, i) => s + i.balance, 0);
 
-  // Sprint 7: Invoice hardening — duplicate detection & over-billing block
   const createInvoiceFromOrder = (order: (typeof salesOrders)[0]) => {
-    // IV-01: Duplicate detection (same orderId)
     const existing = invoices.find(i => i.orderId === order.id);
     if (existing) {
-      toast({ title: "Facture en double", description: `Une facture (${existing.id}) existe déjà pour la commande ${order.id}`, variant: "destructive" });
+      toast({ title: t("accounting.invoicesPage.duplicateInvoice"), description: t("accounting.invoicesPage.duplicateInvoiceDesc", { id: existing.id, orderId: order.id }), variant: "destructive" });
       return;
     }
 
     const issueDate = new Date().toISOString().slice(0, 10);
     const dueDate = dueDateFromTerms(issueDate, order.paymentTerms);
 
-    // IV-06: Check over-billing (invoice total vs PO remaining)
     const previouslyInvoiced = invoices.filter(i => i.orderId === order.id).reduce((s, i) => s + i.totalAmount, 0);
     if (previouslyInvoiced + order.totalAmount > order.totalAmount * 1.05) {
-      toast({ title: "Sur-facturation bloquée", description: `Le montant total dépasse le plafond de la commande (+5% tolérance)`, variant: "destructive" });
+      toast({ title: t("accounting.invoicesPage.overBillingBlocked"), description: t("accounting.invoicesPage.overBillingDesc"), variant: "destructive" });
       return;
     }
 
@@ -93,7 +92,7 @@ export function InvoicesPage() {
     };
     setInvoices((prev) => [...prev, newInv]);
     setSalesOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status: "Invoiced" as const } : o)));
-    toast({ title: "Facture créée", description: `${newInv.id} — ${order.customerName} — Validations IV-01/IV-06 OK` });
+    toast({ title: t("accounting.invoicesPage.invoiceCreated"), description: `${newInv.id} — ${order.customerName}` });
   };
 
   return (
@@ -104,23 +103,23 @@ export function InvoicesPage() {
             <Receipt className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Factures</h1>
-            <p className="text-sm text-muted-foreground">{invoices.length} factures</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("accounting.invoicesPage.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("accounting.invoicesPage.subtitle", { count: invoices.length })}</p>
           </div>
         </div>
       </div>
 
       {ordersEligibleForInvoice.length > 0 && canCreateInvoice && (
         <div className="glass-card rounded-xl p-4">
-          <h3 className="text-sm font-semibold mb-2">Commandes livrées à facturer</h3>
-          <p className="text-xs text-muted-foreground mb-3">Créez une facture pour passer la commande en « Facturée ».</p>
+          <h3 className="text-sm font-semibold mb-2">{t("accounting.invoicesPage.ordersToInvoice")}</h3>
+          <p className="text-xs text-muted-foreground mb-3">{t("accounting.invoicesPage.ordersToInvoiceDesc")}</p>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">Commande</th>
-                <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">Client</th>
-                <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">Total</th>
-                <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">Actions</th>
+                <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.order")}</th>
+                <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.client")}</th>
+                <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.total")}</th>
+                <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -131,7 +130,7 @@ export function InvoicesPage() {
                   <td className="py-2 px-3 text-right font-medium">{currency(order.totalAmount)}</td>
                   <td className="py-2 px-3 text-right">
                     <Button size="sm" variant="outline" onClick={() => createInvoiceFromOrder(order)}>
-                      Créer facture
+                      {t("accounting.invoicesPage.createInvoice")}
                     </Button>
                   </td>
                 </tr>
@@ -143,10 +142,10 @@ export function InvoicesPage() {
 
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Total facturé", value: currency(invoices.reduce((s, i) => s + i.totalAmount, 0)) },
-          { label: "Encaissé", value: currency(invoices.reduce((s, i) => s + i.paidAmount, 0)), color: "text-success" },
-          { label: "En souffrance", value: currency(totalOutstanding), color: "text-warning" },
-          { label: "En retard", value: currency(totalOverdue), color: "text-destructive" },
+          { label: t("accounting.invoicesPage.totalInvoiced"), value: currency(invoices.reduce((s, i) => s + i.totalAmount, 0)) },
+          { label: t("accounting.invoicesPage.collected"), value: currency(invoices.reduce((s, i) => s + i.paidAmount, 0)), color: "text-success" },
+          { label: t("accounting.invoicesPage.outstanding"), value: currency(totalOutstanding), color: "text-warning" },
+          { label: t("accounting.invoicesPage.overdueAmount"), value: currency(totalOverdue), color: "text-destructive" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-xl p-4">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
@@ -158,12 +157,12 @@ export function InvoicesPage() {
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher..." value={search} onChange={(e) => setSearch(e.target.value)}
+          <input type="text" placeholder={t("common.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)}
             className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
         <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
           className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/20">
-          <option value="all">Tous</option>
+          <option value="all">{t("common.allStatuses")}</option>
           {["Draft","Sent","Partially_Paid","Paid","Overdue","Disputed","Cancelled"].map(s => <option key={s} value={s}>{s.replace(/_/g," ")}</option>)}
         </select>
       </div>
@@ -172,15 +171,15 @@ export function InvoicesPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Facture</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Client</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Date</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Échéance</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Total</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Payé</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Solde</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Actions</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.invoice")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.client")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.date")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.due")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.total")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.paid")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.balance")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.status")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -196,21 +195,21 @@ export function InvoicesPage() {
                 <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => setSelectedInvoice(inv)} className="p-1.5 rounded-md hover:bg-muted" title="Voir"><Eye className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                    <button onClick={() => setSelectedInvoice(inv)} className="p-1.5 rounded-md hover:bg-muted" title={t("accounting.invoicesPage.view")}><Eye className="h-3.5 w-3.5 text-muted-foreground" /></button>
                     <button onClick={() => {
                       if (inv.status === "Draft") {
                         setInvoices(prev => prev.map(i => i.id === inv.id ? { ...i, status: "Sent" as Invoice["status"] } : i));
                       }
-                      toast({ title: "Facture envoyée", description: `${inv.id} envoyée à ${inv.customerName}` });
-                    }} className="p-1.5 rounded-md hover:bg-muted" title="Envoyer"><Send className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                      toast({ title: t("accounting.invoicesPage.invoiceSent"), description: t("accounting.invoicesPage.invoiceSentDesc", { id: inv.id, customer: inv.customerName }) });
+                    }} className="p-1.5 rounded-md hover:bg-muted" title={t("accounting.invoicesPage.send")}><Send className="h-3.5 w-3.5 text-muted-foreground" /></button>
                     <button onClick={() => {
                       try {
                         exportInvoicePDF(inv);
-                        toast({ title: "Facture téléchargée", description: inv.id });
+                        toast({ title: t("accounting.invoicesPage.invoiceDownloaded"), description: inv.id });
                       } catch {
-                        toast({ title: "Erreur", description: "Impossible de générer le fichier", variant: "destructive" });
+                        toast({ title: t("common.error"), description: t("accounting.invoicesPage.downloadError"), variant: "destructive" });
                       }
-                    }} className="p-1.5 rounded-md hover:bg-muted" title="Télécharger"><Download className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                    }} className="p-1.5 rounded-md hover:bg-muted" title={t("accounting.invoicesPage.download")}><Download className="h-3.5 w-3.5 text-muted-foreground" /></button>
                   </div>
                 </td>
               </tr>
@@ -230,14 +229,14 @@ export function InvoicesPage() {
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-3 text-sm mt-4">
-                <div><span className="text-muted-foreground">Client :</span> <span className="font-medium">{selectedInvoice.customerName}</span></div>
-                <div><span className="text-muted-foreground">Commande :</span> <span className="font-mono text-xs">{selectedInvoice.orderId}</span></div>
-                <div><span className="text-muted-foreground">Date :</span> {selectedInvoice.issueDate}</div>
-                <div><span className="text-muted-foreground">Échéance :</span> {selectedInvoice.dueDate}</div>
-                <div><span className="text-muted-foreground">Sous-total :</span> {currency(selectedInvoice.subtotal)}</div>
-                <div><span className="text-muted-foreground">TVA :</span> {currency(selectedInvoice.taxAmount)}</div>
-                <div><span className="text-muted-foreground">Payé :</span> <span className="text-success">{currency(selectedInvoice.paidAmount)}</span></div>
-                <div><span className="text-muted-foreground">Solde :</span> <span className="font-bold">{currency(selectedInvoice.balance)}</span></div>
+                <div><span className="text-muted-foreground">{t("accounting.invoicesPage.detailClient")}</span> <span className="font-medium">{selectedInvoice.customerName}</span></div>
+                <div><span className="text-muted-foreground">{t("accounting.invoicesPage.detailOrder")}</span> <span className="font-mono text-xs">{selectedInvoice.orderId}</span></div>
+                <div><span className="text-muted-foreground">{t("accounting.invoicesPage.detailDate")}</span> {selectedInvoice.issueDate}</div>
+                <div><span className="text-muted-foreground">{t("accounting.invoicesPage.detailDue")}</span> {selectedInvoice.dueDate}</div>
+                <div><span className="text-muted-foreground">{t("accounting.invoicesPage.detailSubtotal")}</span> {currency(selectedInvoice.subtotal)}</div>
+                <div><span className="text-muted-foreground">{t("accounting.invoicesPage.detailTax")}</span> {currency(selectedInvoice.taxAmount)}</div>
+                <div><span className="text-muted-foreground">{t("accounting.invoicesPage.detailPaid")}</span> <span className="text-success">{currency(selectedInvoice.paidAmount)}</span></div>
+                <div><span className="text-muted-foreground">{t("accounting.invoicesPage.detailBalance")}</span> <span className="font-bold">{currency(selectedInvoice.balance)}</span></div>
               </div>
             </>
           )}
@@ -248,34 +247,28 @@ export function InvoicesPage() {
 }
 
 export function PaymentsPage() {
+  const { t } = useTranslation();
   const { invoices, setInvoices, payments, setPayments, purchaseOrders } = useWMSData();
   const { canCreate: canCreateDoc } = useAuth();
   const canCreatePayment = canCreateDoc("payment");
   const [showPayment, setShowPayment] = useState(false);
   const [paymentForm, setPaymentForm] = useState({ invoiceId: "", amount: 0, method: "Cash" as PaymentMethod, reference: "", collectedBy: users.find(u => u.role === "Accountant")?.name ?? "Nadia Salim", notes: "", currency: "DZD" });
 
-  // Sprint 12 — FX gain/loss computation on payments
   const fxSummary = useMemo(() => {
-    // Simulate FX payments: any payment linked to a multi-currency PO generates FX variance
-    // For demo, we simulate that some vendor payments were in EUR/USD
     const fxPayments: { paymentId: string; vendorName: string; foreignCurrency: string; foreignAmount: number; poRate: number; payRate: number; poDate: string; payDate: string; gainLoss: number }[] = [];
-
-    // Mock: POs from certain vendors are in foreign currency
     const foreignVendors: Record<string, { currency: string; rate: number }> = {
-      "V007": { currency: "EUR", rate: 146.30 },  // Condor → EUR
-      "V008": { currency: "USD", rate: 134.60 },  // Iris Tech → USD
+      "V007": { currency: "EUR", rate: 146.30 },
+      "V008": { currency: "USD", rate: 134.60 },
     };
 
     for (const po of purchaseOrders) {
       const vendorFx = foreignVendors[po.vendorId];
       if (!vendorFx || po.status === "Draft") continue;
-      // Find related invoices and payments
       const relatedInvoices = invoices.filter(i => i.orderId === po.id);
       for (const inv of relatedInvoices) {
         const relatedPayments = payments.filter(p => p.invoiceId === inv.id && p.status === "Completed");
         for (const pay of relatedPayments) {
-          // Simulate settlement rate = PO rate + small drift
-          const drift = (Math.random() - 0.3) * 2.5; // slight positive bias
+          const drift = (Math.random() - 0.3) * 2.5;
           const payRate = Math.round((vendorFx.rate + drift) * 100) / 100;
           const foreignAmount = pay.amount / vendorFx.rate;
           const gainLoss = foreignAmount * (payRate - vendorFx.rate);
@@ -305,7 +298,7 @@ export function PaymentsPage() {
     const inv = invoices.find(i => i.id === paymentForm.invoiceId);
     if (!inv || paymentForm.amount <= 0) return;
     if (paymentForm.amount > inv.balance) {
-      toast({ title: "Montant invalide", description: "Le montant ne peut pas dépasser le solde.", variant: "destructive" });
+      toast({ title: t("accounting.paymentsPage.invalidAmount"), description: t("accounting.paymentsPage.invalidAmountDesc"), variant: "destructive" });
       return;
     }
     const newPaid = inv.paidAmount + paymentForm.amount;
@@ -328,7 +321,7 @@ export function PaymentsPage() {
     setPayments(prev => [newPay, ...prev]);
     setShowPayment(false);
     setPaymentForm({ invoiceId: "", amount: 0, method: "Cash", reference: "", collectedBy: users.find(u => u.role === "Accountant")?.name ?? "Nadia Salim", notes: "", currency: "DZD" });
-    toast({ title: "Paiement enregistré", description: `${newPay.id} — ${currency(paymentForm.amount)}` });
+    toast({ title: t("accounting.paymentsPage.paymentRegistered"), description: `${newPay.id} — ${currency(paymentForm.amount)}` });
   };
 
   return (
@@ -339,24 +332,24 @@ export function PaymentsPage() {
             <CreditCard className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Encaissements</h1>
-            <p className="text-sm text-muted-foreground">{payments.length} paiements enregistrés</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("accounting.paymentsPage.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("accounting.paymentsPage.subtitle", { count: payments.length })}</p>
           </div>
         </div>
         {canCreatePayment && (
           <Button onClick={() => setShowPayment(true)} className="gap-2">
-            Enregistrer paiement
+            {t("accounting.paymentsPage.registerPayment")}
           </Button>
         )}
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
-          { label: "Total encaissé", value: currency(payments.filter(p => p.status === "Completed").reduce((s, p) => s + p.amount, 0)), color: "text-success" },
-          { label: "En attente", value: currency(payments.filter(p => p.status === "Pending").reduce((s, p) => s + p.amount, 0)), color: "text-warning" },
-          { label: "Rejetés", value: currency(payments.filter(p => p.status === "Bounced").reduce((s, p) => s + p.amount, 0)), color: "text-destructive" },
-          { label: "Gains FX", value: currency(fxSummary.totalGain), color: "text-emerald-600", icon: "up" },
-          { label: "Pertes FX", value: currency(fxSummary.totalLoss), color: "text-destructive", icon: "down" },
+          { label: t("accounting.paymentsPage.totalCollected"), value: currency(payments.filter(p => p.status === "Completed").reduce((s, p) => s + p.amount, 0)), color: "text-success" },
+          { label: t("accounting.paymentsPage.pending"), value: currency(payments.filter(p => p.status === "Pending").reduce((s, p) => s + p.amount, 0)), color: "text-warning" },
+          { label: t("accounting.paymentsPage.bounced"), value: currency(payments.filter(p => p.status === "Bounced").reduce((s, p) => s + p.amount, 0)), color: "text-destructive" },
+          { label: t("accounting.paymentsPage.fxGains"), value: currency(fxSummary.totalGain), color: "text-emerald-600", icon: "up" },
+          { label: t("accounting.paymentsPage.fxLosses"), value: currency(fxSummary.totalLoss), color: "text-destructive", icon: "down" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-xl p-4">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
@@ -373,15 +366,15 @@ export function PaymentsPage() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">ID</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Client</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Facture</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Date</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Méthode</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Montant</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Référence</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Collecté par</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.id")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.client")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.invoice")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.date")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.method")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.amount")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.reference")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.collectedBy")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -402,28 +395,27 @@ export function PaymentsPage() {
         </table>
       </div>
 
-      {/* Sprint 12 — FX Gain/Loss Table */}
       {fxSummary.fxPayments.length > 0 && (
         <div className="glass-card rounded-xl overflow-hidden">
           <div className="p-4 border-b border-border">
             <h3 className="text-sm font-semibold flex items-center gap-2">
               <ArrowUpDown className="h-4 w-4 text-primary" />
-              Gains / Pertes de change (FX)
+              {t("accounting.paymentsPage.fxGainLoss")}
             </h3>
             <p className="text-xs text-muted-foreground mt-1">
-              Écarts de change réalisés sur paiements fournisseurs multi-devises — Net: <span className={`font-semibold ${fxSummary.netFx >= 0 ? "text-emerald-600" : "text-destructive"}`}>{currency(fxSummary.netFx)}</span>
+              {t("accounting.paymentsPage.fxNetDesc")} <span className={`font-semibold ${fxSummary.netFx >= 0 ? "text-emerald-600" : "text-destructive"}`}>{currency(fxSummary.netFx)}</span>
             </p>
           </div>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/30">
-                <th className="text-left px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Paiement</th>
-                <th className="text-left px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Fournisseur</th>
-                <th className="text-center px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Devise</th>
-                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Montant devise</th>
-                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Taux PO</th>
-                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Taux règlement</th>
-                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">Gain/Perte DZD</th>
+                <th className="text-left px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.payment")}</th>
+                <th className="text-left px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.vendor")}</th>
+                <th className="text-center px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.currency")}</th>
+                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.foreignAmount")}</th>
+                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.poRate")}</th>
+                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.settlementRate")}</th>
+                <th className="text-right px-4 py-2 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.paymentsPage.gainLoss")}</th>
               </tr>
             </thead>
             <tbody>
@@ -447,41 +439,41 @@ export function PaymentsPage() {
 
       <Dialog open={showPayment} onOpenChange={setShowPayment}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Enregistrer un paiement</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("accounting.paymentsPage.registerTitle")}</DialogTitle></DialogHeader>
           <div className="space-y-3 mt-4">
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Facture</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("accounting.paymentsPage.invoice")}</label>
               <select value={paymentForm.invoiceId} onChange={e => { const inv = unpaidInvoices.find(i => i.id === e.target.value); setPaymentForm(prev => ({ ...prev, invoiceId: e.target.value, amount: inv?.balance ?? 0 })); }} className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm">
-                <option value="">Sélectionner une facture...</option>
+                <option value="">{t("accounting.paymentsPage.selectInvoice")}</option>
                 {unpaidInvoices.map(inv => <option key={inv.id} value={inv.id}>{inv.id} — {inv.customerName} (solde {currency(inv.balance)})</option>)}
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Montant</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("accounting.paymentsPage.amount")}</label>
               <input type="number" min={0} step={0.01} value={paymentForm.amount || ""} onChange={e => setPaymentForm(prev => ({ ...prev, amount: Number(e.target.value) }))} className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm" />
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Méthode</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("accounting.paymentsPage.method")}</label>
               <select value={paymentForm.method} onChange={e => setPaymentForm(prev => ({ ...prev, method: e.target.value as PaymentMethod }))} className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm">
                 {(["Cash", "Cheque", "Bank_Transfer", "Online"] as const).map(m => <option key={m} value={m}>{m.replace(/_/g, " ")}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Référence</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("accounting.paymentsPage.reference")}</label>
               <input value={paymentForm.reference} onChange={e => setPaymentForm(prev => ({ ...prev, reference: e.target.value }))} placeholder="Ex: VIR-20260220-001" className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm" />
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Collecté par</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("accounting.paymentsPage.collectedBy")}</label>
               <input value={paymentForm.collectedBy} onChange={e => setPaymentForm(prev => ({ ...prev, collectedBy: e.target.value }))} className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm" />
             </div>
             <div>
-              <label className="text-sm font-medium text-muted-foreground">Notes</label>
+              <label className="text-sm font-medium text-muted-foreground">{t("accounting.paymentsPage.notes")}</label>
               <input value={paymentForm.notes} onChange={e => setPaymentForm(prev => ({ ...prev, notes: e.target.value }))} className="mt-1 h-9 w-full rounded-lg border border-input bg-muted/50 px-3 text-sm" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPayment(false)}>Annuler</Button>
-            <Button onClick={handleRecordPayment} disabled={!paymentForm.invoiceId || paymentForm.amount <= 0}>Enregistrer</Button>
+            <Button variant="outline" onClick={() => setShowPayment(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleRecordPayment} disabled={!paymentForm.invoiceId || paymentForm.amount <= 0}>{t("common.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -490,6 +482,7 @@ export function PaymentsPage() {
 }
 
 export function AccountingReportsPage() {
+  const { t } = useTranslation();
   const { invoices, payments } = useWMSData();
   const today = new Date();
 
@@ -522,8 +515,6 @@ export function AccountingReportsPage() {
 
   const COLORS = ["hsl(160, 84%, 39%)", "hsl(217, 91%, 60%)", "hsl(38, 92%, 50%)", "hsl(0, 84%, 60%)"];
 
-  const totalInvoiced = invoices.reduce((s, i) => s + i.totalAmount, 0);
-  const totalCollected = payments.filter((p) => p.status === "Completed").reduce((s, p) => s + p.amount, 0);
   const byMonth: Record<string, { revenue: number; collected: number }> = {};
   invoices.forEach((inv) => {
     const monthKey = inv.issueDate.slice(0, 7);
@@ -574,22 +565,22 @@ export function AccountingReportsPage() {
           <FileText className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Rapports comptables</h1>
-          <p className="text-sm text-muted-foreground">Analyse financière et aging</p>
+          <h1 className="text-xl font-bold tracking-tight">{t("accounting.reportsPage.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("accounting.reportsPage.subtitle")}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         {/* Aging */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-1">Rapport Aging</h3>
-          <p className="text-xs text-muted-foreground mb-4">Créances par ancienneté</p>
+          <h3 className="text-sm font-semibold mb-1">{t("accounting.reportsPage.agingReport")}</h3>
+          <p className="text-xs text-muted-foreground mb-4">{t("accounting.reportsPage.agingDesc")}</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={agingData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
               <XAxis dataKey="range" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip formatter={(v: number) => [currency(v), "Montant"]} contentStyle={{ borderRadius: "8px", fontSize: "12px", border: "1px solid hsl(220, 13%, 91%)" }} />
+              <Tooltip formatter={(v: number) => [currency(v), t("common.amount")]} contentStyle={{ borderRadius: "8px", fontSize: "12px", border: "1px solid hsl(220, 13%, 91%)" }} />
               <Bar dataKey="amount" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -597,8 +588,8 @@ export function AccountingReportsPage() {
 
         {/* Payment Methods */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-1">Méthodes de paiement</h3>
-          <p className="text-xs text-muted-foreground mb-4">Répartition des encaissements</p>
+          <h3 className="text-sm font-semibold mb-1">{t("accounting.reportsPage.paymentMethods")}</h3>
+          <p className="text-xs text-muted-foreground mb-4">{t("accounting.reportsPage.paymentMethodsDesc")}</p>
           <div className="flex items-center gap-6">
             <ResponsiveContainer width="50%" height={180}>
               <PieChart>
@@ -610,7 +601,7 @@ export function AccountingReportsPage() {
             </ResponsiveContainer>
             <div className="space-y-3 flex-1">
               {paymentMethodData.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Aucun encaissement enregistré</p>
+                <p className="text-sm text-muted-foreground">{t("accounting.reportsPage.noPayments")}</p>
               ) : (
                 paymentMethodData.map((m, i) => (
                   <div key={m.name} className="flex items-center justify-between text-sm">
@@ -629,38 +620,38 @@ export function AccountingReportsPage() {
 
       {/* Monthly Revenue vs Collections */}
       <div className="glass-card rounded-xl p-5">
-        <h3 className="text-sm font-semibold mb-1">CA vs Encaissements</h3>
-        <p className="text-xs text-muted-foreground mb-4">5 derniers mois</p>
+        <h3 className="text-sm font-semibold mb-1">{t("accounting.reportsPage.revenueVsCollections")}</h3>
+        <p className="text-xs text-muted-foreground mb-4">{t("accounting.reportsPage.last5Months")}</p>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={monthlyRevenue}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
             <YAxis tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
             <Tooltip formatter={(v: number) => [currency(v), ""]} contentStyle={{ borderRadius: "8px", fontSize: "12px", border: "1px solid hsl(220, 13%, 91%)" }} />
-            <Bar dataKey="revenue" name="CA" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} />
-            <Bar dataKey="collected" name="Encaissé" fill="hsl(160, 84%, 39%)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="revenue" name={t("accounting.biProfitability.revenue")} fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="collected" name={t("accounting.invoicesPage.collected")} fill="hsl(160, 84%, 39%)" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* Client aging table — from context */}
       <div className="glass-card rounded-xl p-5">
-        <h3 className="text-sm font-semibold mb-3">Détail Aging par client</h3>
+        <h3 className="text-sm font-semibold mb-3">{t("accounting.reportsPage.clientAging")}</h3>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border">
-              <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">Client</th>
-              <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">Total dû</th>
+              <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.client")}</th>
+              <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.invoicesPage.total")}</th>
               <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">0-15j</th>
               <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">16-30j</th>
               <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">31-60j</th>
               <th className="text-right py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">{">"}60j</th>
-              <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">Risque</th>
+              <th className="text-left py-2 px-3 text-xs uppercase tracking-wider text-muted-foreground">{t("accounting.reportsPage.risk")}</th>
             </tr>
           </thead>
           <tbody>
             {clientAging.length === 0 ? (
-              <tr><td colSpan={7} className="py-4 text-center text-muted-foreground text-sm">Aucune créance en souffrance</td></tr>
+              <tr><td colSpan={7} className="py-4 text-center text-muted-foreground text-sm">{t("common.noResults")}</td></tr>
             ) : (
               clientAging.map((c) => (
                 <tr key={c.name} className="border-b border-border/50 hover:bg-muted/20">

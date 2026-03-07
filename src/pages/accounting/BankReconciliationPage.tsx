@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { Landmark, Upload, CheckCircle, Link2, AlertTriangle, Download, Search } from "lucide-react";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import { currency } from "@/data/mockData";
@@ -27,19 +28,18 @@ const MOCK_STATEMENT: BankStatementLine[] = [
 ];
 
 export default function BankReconciliationPage() {
+  const { t } = useTranslation();
   const { payments } = useWMSData();
   const [statementLines, setStatementLines] = useState<BankStatementLine[]>(MOCK_STATEMENT);
   const [search, setSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Auto-match: try to match statement lines to payments by amount
   const autoMatch = () => {
     let matched = 0;
     setStatementLines(prev => prev.map(line => {
       if (line.matched) return line;
-      // Try matching by amount (positive = incoming payment)
       const matchPayment = payments.find(p =>
-        Math.abs(p.amount - Math.abs(line.amount)) < 100 && // within 100 DZD tolerance
+        Math.abs(p.amount - Math.abs(line.amount)) < 100 &&
         !prev.some(sl => sl.matchedPaymentId === p.id)
       );
       if (matchPayment) {
@@ -48,12 +48,12 @@ export default function BankReconciliationPage() {
       }
       return line;
     }));
-    toast({ title: `${matched} lignes rapprochées automatiquement` });
+    toast({ title: t("accounting.bankReconciliation.linesMatched", { count: matched }) });
   };
 
   const manualMatch = (lineId: string, paymentId: string) => {
     setStatementLines(prev => prev.map(l => l.id === lineId ? { ...l, matched: true, matchedPaymentId: paymentId } : l));
-    toast({ title: "Rapprochement manuel effectué" });
+    toast({ title: t("accounting.bankReconciliation.manualMatched") });
   };
 
   const unmatch = (lineId: string) => {
@@ -81,7 +81,7 @@ export default function BankReconciliationPage() {
       });
       if (parsed.length > 0) {
         setStatementLines(prev => [...prev, ...parsed]);
-        toast({ title: `${parsed.length} lignes importées` });
+        toast({ title: t("accounting.bankReconciliation.linesImported", { count: parsed.length }) });
       }
     };
     reader.readAsText(file);
@@ -102,38 +102,38 @@ export default function BankReconciliationPage() {
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Landmark className="h-6 w-6 text-primary" /> Rapprochement bancaire</h1>
-          <p className="text-muted-foreground text-sm">Import relevé, rapprochement auto/manuel des paiements</p>
+          <h1 className="text-2xl font-bold flex items-center gap-2"><Landmark className="h-6 w-6 text-primary" /> {t("accounting.bankReconciliation.title")}</h1>
+          <p className="text-muted-foreground text-sm">{t("accounting.bankReconciliation.subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <input ref={fileRef} type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
-          <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4 mr-2" /> Importer CSV</Button>
-          <Button onClick={autoMatch}><Link2 className="h-4 w-4 mr-2" /> Rapprochement auto</Button>
+          <Button variant="outline" onClick={() => fileRef.current?.click()}><Upload className="h-4 w-4 mr-2" /> {t("accounting.bankReconciliation.importCSV")}</Button>
+          <Button onClick={autoMatch}><Link2 className="h-4 w-4 mr-2" /> {t("accounting.bankReconciliation.autoMatch")}</Button>
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">Lignes rapprochées</div><div className="text-2xl font-bold text-emerald-600">{matchedCount}</div></CardContent></Card>
-        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">Non rapprochées</div><div className="text-2xl font-bold text-amber-600">{unmatchedCount}</div></CardContent></Card>
-        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">Total crédit</div><div className="text-2xl font-bold">{currency(totalCredit)}</div></CardContent></Card>
-        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">Total débit</div><div className="text-2xl font-bold text-red-600">{currency(totalDebit)}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">{t("accounting.bankReconciliation.matchedLines")}</div><div className="text-2xl font-bold text-emerald-600">{matchedCount}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">{t("accounting.bankReconciliation.unmatchedLines")}</div><div className="text-2xl font-bold text-amber-600">{unmatchedCount}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">{t("accounting.bankReconciliation.totalCredit")}</div><div className="text-2xl font-bold">{currency(totalCredit)}</div></CardContent></Card>
+        <Card><CardContent className="pt-4"><div className="text-sm text-muted-foreground">{t("accounting.bankReconciliation.totalDebit")}</div><div className="text-2xl font-bold text-red-600">{currency(totalDebit)}</div></CardContent></Card>
       </div>
 
-      <div className="relative w-64"><Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" /><input className="pl-8 pr-3 py-2 border rounded-md text-sm bg-background w-full" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} /></div>
+      <div className="relative w-64"><Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" /><input className="pl-8 pr-3 py-2 border rounded-md text-sm bg-background w-full" placeholder={t("common.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)} /></div>
 
       {/* Statement table */}
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-muted/60">
             <tr>
-              <th className="px-3 py-2 text-left font-medium">Date</th>
-              <th className="px-3 py-2 text-left font-medium">Référence</th>
-              <th className="px-3 py-2 text-left font-medium">Libellé</th>
-              <th className="px-3 py-2 text-right font-medium">Montant</th>
-              <th className="px-3 py-2 text-right font-medium">Solde</th>
-              <th className="px-3 py-2 text-center font-medium">Statut</th>
-              <th className="px-3 py-2 text-center font-medium">Action</th>
+              <th className="px-3 py-2 text-left font-medium">{t("accounting.bankReconciliation.date")}</th>
+              <th className="px-3 py-2 text-left font-medium">{t("accounting.bankReconciliation.reference")}</th>
+              <th className="px-3 py-2 text-left font-medium">{t("accounting.bankReconciliation.description")}</th>
+              <th className="px-3 py-2 text-right font-medium">{t("accounting.bankReconciliation.amount")}</th>
+              <th className="px-3 py-2 text-right font-medium">{t("accounting.bankReconciliation.balance")}</th>
+              <th className="px-3 py-2 text-center font-medium">{t("accounting.bankReconciliation.status")}</th>
+              <th className="px-3 py-2 text-center font-medium">{t("accounting.bankReconciliation.action")}</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -148,22 +148,21 @@ export default function BankReconciliationPage() {
                 <td className="px-3 py-2 text-right font-mono text-muted-foreground">{currency(line.balance)}</td>
                 <td className="px-3 py-2 text-center">
                   {line.matched ? (
-                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle className="h-3 w-3" /> Rapproché</span>
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600"><CheckCircle className="h-3 w-3" /> {t("accounting.bankReconciliation.matched")}</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 text-xs text-amber-600"><AlertTriangle className="h-3 w-3" /> En attente</span>
+                    <span className="inline-flex items-center gap-1 text-xs text-amber-600"><AlertTriangle className="h-3 w-3" /> {t("accounting.bankReconciliation.pending")}</span>
                   )}
                 </td>
                 <td className="px-3 py-2 text-center">
                   {line.matched ? (
-                    <Button size="sm" variant="ghost" onClick={() => unmatch(line.id)} className="text-xs">Délier</Button>
+                    <Button size="sm" variant="ghost" onClick={() => unmatch(line.id)} className="text-xs">{t("accounting.bankReconciliation.unlink")}</Button>
                   ) : (
                     <Button size="sm" variant="outline" className="text-xs" onClick={() => {
-                      // Quick manual match to first unmatched payment
                       const p = payments.find(pm => !statementLines.some(sl => sl.matchedPaymentId === pm.id));
                       if (p) manualMatch(line.id, p.id);
-                      else toast({ title: "Aucun paiement disponible", variant: "destructive" });
+                      else toast({ title: t("accounting.bankReconciliation.noPaymentAvailable"), variant: "destructive" });
                     }}>
-                      Rapprocher
+                      {t("accounting.bankReconciliation.match")}
                     </Button>
                   )}
                 </td>
@@ -175,8 +174,8 @@ export default function BankReconciliationPage() {
 
       {/* CSV format hint */}
       <div className="bg-muted/40 rounded-lg p-3 text-xs text-muted-foreground">
-        <strong>Format CSV attendu:</strong> Date, Référence, Libellé, Montant, Solde<br />
-        Exemple: <code>2026-03-01,VIR-9001,PAIEMENT FOURNISSEUR X,-500000,44500000</code>
+        <strong>{t("accounting.bankReconciliation.csvFormat")}</strong> Date, {t("accounting.bankReconciliation.reference")}, {t("accounting.bankReconciliation.description")}, {t("accounting.bankReconciliation.amount")}, {t("accounting.bankReconciliation.balance")}<br />
+        {t("accounting.bankReconciliation.csvExample")} <code>2026-03-01,VIR-9001,PAIEMENT FOURNISSEUR X,-500000,44500000</code>
       </div>
     </div>
   );

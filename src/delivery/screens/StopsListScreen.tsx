@@ -1,15 +1,14 @@
 import { todayTrip } from "../data/mockDeliveryData";
 import { StopStatusBadge } from "../components/DeliveryComponents";
 import { useNavigate } from "react-router-dom";
-
-const currency = (v: number) =>
-  new Intl.NumberFormat("fr-DZ", { style: "decimal", maximumFractionDigits: 0 }).format(v) + " DH";
+import { useTranslation } from "react-i18next";
 
 export default function StopsListScreen() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <div className="p-4 space-y-3 animate-fade-in pb-6">
-      <h1 className="text-lg font-bold">Tous les arrêts</h1>
+      <h1 className="text-lg font-bold">{t("delivery.stops.title")}</h1>
       {todayTrip.stops.map((stop) => (
         <button
           key={stop.id}

@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { Pencil, History, TrendingUp, Package, ArrowLeft, X, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,15 +23,16 @@ import { BulkUpdateDialog } from "./BulkUpdateDialog";
 import { calcMargin } from "./pricing.types";
 import type { ProductPrice } from "./pricing.types";
 
-const APPROVAL_BADGE: Record<string, { label: string; className: string }> = {
-  draft: { label: "Brouillon", className: "bg-muted text-muted-foreground border-border" },
-  pending: { label: "En attente", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
-  approved: { label: "Approuvé", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+const APPROVAL_BADGE_KEYS: Record<string, { labelKey: string; className: string }> = {
+  draft: { labelKey: "pricing.priceForm.draft", className: "bg-muted text-muted-foreground border-border" },
+  pending: { labelKey: "pricing.priceForm.pending", className: "bg-yellow-100 text-yellow-800 border-yellow-200" },
+  approved: { labelKey: "pricing.priceForm.approved", className: "bg-emerald-100 text-emerald-800 border-emerald-200" },
 };
 
 const PAGE_SIZE = 20;
 
 export default function PricingPage() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const filterProductId = searchParams.get("productId");
 
@@ -145,13 +147,13 @@ export default function PricingPage() {
       },
       currentUser?.name ?? "system"
     );
-    toast({ title: "Prix enregistré", description: `Prix de "${editingPrice.product.name}" mis à jour.` });
+    toast({ title: t("pricing.pricingPage.priceSaved"), description: t("pricing.pricingPage.priceSavedDesc", { name: editingPrice.product.name }) });
     setEditingPrice(null);
   }, [editingPrice, selectedClientType, upsertPrice, currentUser]);
 
   const handleBulkApply = useCallback((pctChange: number) => {
     bulkUpdatePrices(Array.from(selected), pctChange, currentUser?.name ?? "system");
-    toast({ title: "Mise à jour en masse", description: `${selected.size} prix mis à jour de ${pctChange > 0 ? "+" : ""}${pctChange}%.` });
+    toast({ title: t("pricing.pricingPage.bulkUpdated"), description: t("pricing.pricingPage.bulkUpdatedDesc", { count: selected.size, pct: `${pctChange > 0 ? "+" : ""}${pctChange}` }) });
     setSelected(new Set());
   }, [selected, bulkUpdatePrices, currentUser]);
 
@@ -205,8 +207,8 @@ export default function PricingPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Grille Tarifaire</h1>
-          <p className="text-sm text-muted-foreground">Gestion multi-prix par type de client — {filteredRows.length} produit(s)</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("pricing.pricingPage.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("pricing.pricingPage.subtitle", { count: filteredRows.length })}</p>
         </div>
         <div className="flex items-center gap-3">
           {selected.size > 0 && (
@@ -231,23 +233,23 @@ export default function PricingPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <Card>
           <CardContent className="pt-4">
-            <p className="text-xs text-muted-foreground">Prix configurés</p>
+            <p className="text-xs text-muted-foreground">{t("pricing.pricingPage.configuredPrices")}</p>
             <p className="text-2xl font-bold text-foreground">{kpis.totalPrices}</p>
           </CardContent>
         </Card>
         <RBACGuard permission="view_financials">
           <Card>
             <CardContent className="pt-4">
-              <p className="text-xs text-muted-foreground">Marge moyenne</p>
-              <p className="text-2xl font-bold text-foreground">{kpis.avgMargin.toFixed(1)}%</p>
+            <p className="text-xs text-muted-foreground">{t("pricing.pricingPage.avgMargin")}</p>
+            <p className="text-2xl font-bold text-foreground">{kpis.avgMargin.toFixed(1)}%</p>
             </CardContent>
           </Card>
         </RBACGuard>
         <RBACGuard permission="view_financials">
           <Card>
             <CardContent className="pt-4">
-              <p className="text-xs text-muted-foreground">Marges négatives</p>
-              <p className="text-2xl font-bold text-destructive">{kpis.negativeCount}</p>
+            <p className="text-xs text-muted-foreground">{t("pricing.pricingPage.negativeMargins")}</p>
+            <p className="text-2xl font-bold text-destructive">{kpis.negativeCount}</p>
             </CardContent>
           </Card>
         </RBACGuard>
@@ -258,7 +260,7 @@ export default function PricingPage() {
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Rechercher par nom ou SKU..."
+            placeholder={t("pricing.pricingPage.searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -269,11 +271,11 @@ export default function PricingPage() {
             <SelectValue placeholder="Statut approbation" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tous les statuts</SelectItem>
-            <SelectItem value="draft">Brouillon</SelectItem>
-            <SelectItem value="pending">En attente</SelectItem>
-            <SelectItem value="approved">Approuvé</SelectItem>
-            <SelectItem value="none">Non configuré</SelectItem>
+            <SelectItem value="all">{t("pricing.pricingPage.allStatuses")}</SelectItem>
+            <SelectItem value="draft">{t("pricing.priceForm.draft")}</SelectItem>
+            <SelectItem value="pending">{t("pricing.priceForm.pending")}</SelectItem>
+            <SelectItem value="approved">{t("pricing.priceForm.approved")}</SelectItem>
+            <SelectItem value="none">{t("pricing.pricingPage.notConfigured")}</SelectItem>
           </SelectContent>
         </Select>
         {canViewFinancials && (
@@ -282,11 +284,11 @@ export default function PricingPage() {
               <SelectValue placeholder="Filtre marge" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Toutes marges</SelectItem>
-              <SelectItem value="negative">Négative (&lt;0%)</SelectItem>
-              <SelectItem value="low">Faible (&lt;10%)</SelectItem>
-              <SelectItem value="medium">Moyenne (10-20%)</SelectItem>
-              <SelectItem value="high">Bonne (&gt;20%)</SelectItem>
+            <SelectItem value="all">{t("pricing.pricingPage.allMargins")}</SelectItem>
+            <SelectItem value="negative">{t("pricing.pricingPage.negativeMargin")}</SelectItem>
+            <SelectItem value="low">{t("pricing.pricingPage.lowMargin")}</SelectItem>
+            <SelectItem value="medium">{t("pricing.pricingPage.mediumMargin")}</SelectItem>
+            <SelectItem value="high">{t("pricing.pricingPage.highMargin")}</SelectItem>
             </SelectContent>
           </Select>
         )}
@@ -322,10 +324,10 @@ export default function PricingPage() {
             </TableHeader>
             <TableBody>
               {paginatedRows.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Aucun produit correspondant</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{t("pricing.pricingPage.noProducts")}</TableCell></TableRow>
               )}
               {paginatedRows.map(({ product, price }) => {
-                const badge = price ? APPROVAL_BADGE[price.approvalStatus] : null;
+                const badge = price ? APPROVAL_BADGE_KEYS[price.approvalStatus] : null;
                 return (
                    <TableRow key={product.id} className={cn(
                      selected.has(price?.id ?? "") ? "bg-primary/5" : "",
@@ -358,7 +360,7 @@ export default function PricingPage() {
                     <TableCell>{price?.minQty ?? "—"}</TableCell>
                     <TableCell>
                       {badge && (
-                        <Badge variant="outline" className={badge.className}>{badge.label}</Badge>
+                        <Badge variant="outline" className={badge.className}>{t(badge.labelKey)}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-right space-x-1">
