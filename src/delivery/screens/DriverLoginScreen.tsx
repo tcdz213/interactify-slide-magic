@@ -90,7 +90,7 @@ export default function DriverLoginScreen() {
             </Select>
           </div>
 
-          <Button onClick={handleLogin} className="w-full" disabled={pin.length !== 4 || !vehicleId}>
+          <Button onClick={handleLogin} className="w-full" disabled={pin.length !== 6 || !vehicleId}>
             {t("delivery.startDay")}
           </Button>
         </div>
