@@ -335,11 +335,11 @@ export default function Login() {
                 pinError && "animate-[shake_0.5s_ease-in-out]"
               )}>
                 <InputOTP
-                  maxLength={4}
+                  maxLength={6}
                   value={pin}
                   onChange={(v) => {
                     setPin(v);
-                    if (v.length === 4) handlePinComplete(v);
+                    if (v.length === 6) handlePinComplete(v);
                   }}
                 >
                   <InputOTPGroup>
@@ -347,6 +347,8 @@ export default function Login() {
                     <InputOTPSlot index={1} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
                     <InputOTPSlot index={2} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
                     <InputOTPSlot index={3} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
+                    <InputOTPSlot index={4} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
+                    <InputOTPSlot index={5} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>
