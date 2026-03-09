@@ -43,10 +43,10 @@ export default function DriverLoginScreen() {
           <div>
             <label className="text-sm font-medium mb-1.5 block">{t("delivery.pinLabel")}</label>
             <div className="flex gap-2 justify-center">
-              {[0, 1, 2, 3].map((i) => (
+              {[0, 1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="h-12 w-12 rounded-lg border-2 border-border flex items-center justify-center text-xl font-bold"
+                  className="h-12 w-10 rounded-lg border-2 border-border flex items-center justify-center text-xl font-bold"
                 >
                   {pin[i] ? "●" : ""}
                 </div>
