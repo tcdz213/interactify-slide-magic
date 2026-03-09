@@ -272,8 +272,8 @@ Bennet Eddar fait GRN → 3-way match → paiement
 
 ## 7. Plan de Migration — Étapes
 
-### Phase 1 : Infrastructure tenant (1-2 jours)
-| Tâche | Fichier | Action |
+### Phase 1 : Infrastructure tenant (1-2 jours) ✅ COMPLÉTÉ
+| Tâche | Fichier | Statut |
 |-------|---------|--------|
 | 1.1 | `src/lib/tenantFilter.ts` | **CRÉER** — helper `filterByTenant()`, `getCurrentTenantId()` |
 | 1.2 | `src/data/userData.ts` | **REMPLACER** — 4 CEOs + staff par tenant (≈45 users total) |

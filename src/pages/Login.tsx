@@ -23,12 +23,25 @@ const LEVEL_COLORS = [
 ];
 
 const USER_PINS: Record<string, string> = {
-  U001: "1234", U002: "2345", U003: "3456", U004: "4567", U005: "5678",
-  U006: "6789", U007: "7890", U008: "8901", U009: "9012", U010: "0123",
-  U011: "1111", U012: "2222", U013: "3333", U014: "4444", U015: "1515", 
-  U016: "1616", U017: "1717",
-  // Agro Sahel (Fournisseur-Entrepôt)
-  U020: "2020", U021: "2121", U022: "2222", U023: "2323",
+  // ── Platform Owner ──
+  U015: "999999",
+  // ── Bennet Eddar (T-ENT-01) ──
+  U001: "100001", U011: "100002", U012: "100003", U013: "100004",
+  U009: "100005", U003: "100006", U006: "100007", U008: "100008",
+  U014: "100009", U004: "100010", U002: "100011",
+  // ── Atlas BTP (T-ENT-02) ──
+  U030: "200001", U036: "200002", U037: "200003", U005: "200004",
+  U007: "200005", U038: "200006", U039: "200007",
+  // ── TechnoLog (T-ENT-03) ──
+  U031: "300001", U040: "300002", U041: "300003", U010: "300004",
+  U042: "300005", U043: "300006", U044: "300007", U045: "300008",
+  // ── Sahara Express (T-ENT-04) ──
+  U016: "400001", U046: "400002", U047: "400003", U048: "400004", U049: "400005",
+  // ── Agro Sahel (T-FRN-01) ──
+  U020: "500001", U021: "500002", U022: "500003", U023: "500004",
+  U017: "500005",
+  // ── Fournisseurs externes ──
+  U032: "600001", U033: "600002", U034: "600003", U035: "600004",
 };
 
 type LoginStep = "company" | "select" | "pin";
@@ -322,11 +335,11 @@ export default function Login() {
                 pinError && "animate-[shake_0.5s_ease-in-out]"
               )}>
                 <InputOTP
-                  maxLength={4}
+                  maxLength={6}
                   value={pin}
                   onChange={(v) => {
                     setPin(v);
-                    if (v.length === 4) handlePinComplete(v);
+                    if (v.length === 6) handlePinComplete(v);
                   }}
                 >
                   <InputOTPGroup>
@@ -334,6 +347,8 @@ export default function Login() {
                     <InputOTPSlot index={1} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
                     <InputOTPSlot index={2} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
                     <InputOTPSlot index={3} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
+                    <InputOTPSlot index={4} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
+                    <InputOTPSlot index={5} className={cn("h-14 w-14 text-xl", pinError && "border-destructive")} />
                   </InputOTPGroup>
                 </InputOTP>
               </div>

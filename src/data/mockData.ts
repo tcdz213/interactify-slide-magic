@@ -23,3 +23,7 @@ export { qcInspections, putawayTasks, MOVEMENT_TYPE_LABELS, stockMovements, cros
 
 // Historical Data (Jan 2024 → Nov 2025)
 export { historicalPOs, historicalSOs, historicalInvoices, historicalPayments, historicalGrns, historicalCycleCounts } from "./historicalData";
+
+// Tenant Registry
+export type { Tenant } from "./tenants";
+export { tenants, getTenant, getEntrepotTenants, getFournisseurTenants, getSubscriberTenants } from "./tenants";

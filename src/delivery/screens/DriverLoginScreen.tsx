@@ -43,10 +43,10 @@ export default function DriverLoginScreen() {
           <div>
             <label className="text-sm font-medium mb-1.5 block">{t("delivery.pinLabel")}</label>
             <div className="flex gap-2 justify-center">
-              {[0, 1, 2, 3].map((i) => (
+              {[0, 1, 2, 3, 4, 5].map((i) => (
                 <div
                   key={i}
-                  className="h-12 w-12 rounded-lg border-2 border-border flex items-center justify-center text-xl font-bold"
+                  className="h-12 w-10 rounded-lg border-2 border-border flex items-center justify-center text-xl font-bold"
                 >
                   {pin[i] ? "●" : ""}
                 </div>
@@ -59,7 +59,7 @@ export default function DriverLoginScreen() {
                   onClick={() => {
                     if (key === null) return;
                     if (key === "⌫") setPin((p) => p.slice(0, -1));
-                    else if (pin.length < 4) setPin((p) => p + key);
+                    else if (pin.length < 6) setPin((p) => p + key);
                   }}
                   className={`h-12 rounded-lg text-lg font-semibold transition-colors ${
                     key === null
@@ -90,7 +90,7 @@ export default function DriverLoginScreen() {
             </Select>
           </div>
 
-          <Button onClick={handleLogin} className="w-full" disabled={pin.length !== 4 || !vehicleId}>
+          <Button onClick={handleLogin} className="w-full" disabled={pin.length !== 6 || !vehicleId}>
             {t("delivery.startDay")}
           </Button>
         </div>

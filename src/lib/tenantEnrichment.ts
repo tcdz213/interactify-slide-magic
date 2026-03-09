@@ -4,7 +4,8 @@ export const WAREHOUSE_TO_TENANT: Record<string, string> = {
   "wh-oran-food": "T-ENT-01",
   "wh-alger-construction": "T-ENT-02",
   "wh-constantine-tech": "T-ENT-03",
-  "wh-se-ghardaia": "T-ENT-04"
+  "wh-se-ghardaia": "T-ENT-04",
+  "wh-sahel-supplier": "T-FRN-01",
 };
 
 export function getTenantByWarehouse(warehouseId?: string): string {

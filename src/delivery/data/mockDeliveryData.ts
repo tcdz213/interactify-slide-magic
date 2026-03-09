@@ -9,9 +9,10 @@ import type { Incident } from "../types/incident";
 // ── Drivers (simplified) ──
 export const MOCK_DRIVER = {
   id: "DRV-001",
-  name: "Ahmed Bouzid",
-  pin: "1234",
+  name: "Omar Fadel",
+  pin: "100010",
   phone: "+213-55-123-456",
+  tenantId: "T-ENT-01",
 };
 
 // ── Vehicles ──
