@@ -7,29 +7,40 @@
 export type QCInspectionStatus = "Pending" | "In_Progress" | "Passed" | "Failed" | "Conditional" | "On_Hold";
 export type QCDefectType = "Temperature" | "Packaging" | "Contamination" | "Expiry" | "Label" | "Weight" | "Visual" | "Other";
 export interface QCInspectionLine { lineId: number; productId: string; productName: string; batchNumber: string; sampleSize: number; passedQty: number; failedQty: number; defectType?: QCDefectType; defectDescription?: string; result: "Passed" | "Failed" | "Conditional"; temperature?: number; temperatureOk?: boolean; }
-export interface QCInspection { id: string; grnId: string; vendorName: string; warehouseId: string; warehouseName: string; inspectorId: string; inspectorName: string; scheduledDate: string; completedDate?: string; status: QCInspectionStatus; overallResult?: "Passed" | "Failed" | "Conditional"; quarantineLocationId?: string; notes: string; lines: QCInspectionLine[]; }
+export interface QCInspection {
+  tenantId?: string; id: string; grnId: string; vendorName: string; warehouseId: string; warehouseName: string; inspectorId: string; inspectorName: string; scheduledDate: string; completedDate?: string; status: QCInspectionStatus; overallResult?: "Passed" | "Failed" | "Conditional"; quarantineLocationId?: string; notes: string; lines: QCInspectionLine[]; }
 
 export const qcInspections: QCInspection[] = [
   { id: "QC-20260213-001", grnId: "GRN-20260213-001", vendorName: "GICA Cimenterie", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", inspectorId: "U003", inspectorName: "Sara Khalil", scheduledDate: "2026-02-13", completedDate: "2026-02-13", status: "Passed", overallResult: "Passed", notes: "Ciment conforme — résistance OK, pas d'humidité", lines: [{ lineId: 1, productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", batchNumber: "LOT-CIM-0213A", sampleSize: 50, passedQty: 50, failedQty: 0, result: "Passed" }, { lineId: 2, productId: "P008", productName: "Plâtre fin 40kg", batchNumber: "LOT-PLT-0213B", sampleSize: 30, passedQty: 30, failedQty: 0, result: "Passed" }] },
   { id: "QC-20260218-002", grnId: "GRN-20260218-002", vendorName: "Céramique SEROR", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", inspectorId: "U003", inspectorName: "Sara Khalil", scheduledDate: "2026-02-18", status: "In_Progress", notes: "Carrelage en attente test résistance", lines: [{ lineId: 1, productId: "P003", productName: "Carrelage 40x40 (m²)", batchNumber: "LOT-CAR-0218A", sampleSize: 40, passedQty: 25, failedQty: 15, defectType: "Visual", defectDescription: "Fissures sur 15 carreaux", result: "Conditional" }, { lineId: 2, productId: "P005", productName: "Brique rouge 10x20x30", batchNumber: "LOT-BRQ-0218B", sampleSize: 20, passedQty: 20, failedQty: 0, result: "Passed" }] },
   { id: "QC-20260220-003", grnId: "GRN-20260220-003", vendorName: "Cevital Agro", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", inspectorId: "U009", inspectorName: "Samir Rafik", scheduledDate: "2026-02-20", completedDate: "2026-02-20", status: "Passed", overallResult: "Passed", notes: "Chaîne du froid respectée — température 4°C à la réception", lines: [{ lineId: 1, productId: "P010", productName: "Huile de tournesol 5L", batchNumber: "LOT-HUI-0220A", sampleSize: 30, passedQty: 30, failedQty: 0, result: "Passed", temperature: 22, temperatureOk: true }, { lineId: 2, productId: "P012", productName: "Sucre blanc 1kg", batchNumber: "LOT-SUC-0220B", sampleSize: 20, passedQty: 20, failedQty: 0, result: "Passed" }, { lineId: 3, productId: "P013", productName: "Lait UHT 1L", batchNumber: "LOT-LAI-0220C", sampleSize: 25, passedQty: 25, failedQty: 0, result: "Passed", temperature: 4, temperatureOk: true }] },
+  // ── March 2026 ──
+  { id: "QC-20260305-004", grnId: "GRN-20260305-006", vendorName: "Cevital Agro", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", inspectorId: "U009", inspectorName: "Samir Rafik", scheduledDate: "2026-03-05", completedDate: "2026-03-05", status: "Passed", overallResult: "Passed", notes: "Huile + farine + sucre — tout conforme, chaîne froid OK", lines: [{ lineId: 1, productId: "P010", productName: "Huile de tournesol 5L", batchNumber: "LOT-HUI-0305A", sampleSize: 40, passedQty: 40, failedQty: 0, result: "Passed", temperature: 21, temperatureOk: true }, { lineId: 2, productId: "P009", productName: "Farine de blé T55 (50kg)", batchNumber: "LOT-FAR-0305B", sampleSize: 25, passedQty: 25, failedQty: 0, result: "Passed" }, { lineId: 3, productId: "P012", productName: "Sucre blanc 1kg", batchNumber: "LOT-SUC-0305C", sampleSize: 20, passedQty: 20, failedQty: 0, result: "Passed" }] },
+  { id: "QC-20260306-005", grnId: "GRN-20260306-007", vendorName: "GICA Cimenterie", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", inspectorId: "U003", inspectorName: "Sara Khalil", scheduledDate: "2026-03-06", completedDate: "2026-03-06", status: "Passed", overallResult: "Passed", notes: "Ciment conforme — pas d'humidité", lines: [{ lineId: 1, productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", batchNumber: "LOT-CIM-0306A", sampleSize: 60, passedQty: 60, failedQty: 0, result: "Passed" }] },
+  { id: "QC-20260308-006", grnId: "GRN-20260308-008", vendorName: "Condor Electronics", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", inspectorId: "U011", inspectorName: "Hassan Nour", scheduledDate: "2026-03-08", status: "In_Progress", notes: "2 laptops écrans rayés — inspection moniteurs en cours", lines: [{ lineId: 1, productId: "P017", productName: "Laptop HP ProBook 450", batchNumber: "LOT-LAP-0308A", sampleSize: 60, passedQty: 56, failedQty: 2, defectType: "Visual", defectDescription: "Écrans rayés sur 2 unités", result: "Conditional" }, { lineId: 2, productId: "P041", productName: "Moniteur Dell 24\" FHD", batchNumber: "LOT-MON-0308B", sampleSize: 60, passedQty: 60, failedQty: 0, result: "Passed" }] },
 ];
 
 // ---------- Putaway Tasks ----------
 export type PutawayStatus = "Pending" | "Assigned" | "In_Progress" | "Completed" | "Cancelled";
 export type PutawayStrategy = "FIFO" | "FEFO" | "Zone_Match" | "Nearest_Available";
-export interface PutawayTask { id: string; grnId: string; qcInspectionId?: string; productId: string; productName: string; batchNumber: string; expiryDate: string; qty: number; warehouseId: string; warehouseName: string; suggestedLocationId: string; actualLocationId?: string; strategy: PutawayStrategy; assignedTo?: string; assignedToName?: string; createdAt: string; completedAt?: string; status: PutawayStatus; notes: string; }
+export interface PutawayTask {
+  tenantId?: string; id: string; grnId: string; qcInspectionId?: string; productId: string; productName: string; batchNumber: string; expiryDate: string; qty: number; warehouseId: string; warehouseName: string; suggestedLocationId: string; actualLocationId?: string; strategy: PutawayStrategy; assignedTo?: string; assignedToName?: string; createdAt: string; completedAt?: string; status: PutawayStatus; notes: string; }
 
 export const putawayTasks: PutawayTask[] = [
   { id: "PUT-20260213-001", grnId: "GRN-20260213-001", qcInspectionId: "QC-20260213-001", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", batchNumber: "LOT-CIM-0213A", expiryDate: "2026-08-10", qty: 5000, warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", suggestedLocationId: "ALG-A1-01", actualLocationId: "ALG-A1-01", strategy: "FIFO", assignedTo: "U007", assignedToName: "Tarek Daoui", createdAt: "2026-02-13 09:00", completedAt: "2026-02-13 11:00", status: "Completed", notes: "5000 sacs rangés zone A" },
   { id: "PUT-20260220-002", grnId: "GRN-20260220-003", qcInspectionId: "QC-20260220-003", productId: "P010", productName: "Huile de tournesol 5L", batchNumber: "LOT-HUI-0220A", expiryDate: "2027-02-15", qty: 1500, warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", suggestedLocationId: "ORA-A1-01", actualLocationId: "ORA-A1-01", strategy: "FEFO", assignedTo: "U014", assignedToName: "Mourad Ziani", createdAt: "2026-02-20 08:00", completedAt: "2026-02-20 10:00", status: "Completed", notes: "Huile rangée zone A — respect FEFO" },
   { id: "PUT-20260220-003", grnId: "GRN-20260220-003", productId: "P013", productName: "Lait UHT 1L", batchNumber: "LOT-LAI-0220C", expiryDate: "2026-05-18", qty: 800, warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", suggestedLocationId: "ORA-B1-01", strategy: "FEFO", assignedTo: "U014", assignedToName: "Mourad Ziani", createdAt: "2026-02-20 08:00", status: "In_Progress", notes: "Priorité DLC courte — zone chambre froide" },
   { id: "PUT-20260218-004", grnId: "GRN-20260218-002", productId: "P003", productName: "Carrelage 40x40 (m²)", batchNumber: "LOT-CAR-0218A", expiryDate: "2030-02-12", qty: 800, warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", suggestedLocationId: "ALG-B1-01", strategy: "Zone_Match", createdAt: "2026-02-18 11:00", status: "Pending", notes: "En attente validation QC carrelage" },
+  // ── March 2026 ──
+  { id: "PUT-20260305-005", grnId: "GRN-20260305-006", qcInspectionId: "QC-20260305-004", productId: "P010", productName: "Huile de tournesol 5L", batchNumber: "LOT-HUI-0305A", expiryDate: "2027-02-28", qty: 2000, warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", suggestedLocationId: "ORA-A1-01", actualLocationId: "ORA-A1-01", strategy: "FEFO", assignedTo: "U014", assignedToName: "Mourad Ziani", createdAt: "2026-03-05 08:00", completedAt: "2026-03-05 10:30", status: "Completed", notes: "2000 bidons rangés zone A — FEFO" },
+  { id: "PUT-20260306-006", grnId: "GRN-20260306-007", qcInspectionId: "QC-20260306-005", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", batchNumber: "LOT-CIM-0306A", expiryDate: "2026-09-02", qty: 6000, warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", suggestedLocationId: "ALG-A1-01", actualLocationId: "ALG-A1-01", strategy: "FIFO", assignedTo: "U007", assignedToName: "Tarek Daoui", createdAt: "2026-03-06 09:00", completedAt: "2026-03-06 12:00", status: "Completed", notes: "6000 sacs zone A — chantier mars" },
+  { id: "PUT-20260308-007", grnId: "GRN-20260308-008", productId: "P017", productName: "Laptop HP ProBook 450", batchNumber: "LOT-LAP-0308A", expiryDate: "2028-02-20", qty: 58, warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", suggestedLocationId: "CST-A1-01", strategy: "Zone_Match", assignedTo: "U011", assignedToName: "Hassan Nour", createdAt: "2026-03-08 10:00", status: "Pending", notes: "En attente validation QC — 2 unités rejetées" },
 ];
 
 // ---------- Stock Movements ----------
 export type MovementType = "GRN_Receipt" | "Putaway" | "Transfer_Out" | "Transfer_In" | "Adjustment_Increase" | "Adjustment_Decrease" | "Picking" | "Return_In" | "Return_Out" | "QC_Quarantine" | "QC_Release";
-export interface StockMovement { id: string; timestamp: string; movementType: MovementType; referenceId: string; referenceType: string; productId: string; productName: string; batchNumber?: string; warehouseId: string; warehouseName: string; fromLocationId?: string; toLocationId?: string; qty: number; direction: "In" | "Out" | "Internal"; performedBy: string; notes: string; }
+export interface StockMovement {
+  tenantId?: string; id: string; timestamp: string; movementType: MovementType; referenceId: string; referenceType: string; productId: string; productName: string; batchNumber?: string; warehouseId: string; warehouseName: string; fromLocationId?: string; toLocationId?: string; qty: number; direction: "In" | "Out" | "Internal"; performedBy: string; notes: string; }
 
 export const MOVEMENT_TYPE_LABELS: Record<MovementType, string> = {
   GRN_Receipt: "Réception GRN", Putaway: "Rangement (Putaway)", Transfer_Out: "Transfert sortant",
@@ -51,22 +62,39 @@ export const stockMovements: StockMovement[] = [
   { id: "MOV-010", timestamp: "2025-12-15 14:00", movementType: "GRN_Receipt", referenceId: "GRN-20251215-005", referenceType: "GRN", productId: "P017", productName: "Laptop HP ProBook 450", batchNumber: "LOT-LAP-1215A", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", toLocationId: "CST-A1-01", qty: 40, direction: "In", performedBy: "Hassan Nour", notes: "Stock initial" },
   { id: "MOV-011", timestamp: "2026-01-20 09:00", movementType: "Transfer_Out", referenceId: "TRF-001", referenceType: "Transfer", productId: "P023", productName: "Routeur WiFi 6 TP-Link", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", fromLocationId: "CST-B1-01", qty: 20, direction: "Out", performedBy: "Hassan Nour", notes: "Transfert vers Alger" },
   { id: "MOV-012", timestamp: "2026-02-18 14:00", movementType: "Picking", referenceId: "ORD-20260218-008", referenceType: "SalesOrder", productId: "P017", productName: "Laptop HP ProBook 450", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", fromLocationId: "CST-A1-01", qty: 20, direction: "Out", performedBy: "Hassan Nour", notes: "Commande Université Constantine 3" },
+  // ── March 2026 ──
+  { id: "MOV-013", timestamp: "2026-03-05 07:30", movementType: "GRN_Receipt", referenceId: "GRN-20260305-006", referenceType: "GRN", productId: "P010", productName: "Huile de tournesol 5L", batchNumber: "LOT-HUI-0305A", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", toLocationId: "ORA-A1-01", qty: 2000, direction: "In", performedBy: "Mourad Ziani", notes: "Réception Cevital mars" },
+  { id: "MOV-014", timestamp: "2026-03-05 07:30", movementType: "GRN_Receipt", referenceId: "GRN-20260305-006", referenceType: "GRN", productId: "P009", productName: "Farine de blé T55 (50kg)", batchNumber: "LOT-FAR-0305B", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", toLocationId: "ORA-A1-02", qty: 300, direction: "In", performedBy: "Mourad Ziani", notes: "Farine mars" },
+  { id: "MOV-015", timestamp: "2026-03-05 10:30", movementType: "Putaway", referenceId: "PUT-20260305-005", referenceType: "Putaway", productId: "P010", productName: "Huile de tournesol 5L", batchNumber: "LOT-HUI-0305A", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", fromLocationId: "ORA-DOCK", toLocationId: "ORA-A1-01", qty: 2000, direction: "Internal", performedBy: "Mourad Ziani", notes: "Rangement FEFO" },
+  { id: "MOV-016", timestamp: "2026-03-06 08:00", movementType: "GRN_Receipt", referenceId: "GRN-20260306-007", referenceType: "GRN", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", batchNumber: "LOT-CIM-0306A", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", toLocationId: "ALG-A1-01", qty: 6000, direction: "In", performedBy: "Tarek Daoui", notes: "Réception GICA mars" },
+  { id: "MOV-017", timestamp: "2026-03-06 12:00", movementType: "Putaway", referenceId: "PUT-20260306-006", referenceType: "Putaway", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", batchNumber: "LOT-CIM-0306A", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", fromLocationId: "ALG-DOCK", toLocationId: "ALG-A1-01", qty: 6000, direction: "Internal", performedBy: "Tarek Daoui", notes: "Rangement zone A — 6000 sacs" },
+  { id: "MOV-018", timestamp: "2026-03-07 07:00", movementType: "Picking", referenceId: "ORD-20260305-009", referenceType: "SalesOrder", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", fromLocationId: "ALG-A1-01", qty: 4000, direction: "Out", performedBy: "Tarek Daoui", notes: "Commande COSIDER Blida" },
+  { id: "MOV-019", timestamp: "2026-03-07 07:30", movementType: "Picking", referenceId: "ORD-20260305-009", referenceType: "SalesOrder", productId: "P002", productName: "Fer à béton Ø12", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", fromLocationId: "ALG-B1-01", qty: 800, direction: "Out", performedBy: "Tarek Daoui", notes: "Fer COSIDER Blida" },
+  { id: "MOV-020", timestamp: "2026-03-08 06:30", movementType: "Picking", referenceId: "ORD-20260307-010", referenceType: "SalesOrder", productId: "P010", productName: "Huile de tournesol 5L", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", fromLocationId: "ORA-A1-01", qty: 1000, direction: "Out", performedBy: "Mourad Ziani", notes: "Commande Supermarché Uno mars S2" },
+  { id: "MOV-021", timestamp: "2026-03-08 09:00", movementType: "GRN_Receipt", referenceId: "GRN-20260308-008", referenceType: "GRN", productId: "P017", productName: "Laptop HP ProBook 450", batchNumber: "LOT-LAP-0308A", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", toLocationId: "CST-A1-01", qty: 58, direction: "In", performedBy: "Hassan Nour", notes: "Réception Condor — 2 rejetés" },
+  { id: "MOV-022", timestamp: "2026-03-08 09:00", movementType: "GRN_Receipt", referenceId: "GRN-20260308-008", referenceType: "GRN", productId: "P041", productName: "Moniteur Dell 24\" FHD", batchNumber: "LOT-MON-0308B", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", toLocationId: "CST-A1-02", qty: 60, direction: "In", performedBy: "Hassan Nour", notes: "Moniteurs Dell — tous conformes" },
 ];
 
 // ---------- Cross Docking ----------
 export type CrossDockStatus = "Pending" | "In_Progress" | "Completed" | "Cancelled";
-export interface CrossDock { id: string; grnId: string; salesOrderId: string; productId: string; productName: string; qty: number; warehouseId: string; warehouseName: string; fromDock: string; toDock: string; status: CrossDockStatus; createdBy: string; createdAt: string; completedAt?: string; notes: string; }
+export interface CrossDock {
+  tenantId?: string; id: string; grnId: string; salesOrderId: string; productId: string; productName: string; qty: number; warehouseId: string; warehouseName: string; fromDock: string; toDock: string; status: CrossDockStatus; createdBy: string; createdAt: string; completedAt?: string; notes: string; }
 
 export const crossDocks: CrossDock[] = [
   { id: "XD-001", grnId: "GRN-20260213-001", salesOrderId: "ORD-20260222-001", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", qty: 500, warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", fromDock: "Quai 1", toDock: "Quai 3", status: "Completed", createdBy: "Karim Ben Ali", createdAt: "2026-02-13", completedAt: "2026-02-13", notes: "Cross-dock direct pour commande COSIDER urgente" },
   { id: "XD-002", grnId: "GRN-20260220-003", salesOrderId: "ORD-20260223-004", productId: "P010", productName: "Huile de tournesol 5L", qty: 200, warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", fromDock: "Quai 1", toDock: "Quai 2", status: "Pending", createdBy: "Samir Rafik", createdAt: "2026-02-20", notes: "En attente confirmation Supermarché Uno" },
+  // ── March 2026 ──
+  { id: "XD-003", grnId: "GRN-20260305-006", salesOrderId: "ORD-20260307-010", productId: "P010", productName: "Huile de tournesol 5L", qty: 300, warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", fromDock: "Quai 1", toDock: "Quai 2", status: "Completed", createdBy: "Samir Rafik", createdAt: "2026-03-05", completedAt: "2026-03-05", notes: "Cross-dock rapide — commande Uno mars S2" },
+  { id: "XD-004", grnId: "GRN-20260308-008", salesOrderId: "ORD-20260308-012", productId: "P017", productName: "Laptop HP ProBook 450", qty: 50, warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", fromDock: "Quai 1", toDock: "Quai 2", status: "Pending", createdBy: "Hassan Nour", createdAt: "2026-03-08", notes: "Cross-dock Algérie Télécom — attente QC" },
 ];
 
 // ---------- Kitting ----------
 export type KitStatus = "Draft" | "In_Progress" | "Completed" | "Cancelled";
 export interface KitComponent { productId: string; productName: string; qty: number; uom: string; }
-export interface KitRecipe { id: string; name: string; sku: string; description: string; components: KitComponent[]; outputQty: number; outputUom: string; isActive: boolean; }
-export interface KitOrder { id: string; recipeId: string; recipeName: string; qty: number; warehouseId: string; warehouseName: string; status: KitStatus; createdBy: string; createdAt: string; completedAt?: string; notes: string; }
+export interface KitRecipe {
+  tenantId?: string; id: string; name: string; sku: string; description: string; components: KitComponent[]; outputQty: number; outputUom: string; isActive: boolean; }
+export interface KitOrder {
+  tenantId?: string; id: string; recipeId: string; recipeName: string; qty: number; warehouseId: string; warehouseName: string; status: KitStatus; createdBy: string; createdAt: string; completedAt?: string; notes: string; }
 
 export const kitRecipes: KitRecipe[] = [
   { id: "KR-001", name: "Kit Maçonnerie Standard", sku: "KIT-MAC-001", description: "Ciment + Briques + Sable", components: [{ productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", qty: 10, uom: "Sac" }, { productId: "P005", productName: "Brique rouge 10x20x30", qty: 1, uom: "Palette (200)" }, { productId: "P004", productName: "Sable lavé 0/3", qty: 2, uom: "Tonne" }], outputQty: 1, outputUom: "Kit", isActive: true },
@@ -82,7 +110,8 @@ export const kitOrders: KitOrder[] = [
 
 // ---------- Stock Block ----------
 export type StockBlockStatus = "Blocked" | "Unblocked";
-export interface StockBlock { id: string; productId: string; productName: string; warehouseId: string; warehouseName: string; locationId: string; qty: number; reason: string; blockedBy: string; blockedAt: string; unblockedBy?: string; unblockedAt?: string; status: StockBlockStatus; notes: string; }
+export interface StockBlock {
+  tenantId?: string; id: string; productId: string; productName: string; warehouseId: string; warehouseName: string; locationId: string; qty: number; reason: string; blockedBy: string; blockedAt: string; unblockedBy?: string; unblockedAt?: string; status: StockBlockStatus; notes: string; }
 
 export const stockBlocks: StockBlock[] = [
   { id: "BLK-001", productId: "P003", productName: "Carrelage 40x40 (m²)", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", locationId: "ALG-B1-01", qty: 200, reason: "Lot en attente QC — fissures détectées", blockedBy: "Sara Khalil", blockedAt: "2026-02-18", status: "Blocked", notes: "15 carreaux fissurés dans l'échantillon" },
@@ -92,6 +121,7 @@ export const stockBlocks: StockBlock[] = [
 // ---------- Repacking ----------
 export type RepackStatus = "Pending" | "In_Progress" | "Completed" | "Cancelled";
 export interface RepackOrder {
+  tenantId?: string;
   id: string; productId: string; productName: string;
   warehouseId: string; warehouseName: string; locationId: string;
   sourceUom: string; targetUom: string; sourceQty: number; targetQty: number;
@@ -109,7 +139,8 @@ export const repackOrders: RepackOrder[] = [
 
 // ---------- Lot/Batch ----------
 export type LotStatus = "Active" | "Quarantine" | "Expired" | "Recalled" | "Consumed";
-export interface LotBatch { id: string; lotNumber: string; productId: string; productName: string; vendorId: string; vendorName: string; warehouseId: string; warehouseName: string; locationId: string; qty: number; manufacturingDate: string; expiryDate: string; receivedDate: string; grnId: string; status: LotStatus; qcStatus: "Passed" | "Failed" | "Pending"; notes: string; }
+export interface LotBatch {
+  tenantId?: string; id: string; lotNumber: string; productId: string; productName: string; vendorId: string; vendorName: string; warehouseId: string; warehouseName: string; locationId: string; qty: number; manufacturingDate: string; expiryDate: string; receivedDate: string; grnId: string; status: LotStatus; qcStatus: "Passed" | "Failed" | "Pending"; notes: string; }
 
 export const lotBatches: LotBatch[] = [
   { id: "LOT-001", lotNumber: "LOT-CIM-0213A", productId: "P001", productName: "Ciment CPJ 42.5 (50kg)", vendorId: "V001", vendorName: "GICA Cimenterie", warehouseId: "wh-alger-construction", warehouseName: "Entrepôt Construction Alger", locationId: "ALG-A1-01", qty: 3200, manufacturingDate: "2026-02-10", expiryDate: "2026-08-10", receivedDate: "2026-02-13", grnId: "GRN-20260213-001", status: "Active", qcStatus: "Passed", notes: "" },
@@ -126,7 +157,8 @@ export const lotBatches: LotBatch[] = [
 
 // ---------- Serial Numbers ----------
 export type SerialStatus = "In_Stock" | "Sold" | "In_Transit" | "Returned" | "Defective" | "Scrapped";
-export interface SerialNumber { id: string; serialNumber: string; productId: string; productName: string; lotId: string; lotNumber: string; warehouseId: string; warehouseName: string; locationId: string; status: SerialStatus; receivedDate: string; soldDate?: string; customerId?: string; customerName?: string; salesOrderId?: string; notes: string; }
+export interface SerialNumber {
+  tenantId?: string; id: string; serialNumber: string; productId: string; productName: string; lotId: string; lotNumber: string; warehouseId: string; warehouseName: string; locationId: string; status: SerialStatus; receivedDate: string; soldDate?: string; customerId?: string; customerName?: string; salesOrderId?: string; notes: string; }
 
 export const serialNumbers: SerialNumber[] = [
   { id: "SN-001", serialNumber: "LAP-2026-00001", productId: "P017", productName: "Laptop HP ProBook 450", lotId: "LOT-006", lotNumber: "LOT-LAP-1215A", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", locationId: "CST-A1-01", status: "In_Stock", receivedDate: "2025-12-15", notes: "" },
@@ -138,3 +170,18 @@ export const serialNumbers: SerialNumber[] = [
   { id: "SN-007", serialNumber: "RTR-2026-00001", productId: "P023", productName: "Routeur WiFi 6 TP-Link", lotId: "LOT-008", lotNumber: "LOT-RTR-0120A", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", locationId: "CST-B1-01", status: "In_Transit", receivedDate: "2026-01-20", notes: "Transfert TRF-001 vers Alger" },
   { id: "SN-008", serialNumber: "OND-2026-00001", productId: "P024", productName: "Onduleur APC 1500VA", lotId: "LOT-010", lotNumber: "LOT-OND-0120B", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", locationId: "CST-C1-01", status: "In_Stock", receivedDate: "2026-01-20", notes: "" },
 ];
+
+// --- TENANT ENRICHMENT ---
+import { assignTenant } from "@/lib/tenantEnrichment";
+
+
+qcInspections.forEach(x => assignTenant(x, "warehouse"));
+putawayTasks.forEach(x => assignTenant(x, "warehouse"));
+stockMovements.forEach(x => assignTenant(x, "warehouse"));
+crossDocks.forEach(x => assignTenant(x, "warehouse"));
+kitRecipes.forEach(x => assignTenant(x, "warehouse"));
+kitOrders.forEach(x => assignTenant(x, "warehouse"));
+stockBlocks.forEach(x => assignTenant(x, "warehouse"));
+repackOrders.forEach(x => assignTenant(x, "warehouse"));
+lotBatches.forEach(x => assignTenant(x, "warehouse"));
+serialNumbers.forEach(x => assignTenant(x, "warehouse"));

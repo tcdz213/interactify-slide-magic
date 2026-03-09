@@ -1,5 +1,5 @@
 /**
- * B9 — Sortable table header with click + indicator.
+ * Phase F2 — Sortable table header with clear sort indicators.
  */
 import { useState, useMemo } from "react";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
@@ -31,19 +31,31 @@ export default function SortableHeader({
   return (
     <th
       className={cn(
-        "px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider cursor-pointer select-none hover:text-foreground transition-colors group",
+        "h-11 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider cursor-pointer select-none transition-colors group",
+        "hover:text-foreground hover:bg-muted/60",
         align === "right" && "text-right",
         align === "center" && "text-center",
-        isActive && "text-foreground",
+        isActive && "text-foreground bg-muted/40",
         className
       )}
       onClick={() => onSort(sortKey)}
     >
-      <span className="inline-flex items-center gap-1">
+      <span className={cn(
+        "inline-flex items-center gap-1.5",
+        align === "right" && "flex-row-reverse"
+      )}>
         {label}
-        {isActive && currentDirection === "asc" && <ArrowUp className="h-3 w-3" />}
-        {isActive && currentDirection === "desc" && <ArrowDown className="h-3 w-3" />}
-        {!isActive && <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />}
+        <span className="inline-flex">
+          {isActive && currentDirection === "asc" && (
+            <ArrowUp className="h-3.5 w-3.5 text-primary" />
+          )}
+          {isActive && currentDirection === "desc" && (
+            <ArrowDown className="h-3.5 w-3.5 text-primary" />
+          )}
+          {!isActive && (
+            <ArrowUpDown className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-opacity" />
+          )}
+        </span>
       </span>
     </th>
   );

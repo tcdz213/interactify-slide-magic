@@ -329,7 +329,7 @@ describe("11.16 — Cross-role: Financial visibility & export matrix", () => {
   it("Exactly 5 roles can view financials", () => {
     const financialRoles = users.filter((u) => canViewFinancials(u));
     const roleSet = new Set(financialRoles.map((u) => u.role));
-    expect(roleSet).toEqual(new Set(["CEO", "FinanceDirector", "OpsDirector", "Accountant", "BIAnalyst"]));
+    expect(roleSet).toEqual(new Set(["PlatformOwner", "CEO", "FinanceDirector", "OpsDirector", "Accountant", "BIAnalyst"]));
   });
 
   it("WarehouseManagers see quantity reports but NOT cost/margin", () => {

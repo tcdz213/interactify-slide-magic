@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ArrowRightLeft, Plus, CheckCircle, XCircle, Eye, Truck, Search, FileText, Lock, Package, MapPin, Calendar, MessageSquare, AlertTriangle, RotateCcw, Download } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { DateFilter } from "@/components/DateFilter";
 import { products, currency, warehouseLocations } from "@/data/mockData";
 import { useWMSData } from "@/contexts/WMSDataContext";
@@ -21,17 +22,10 @@ import { useUnitConversion } from "@/hooks/useUnitConversion";
 import { toBaseUnits } from "@/lib/unitConversion";
 
 export default function StockTransfersPage() {
+  const { t } = useTranslation();
   const { stockTransfers: data, setStockTransfers: setData, inventory, setInventory, warehouses } = useWMSData();
   const { currentUser, accessibleWarehouseIds, isFullAccess } = useAuth();
-  const {
-    canOperateOn,
-    operationalWarehouses,
-    defaultWarehouseId,
-    canCreateTransferFrom,
-    canDispatchTransfer,
-    canReceiveTransfer,
-    isOperationalRole,
-  } = useWarehouseScope();
+  const { canOperateOn, operationalWarehouses, defaultWarehouseId, canCreateTransferFrom, canDispatchTransfer, canReceiveTransfer, isOperationalRole } = useWarehouseScope();
 
   const [selectedTrf, setSelectedTrf] = useState<StockTransfer | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -39,11 +33,11 @@ export default function StockTransfersPage() {
   const [exportOpen, setExportOpen] = useState(false);
 
   const trfExportCols: ExportColumn<StockTransfer>[] = [
-    { key: "id", label: "ID" }, { key: "productName", label: "Produit" },
-    { key: "fromWarehouseName", label: "De" }, { key: "toWarehouseName", label: "Vers" },
-    { key: "qty", label: "Qté" }, { key: "status", label: "Statut" },
-    { key: "date", label: "Date" }, { key: "expectedDate", label: "Date prévue" },
-    { key: "createdBy", label: "Créé par" }, { key: "reason", label: "Raison" },
+    { key: "id", label: t("stockTransfers.colID") }, { key: "productName", label: t("stockTransfers.colProduct") },
+    { key: "fromWarehouseName", label: t("stockTransfers.colFrom") }, { key: "toWarehouseName", label: t("stockTransfers.colTo") },
+    { key: "qty", label: t("stockTransfers.colQty") }, { key: "status", label: t("stockTransfers.colStatus") },
+    { key: "date", label: t("stockTransfers.detailDate") }, { key: "expectedDate", label: t("stockTransfers.colExpectedDate") },
+    { key: "createdBy", label: t("stockTransfers.detailCreatedBy") }, { key: "reason", label: t("stockTransfers.reason") },
   ];
 
   const defaultFromWH = defaultWarehouseId;
@@ -51,22 +45,19 @@ export default function StockTransfersPage() {
   const { getUnitsForProduct, getBaseUnitAbbr } = useUnitConversion();
   const [newForm, setNewForm] = useState({ productId: "", fromWH: defaultFromWH, toWH: defaultToWH, fromLocId: "", toLocId: "", qty: 0, reason: "", expectedDate: "", unitId: "", unitFactor: 1 });
 
-  // Visibility: user sees transfers involving their warehouses
-  const scopedData = isFullAccess ? data : data.filter(t => accessibleWarehouseIds?.includes(t.fromWarehouseId) || accessibleWarehouseIds?.includes(t.toWarehouseId));
-  const filtered = scopedData.filter(t => filterStatus === "all" || t.status === filterStatus);
+  const scopedData = isFullAccess ? data : data.filter(trf => accessibleWarehouseIds?.includes(trf.fromWarehouseId) || accessibleWarehouseIds?.includes(trf.toWarehouseId));
+  const filtered = scopedData.filter(trf => filterStatus === "all" || trf.status === filterStatus);
   const fromLocations = warehouseLocations.filter(l => l.warehouseId === newForm.fromWH);
   const toLocations = warehouseLocations.filter(l => l.warehouseId === newForm.toWH);
   const availableAtSource = newForm.productId && newForm.fromWH
     ? inventory.filter((i: InventoryItem) => i.productId === newForm.productId && i.warehouseId === newForm.fromWH).reduce((s: number, i: InventoryItem) => s + i.qtyAvailable, 0)
     : 0;
-  const stockWarning = newForm.qty > 0 && availableAtSource < newForm.qty ? `Stock disponible : ${availableAtSource}` : null;
-
-  // User can only create transfers FROM their operational warehouses
+  const stockWarning = newForm.qty > 0 && availableAtSource < newForm.qty ? `${t("stockTransfers.stockAvailableSource")} : ${availableAtSource}` : null;
   const canCreate = isOperationalRole && operationalWarehouses.length > 0;
 
   const handleCreate = () => {
     if (!canCreateTransferFrom(newForm.fromWH)) {
-      toast({ title: "Accès refusé", description: "Vous n'avez pas l'autorité opérationnelle sur l'entrepôt source.", variant: "destructive" });
+      toast({ title: t("stockTransfers.accessDenied"), description: t("stockTransfers.noAuthoritySource"), variant: "destructive" });
       return;
     }
     const prod = products.find(p => p.id === newForm.productId);
@@ -75,7 +66,6 @@ export default function StockTransfersPage() {
     if (!prod || !fromWH || !toWH || !newForm.qty) return;
     const fromLoc = newForm.fromLocId || fromLocations[0]?.id || `${fromWH.id}-A1-01`;
     const toLoc = newForm.toLocId || toLocations[0]?.id || `${toWH.id}-A1-01`;
-    // R3: Convert qty to base units
     const baseQty = Math.round(toBaseUnits(newForm.qty, newForm.unitFactor));
     const newTrf: StockTransfer = {
       id: `TRF-${String(data.length + 1).padStart(3, "0")}`,
@@ -89,7 +79,7 @@ export default function StockTransfersPage() {
     setData([newTrf, ...data]);
     setShowCreate(false);
     setNewForm({ productId: "", fromWH: defaultFromWH, toWH: defaultToWH, fromLocId: "", toLocId: "", qty: 0, reason: "", expectedDate: "", unitId: "", unitFactor: 1 });
-    toast({ title: "Transfert créé", description: newTrf.id });
+    toast({ title: t("stockTransfers.transferCreated"), description: newTrf.id });
   };
 
   const applyTransferShip = (trf: StockTransfer) => {
@@ -126,24 +116,20 @@ export default function StockTransfersPage() {
   const handleAction = (id: string, action: "approve" | "ship" | "receive" | "cancel") => {
     const trf = data.find(t => t.id === id);
     if (!trf) return;
-
-    // Warehouse authority checks
     if (action === "approve" || action === "ship" || action === "cancel") {
       if (!canDispatchTransfer(trf.fromWarehouseId)) {
-        toast({ title: "Accès refusé", description: "Seul le responsable de l'entrepôt source peut effectuer cette action.", variant: "destructive" });
+        toast({ title: t("stockTransfers.accessDenied"), description: t("stockTransfers.noAuthorityDispatch"), variant: "destructive" });
         return;
       }
     }
     if (action === "receive") {
       if (!canReceiveTransfer(trf.toWarehouseId)) {
-        toast({ title: "Accès refusé", description: "Seul le responsable de l'entrepôt destination peut réceptionner.", variant: "destructive" });
+        toast({ title: t("stockTransfers.accessDenied"), description: t("stockTransfers.noAuthorityDest"), variant: "destructive" });
         return;
       }
     }
-
     if (action === "ship") applyTransferShip(trf);
     if (action === "receive") applyTransferReceive(trf);
-
     setData(prev => prev.map(t => {
       if (t.id !== id) return t;
       switch (action) {
@@ -153,18 +139,13 @@ export default function StockTransfersPage() {
         case "cancel": return { ...t, status: "Cancelled" as const };
       }
     }));
-    const labels = { approve: "Approuvé", ship: "Expédié", receive: "Reçu", cancel: "Annulé" };
-    toast({ title: `Transfert ${labels[action]}` });
+    const labels: Record<string, string> = { approve: t("stockTransfers.transferApproved"), ship: t("stockTransfers.transferShipped"), receive: t("stockTransfers.transferReceived"), cancel: t("stockTransfers.transferCancelled") };
+    toast({ title: labels[action] });
   };
 
-  /** Check if the current user can perform a specific action on a transfer */
   const canDoAction = (trf: StockTransfer, action: "approve" | "ship" | "receive" | "cancel") => {
-    if (action === "approve" || action === "ship" || action === "cancel") {
-      return canDispatchTransfer(trf.fromWarehouseId);
-    }
-    if (action === "receive") {
-      return canReceiveTransfer(trf.toWarehouseId);
-    }
+    if (action === "approve" || action === "ship" || action === "cancel") return canDispatchTransfer(trf.fromWarehouseId);
+    if (action === "receive") return canReceiveTransfer(trf.toWarehouseId);
     return false;
   };
 
@@ -177,16 +158,16 @@ export default function StockTransfersPage() {
             <ArrowRightLeft className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Transferts de stock</h1>
-            <p className="text-sm text-muted-foreground">{scopedData.length} transferts</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("stockTransfers.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("stockTransfers.subtitle", { count: scopedData.length })}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-2"><Download className="h-4 w-4" /> Exporter</Button>
+          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-2"><Download className="h-4 w-4" /> {t("stockTransfers.export")}</Button>
           {canCreate ? (
-            <Button onClick={() => setShowCreate(true)} className="gap-2"><Plus className="h-4 w-4" /> Nouveau transfert</Button>
+            <Button onClick={() => setShowCreate(true)} className="gap-2"><Plus className="h-4 w-4" /> {t("stockTransfers.newTransfer")}</Button>
           ) : (
-            <Button disabled className="gap-2 opacity-50"><Lock className="h-4 w-4" /> Nouveau transfert</Button>
+            <Button disabled className="gap-2 opacity-50"><Lock className="h-4 w-4" /> {t("stockTransfers.newTransfer")}</Button>
           )}
         </div>
       </div>
@@ -195,7 +176,7 @@ export default function StockTransfersPage() {
         {["all", "Draft", "Pending_Approval", "Approved", "In_Transit", "Received", "Cancelled"].map(s => (
           <button key={s} onClick={() => setFilterStatus(s)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filterStatus === s ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-            {s === "all" ? "Tous" : s.replace(/_/g, " ")}
+            {s === "all" ? t("stockTransfers.all") : s.replace(/_/g, " ")}
           </button>
         ))}
       </div>
@@ -204,22 +185,22 @@ export default function StockTransfersPage() {
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
             <FileText className="h-12 w-12 mb-3 opacity-50" />
-            <p className="font-medium">Aucun transfert</p>
-            <p className="text-sm mt-1">Ajustez les filtres ou créez un nouveau transfert.</p>
+            <p className="font-medium">{t("stockTransfers.noTransfer")}</p>
+            <p className="text-sm mt-1">{t("stockTransfers.noTransferHint")}</p>
           </div>
         ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">ID</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Produit</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">De</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("stockTransfers.colID")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("stockTransfers.colProduct")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("stockTransfers.colFrom")}</th>
               <th className="text-center px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">→</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Vers</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Qty</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Date prévue</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Actions</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("stockTransfers.colTo")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("stockTransfers.colQty")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("stockTransfers.colExpectedDate")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("stockTransfers.colStatus")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("stockTransfers.colActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -251,20 +232,18 @@ export default function StockTransfersPage() {
                     {(trf.status === "Draft" || trf.status === "Pending_Approval") && canDoAction(trf, "cancel") && (
                       <button onClick={() => handleAction(trf.id, "cancel")} className="p-1.5 rounded-md hover:bg-destructive/10"><XCircle className="h-3.5 w-3.5 text-destructive" /></button>
                     )}
-                    {/* Show lock icon if user cannot act on this transfer */}
                     {trf.status !== "Received" && trf.status !== "Cancelled" && !canDoAction(trf, trf.status === "In_Transit" ? "receive" : "approve") && (
-                      <span className="p-1.5" title="Hors de votre périmètre opérationnel"><Lock className="h-3.5 w-3.5 text-muted-foreground/40" /></span>
+                      <span className="p-1.5" title={t("stockTransfers.outOfScope")}><Lock className="h-3.5 w-3.5 text-muted-foreground/40" /></span>
                     )}
-                    {/* Change status dropdown */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Changer statut">
+                        <button className="p-1.5 rounded-md hover:bg-muted transition-colors" title={t("stockTransfers.changeStatus")}>
                           <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         {(["Draft", "Pending_Approval", "Approved", "In_Transit", "Received", "Cancelled"] as const).filter(s => s !== trf.status).map(s => (
-                          <DropdownMenuItem key={s} onClick={() => { setData(prev => prev.map(t => t.id === trf.id ? { ...t, status: s } : t)); toast({ title: "Statut modifié", description: `${trf.id} → ${s}` }); }}>
+                          <DropdownMenuItem key={s} onClick={() => { setData(prev => prev.map(t => t.id === trf.id ? { ...t, status: s } : t)); toast({ title: t("stockTransfers.statusChanged"), description: `${trf.id} → ${s}` }); }}>
                             <StatusBadge status={s} />
                           </DropdownMenuItem>
                         ))}
@@ -288,15 +267,15 @@ export default function StockTransfersPage() {
                 <DialogTitle className="flex items-center gap-3"><span className="font-mono">{selectedTrf.id}</span> <StatusBadge status={selectedTrf.status} /></DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 text-sm mt-4">
-                <div><span className="text-muted-foreground">Produit :</span> <span className="font-medium">{selectedTrf.productName}</span></div>
-                <div><span className="text-muted-foreground">Quantité :</span> <span className="font-medium">{selectedTrf.qty}</span></div>
-                <div><span className="text-muted-foreground">De :</span> {selectedTrf.fromWarehouseName} <span className="font-mono text-xs">({selectedTrf.fromLocationId})</span></div>
-                <div><span className="text-muted-foreground">Vers :</span> {selectedTrf.toWarehouseName} <span className="font-mono text-xs">({selectedTrf.toLocationId})</span></div>
-                <div><span className="text-muted-foreground">Créé par :</span> {selectedTrf.createdBy}</div>
-                <div><span className="text-muted-foreground">Approuvé par :</span> {selectedTrf.approvedBy || "—"}</div>
-                <div><span className="text-muted-foreground">Date :</span> {selectedTrf.date}</div>
-                <div><span className="text-muted-foreground">Arrivée prévue :</span> {selectedTrf.expectedDate}</div>
-                <div className="col-span-2"><span className="text-muted-foreground">Raison :</span> {selectedTrf.reason}</div>
+                <div><span className="text-muted-foreground">{t("stockTransfers.detailProduct")} :</span> <span className="font-medium">{selectedTrf.productName}</span></div>
+                <div><span className="text-muted-foreground">{t("stockTransfers.detailQty")} :</span> <span className="font-medium">{selectedTrf.qty}</span></div>
+                <div><span className="text-muted-foreground">{t("stockTransfers.detailFrom")} :</span> {selectedTrf.fromWarehouseName} <span className="font-mono text-xs">({selectedTrf.fromLocationId})</span></div>
+                <div><span className="text-muted-foreground">{t("stockTransfers.detailTo")} :</span> {selectedTrf.toWarehouseName} <span className="font-mono text-xs">({selectedTrf.toLocationId})</span></div>
+                <div><span className="text-muted-foreground">{t("stockTransfers.detailCreatedBy")} :</span> {selectedTrf.createdBy}</div>
+                <div><span className="text-muted-foreground">{t("stockTransfers.detailApprovedBy")} :</span> {selectedTrf.approvedBy || "—"}</div>
+                <div><span className="text-muted-foreground">{t("stockTransfers.detailDate")} :</span> {selectedTrf.date}</div>
+                <div><span className="text-muted-foreground">{t("stockTransfers.detailExpectedDate")} :</span> {selectedTrf.expectedDate}</div>
+                <div className="col-span-2"><span className="text-muted-foreground">{t("stockTransfers.detailReason")} :</span> {selectedTrf.reason}</div>
               </div>
             </>
           )}
@@ -311,30 +290,27 @@ export default function StockTransfersPage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                 <ArrowRightLeft className="h-4 w-4 text-primary" />
               </div>
-              Nouveau transfert de stock
+              {t("stockTransfers.newTransferTitle")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-5 mt-2">
-            <FormField label="Produit" icon={<Package className="h-3.5 w-3.5" />} required>
-              <select value={newForm.productId} onChange={e => setNewForm({ ...newForm, productId: e.target.value })}
-                className={formSelectClass}>
-                <option value="">Sélectionner un produit...</option>
+            <FormField label={t("stockTransfers.product")} icon={<Package className="h-3.5 w-3.5" />} required>
+              <select value={newForm.productId} onChange={e => setNewForm({ ...newForm, productId: e.target.value })} className={formSelectClass}>
+                <option value="">{t("stockTransfers.selectProduct")}</option>
                 {products.map(p => <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>)}
               </select>
             </FormField>
 
-            <FormSection title="Source" icon={<MapPin className="h-3.5 w-3.5" />}>
+            <FormSection title={t("stockTransfers.source")} icon={<MapPin className="h-3.5 w-3.5" />}>
               <div className="grid grid-cols-2 gap-3">
-                <FormField label="Entrepôt source" required hint="Votre périmètre opérationnel">
-                  <select value={newForm.fromWH} onChange={e => setNewForm({ ...newForm, fromWH: e.target.value, fromLocId: "" })}
-                    className={formSelectClass}>
+                <FormField label={t("stockTransfers.sourceWarehouse")} required hint={t("stockTransfers.sourceWarehouseHint")}>
+                  <select value={newForm.fromWH} onChange={e => setNewForm({ ...newForm, fromWH: e.target.value, fromLocId: "" })} className={formSelectClass}>
                     {operationalWarehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                   </select>
                 </FormField>
-                <FormField label="Emplacement source">
-                  <select value={newForm.fromLocId} onChange={e => setNewForm({ ...newForm, fromLocId: e.target.value })}
-                    className={formSelectClass}>
-                    <option value="">Premier disponible</option>
+                <FormField label={t("stockTransfers.sourceLocation")}>
+                  <select value={newForm.fromLocId} onChange={e => setNewForm({ ...newForm, fromLocId: e.target.value })} className={formSelectClass}>
+                    <option value="">{t("stockTransfers.firstAvailable")}</option>
                     {fromLocations.map(loc => <option key={loc.id} value={loc.id}>{loc.id}</option>)}
                   </select>
                 </FormField>
@@ -344,37 +320,33 @@ export default function StockTransfersPage() {
             <div className="flex items-center justify-center">
               <div className="flex items-center gap-2 rounded-full bg-muted px-4 py-1.5">
                 <ArrowRightLeft className="h-4 w-4 text-primary" />
-                <span className="text-xs font-medium text-muted-foreground">Transfert vers</span>
+                <span className="text-xs font-medium text-muted-foreground">{t("stockTransfers.transferTo")}</span>
               </div>
             </div>
 
-            <FormSection title="Destination" icon={<MapPin className="h-3.5 w-3.5" />}>
+            <FormSection title={t("stockTransfers.destination")} icon={<MapPin className="h-3.5 w-3.5" />}>
               <div className="grid grid-cols-2 gap-3">
-                <FormField label="Entrepôt destination" required>
-                  <select value={newForm.toWH} onChange={e => setNewForm({ ...newForm, toWH: e.target.value, toLocId: "" })}
-                    className={formSelectClass}>
+                <FormField label={t("stockTransfers.destWarehouse")} required>
+                  <select value={newForm.toWH} onChange={e => setNewForm({ ...newForm, toWH: e.target.value, toLocId: "" })} className={formSelectClass}>
                     {warehouses.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                   </select>
                 </FormField>
-                <FormField label="Emplacement destination">
-                  <select value={newForm.toLocId} onChange={e => setNewForm({ ...newForm, toLocId: e.target.value })}
-                    className={formSelectClass}>
-                    <option value="">Premier disponible</option>
+                <FormField label={t("stockTransfers.destLocation")}>
+                  <select value={newForm.toLocId} onChange={e => setNewForm({ ...newForm, toLocId: e.target.value })} className={formSelectClass}>
+                    <option value="">{t("stockTransfers.firstAvailable")}</option>
                     {toLocations.map(loc => <option key={loc.id} value={loc.id}>{loc.id}</option>)}
                   </select>
                 </FormField>
               </div>
             </FormSection>
 
-            <FormSection title="Détails" icon={<Calendar className="h-3.5 w-3.5" />}>
+            <FormSection title={t("stockTransfers.details")} icon={<Calendar className="h-3.5 w-3.5" />}>
               <div className="grid grid-cols-3 gap-3">
-                <FormField label="Quantité" required error={stockWarning}>
+                <FormField label={t("stockTransfers.quantity")} required error={stockWarning}>
                   <input type="number" min={1} value={newForm.qty || ""} onChange={e => setNewForm({ ...newForm, qty: Number(e.target.value) })}
-                    placeholder="0"
-                    className={cn(formInputClass, "text-right font-semibold", stockWarning && "border-destructive")} />
+                    placeholder="0" className={cn(formInputClass, "text-right font-semibold", stockWarning && "border-destructive")} />
                 </FormField>
-                {/* R3: Unit selector */}
-                <FormField label="Unité">
+                <FormField label={t("stockTransfers.unit")}>
                   {(() => {
                     const units = getUnitsForProduct(newForm.productId, "buy");
                     if (!newForm.productId || units.length <= 1) {
@@ -384,17 +356,8 @@ export default function StockTransfersPage() {
                     const baseEquiv = newForm.qty > 0 && sel ? Math.round(toBaseUnits(newForm.qty, sel.conversionFactor)) : 0;
                     return (
                       <div>
-                        <select
-                          value={newForm.unitId || sel?.id || ""}
-                          onChange={e => {
-                            const u = units.find(u => u.id === e.target.value);
-                            if (u) setNewForm({ ...newForm, unitId: u.id, unitFactor: u.conversionFactor });
-                          }}
-                          className={formSelectClass}
-                        >
-                          {units.map(u => (
-                            <option key={u.id} value={u.id}>{u.unitAbbreviation} {u.conversionFactor === 1 ? "(base)" : `(×${u.conversionFactor})`}</option>
-                          ))}
+                        <select value={newForm.unitId || sel?.id || ""} onChange={e => { const u = units.find(u => u.id === e.target.value); if (u) setNewForm({ ...newForm, unitId: u.id, unitFactor: u.conversionFactor }); }} className={formSelectClass}>
+                          {units.map(u => (<option key={u.id} value={u.id}>{u.unitAbbreviation} {u.conversionFactor === 1 ? "(base)" : `(×${u.conversionFactor})`}</option>))}
                         </select>
                         {sel && !sel.isStockUnit && baseEquiv > 0 && (
                           <p className="text-[10px] text-muted-foreground mt-0.5">= {baseEquiv.toLocaleString("fr-FR")} {getBaseUnitAbbr(newForm.productId)}</p>
@@ -403,29 +366,28 @@ export default function StockTransfersPage() {
                     );
                   })()}
                 </FormField>
-                <FormField label="Date arrivée prévue">
-                  <DateFilter value={newForm.expectedDate} onChange={(v) => setNewForm({ ...newForm, expectedDate: v })} placeholder="Choisir date" />
+                <FormField label={t("stockTransfers.expectedArrival")}>
+                  <DateFilter value={newForm.expectedDate} onChange={(v) => setNewForm({ ...newForm, expectedDate: v })} placeholder={t("stockTransfers.chooseDate")} />
                 </FormField>
               </div>
               {newForm.productId && newForm.qty > 0 && (
                 <div className="flex items-center gap-2 rounded-lg bg-primary/5 border border-primary/20 px-3 py-2">
                   <Package className="h-4 w-4 text-primary shrink-0" />
                   <p className="text-xs text-primary">
-                    Stock disponible à la source : <strong>{availableAtSource}</strong> {getBaseUnitAbbr(newForm.productId) || "unités"} (base)
+                    {t("stockTransfers.stockAvailableSource")} : <strong>{availableAtSource}</strong> {getBaseUnitAbbr(newForm.productId) || "unités"} (base)
                   </p>
                 </div>
               )}
-              <FormField label="Raison" icon={<MessageSquare className="h-3.5 w-3.5" />}>
+              <FormField label={t("stockTransfers.reason")} icon={<MessageSquare className="h-3.5 w-3.5" />}>
                 <textarea value={newForm.reason} onChange={e => setNewForm({ ...newForm, reason: e.target.value })}
-                  placeholder="Motif du transfert..."
-                  className={formTextareaClass} />
+                  placeholder={t("stockTransfers.reasonPlaceholder")} className={formTextareaClass} />
               </FormField>
             </FormSection>
           </div>
           <DialogFooter className="mt-2">
-            <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>{t("common.cancel", "Annuler")}</Button>
             <Button onClick={handleCreate} disabled={!newForm.productId || !newForm.qty || !!stockWarning} className="gap-1.5">
-              <Plus className="h-4 w-4" /> Créer le transfert
+              <Plus className="h-4 w-4" /> {t("stockTransfers.createTransfer")}
             </Button>
           </DialogFooter>
         </DialogContent>

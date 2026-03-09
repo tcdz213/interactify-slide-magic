@@ -13,6 +13,7 @@ export type ProductType = "Storable" | "Consumable" | "Service";
 export type CostMethod = "Standard" | "Average" | "FIFO";
 
 export interface Product {
+  tenantId?: string;
   id: string; name: string; sku: string; category: string;
   subcategoryId?: string;  // FK → SubCategory.id (hierarchical)
   uom: string; unitCost: number; unitPrice: number; reorderPoint: number;
@@ -97,6 +98,7 @@ export type VendorPaymentTerms = "Comptant" | "Net_15" | "Net_30" | "Net_45" | "
 export type VendorStatus = "Active" | "On Hold" | "Blocked";
 
 export interface Vendor {
+  tenantId?: string;
   id: string; name: string; contact: string; phone: string; email: string;
   city: string; address?: string; rating: number;
   status: VendorStatus;
@@ -122,10 +124,13 @@ export const vendors: Vendor[] = [
   { id: "V006", name: "Ifri (IBSA)", contact: "Rachid Oulaid", phone: "+213-34-28-10-00", email: "distribution@ifri.dz", city: "Tizi Ouzou", address: "Ighzer Amokrane, Ifri Ouzellaguen", rating: 4.1, status: "Active", totalPOs: 88, totalValue: 28000000, avgLeadDays: 3, lastDelivery: "2026-02-21", paymentTerms: "Comptant", taxId: "000215028100056", currencyId: "DZD", bankAccount: "DZ580006300000000777888999", bankBIC: "CNEPDZAL", procurementCategory: "Boissons" },
   { id: "V007", name: "Condor Electronics", contact: "Yacine Benamar", phone: "+213-36-93-50-00", email: "pro@condor.dz", city: "Bordj Bou Arréridj", address: "Zone Industrielle El Harrach", rating: 4.4, status: "Active", totalPOs: 140, totalValue: 180000000, avgLeadDays: 4, lastDelivery: "2026-02-22", paymentTerms: "Net_30", taxId: "000234093500067", currencyId: "EUR", bankAccount: "DZ580007500000000222333444", bankBIC: "BADRDZAL", procurementCategory: "Technologie" },
   { id: "V008", name: "Iris Technologies", contact: "Sofiane Djabri", phone: "+213-25-49-88-00", email: "ventes@iris.dz", city: "Sétif", address: "Zone Industrielle, Sétif", rating: 4.0, status: "Active", totalPOs: 75, totalValue: 95000000, avgLeadDays: 5, lastDelivery: "2026-02-19", paymentTerms: "Net_45", taxId: "000219049880078", currencyId: "DZD", bankAccount: "DZ580008700000000555666777", bankBIC: "BNAADZAL", procurementCategory: "Technologie" },
+  // ── Agro Sahel — Fournisseur-Entrepôt (vend aux Entrepôts Oran & Alger) ──
+  { id: "V-SAHEL", name: "Agro Sahel Distribution", contact: "Karim Benmoussa", phone: "+213-21-555-678", email: "contact@agrosahel.dz", city: "Alger", address: "Zone Industrielle Oued Smar, Lot 42, Alger 16270", rating: 4.2, status: "Active", totalPOs: 45, totalValue: 32000000, avgLeadDays: 2, lastDelivery: "2026-03-06", paymentTerms: "Net_30", taxId: "000216099054321", currencyId: "DZD", bankAccount: "DZ580007990003004521780000", bankBIC: "BNAADZAL", procurementCategory: "Agroalimentaire" },
 ];
 
 // ---------- Payment Terms ----------
 export interface PaymentTerm {
+  tenantId?: string;
   id: string;
   name: string;
   code: VendorPaymentTerms;
@@ -151,6 +156,7 @@ export type WarehouseType = "construction" | "food" | "technology" | "general";
 export type WarehouseStatus = "active" | "inactive" | "maintenance";
 
 export interface Warehouse {
+  tenantId?: string;
   id: string; name: string; shortCode: string; type: WarehouseType;
   city: string; wilaya: string; zones: number; capacity: number; utilization: number;
   address: string; manager: string; phone: string; speciality: string;
@@ -165,9 +171,12 @@ export const warehouses: Warehouse[] = [
   { id: "wh-alger-construction", shortCode: "WH-ALG-CONST", name: "Entrepôt Construction Alger", type: "construction", city: "Alger", wilaya: "Alger (16)", zones: 6, capacity: 5000, utilization: 74, address: "Zone Industrielle Rouiba, Alger", manager: "Karim Ben Ali", phone: "+213-21-100-200", speciality: "Matériaux de construction, ciment, acier, carrelage", status: "active" },
   { id: "wh-oran-food", shortCode: "WH-ORA-FOOD", name: "Entrepôt Agroalimentaire Oran", type: "food", city: "Oran", wilaya: "Oran (31)", zones: 5, capacity: 3500, utilization: 68, address: "Zone d'Activité Hassi Ameur, Oran", manager: "Samir Rafik", phone: "+213-41-200-300", speciality: "Produits alimentaires, céréales, huiles, conserves", status: "active", temperature: "Ambient + Cold chain (2–8°C)", certifications: ["HACCP", "ISO 22000"] },
   { id: "wh-constantine-tech", shortCode: "WH-CST-TECH", name: "Entrepôt Technologie Constantine", type: "technology", city: "Constantine", wilaya: "Constantine (25)", zones: 4, capacity: 2000, utilization: 81, address: "Zone Industrielle Palma, Constantine", manager: "Hassan Nour", phone: "+213-31-300-400", speciality: "Électronique, informatique, télécoms, composants", status: "active", security: "High (caméras, alarme, accès badge)" },
+  // ── Fournisseur = Entrepôt (Agro Sahel Distribution) ──
+  { id: "wh-sahel-supplier", shortCode: "WH-SAH-SUP", name: "Entrepôt Agro Sahel — Oued Smar", type: "food", city: "Alger", wilaya: "Alger (16)", zones: 3, capacity: 2500, utilization: 62, address: "Zone Industrielle Oued Smar, Lot 42, Alger 16270", manager: "Mourad Sahli", phone: "+213-21-555-678", speciality: "Distribution agroalimentaire, huiles, céréales, conserves", status: "active", temperature: "Ambient", certifications: ["HACCP"], companyId: "COMP-SAHEL" },
 ];
 
 export interface WarehouseLocation {
+  tenantId?: string;
   id: string; warehouseId: string; zone: string; aisle: string; rack: string; level: string;
   type: "Ambient" | "Chilled" | "Frozen" | "Dry"; capacity: number; used: number;
   status: "Available" | "Full" | "Reserved" | "Maintenance";
@@ -196,10 +205,15 @@ export const warehouseLocations: WarehouseLocation[] = [
   { id: "CST-B1-01", warehouseId: "wh-constantine-tech", zone: "B", aisle: "1", rack: "01", level: "1", type: "Ambient", capacity: 250, used: 190, status: "Available" },
   { id: "CST-B1-02", warehouseId: "wh-constantine-tech", zone: "B", aisle: "1", rack: "02", level: "1", type: "Ambient", capacity: 250, used: 120, status: "Available" },
   { id: "CST-C1-01", warehouseId: "wh-constantine-tech", zone: "C", aisle: "1", rack: "01", level: "1", type: "Ambient", capacity: 200, used: 180, status: "Available" },
+  // ── Sahel Supplier ──
+  { id: "SAH-A1-01", warehouseId: "wh-sahel-supplier", zone: "A", aisle: "1", rack: "01", level: "1", type: "Ambient", capacity: 600, used: 420, status: "Available" },
+  { id: "SAH-A1-02", warehouseId: "wh-sahel-supplier", zone: "A", aisle: "1", rack: "02", level: "1", type: "Ambient", capacity: 600, used: 380, status: "Available" },
+  { id: "SAH-B1-01", warehouseId: "wh-sahel-supplier", zone: "B", aisle: "1", rack: "01", level: "1", type: "Ambient", capacity: 500, used: 350, status: "Available" },
 ];
 
 // ---------- Sectors ----------
 export interface Sector {
+  tenantId?: string;
   id: string; code: string; name: string; icon: string; color: string;
   description: string; status: "Active" | "Inactive";
 }
@@ -213,6 +227,7 @@ export const sectors: Sector[] = [
 
 // ---------- Product Categories (Level 2) ----------
 export interface ProductCategory {
+  tenantId?: string;
   id: string; code: string; name: string; sectorId: string;
   description: string; productCount: number; status: "Active" | "Inactive";
   isDeleted?: boolean;
@@ -259,6 +274,7 @@ export const productCategories: ProductCategory[] = [
 
 // ---------- SubCategories (Level 3) ----------
 export interface SubCategory {
+  tenantId?: string;
   id: string; name: string; categoryId: string; status: "Active" | "Inactive";
   isDeleted?: boolean;
 }
@@ -391,6 +407,7 @@ export const subCategories: SubCategory[] = [
 export type UnitKind = "PHYSICAL" | "ABSTRACT";
 
 export interface UnitOfMeasure {
+  tenantId?: string;
   id: string; name: string; abbreviation: string; type: "Weight" | "Volume" | "Length" | "Count" | "Area";
   unitKind: UnitKind;  // PHYSICAL = integer-only, ABSTRACT = decimals allowed
   baseUnit?: string; conversionFactor?: number;
@@ -421,6 +438,7 @@ export const unitsOfMeasure: UnitOfMeasure[] = [
 
 // ---------- Carriers ----------
 export interface Carrier {
+  tenantId?: string;
   id: string; name: string; contact: string; phone: string; email: string;
   city: string; vehicleCount: number; coverageZones: string[];
   status: "Active" | "Inactive"; rating: number;
@@ -437,6 +455,7 @@ export const carriers: Carrier[] = [
 export type BarcodeType = "EAN-13" | "EAN-8" | "UPC-A" | "Code128" | "QR" | "DataMatrix";
 
 export interface Barcode {
+  tenantId?: string;
   id: string; productId: string; productName: string;
   type: BarcodeType; value: string; isPrimary: boolean; createdAt: string;
 }
@@ -467,3 +486,11 @@ export const barcodes: Barcode[] = [
   { id: "BC-022", productId: "P049", productName: "Caméra IP Hikvision 4MP", type: "EAN-13", value: "6191000000490", isPrimary: true, createdAt: "2025-12-15" },
   { id: "BC-023", productId: "P050", productName: "Panneau solaire 300W", type: "EAN-13", value: "6191000000500", isPrimary: true, createdAt: "2025-12-15" },
 ];
+
+// --- TENANT ENRICHMENT ---
+import { assignTenant } from "@/lib/tenantEnrichment";
+
+
+products.forEach(x => assignTenant(x, "productSku"));
+vendors.forEach(x => assignTenant(x, "customerVendor"));
+warehouses.forEach(x => assignTenant(x, "warehouse"));

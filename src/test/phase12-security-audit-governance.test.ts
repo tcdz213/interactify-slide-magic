@@ -379,9 +379,9 @@ describe("12.15 — CEO: Vérifier EDITION_CONTROL sur Dashboard", () => {
     expect(hasGovernancePermission(CEO, "EDITION_CONTROL")).toBe(true);
   });
 
-  it("No other user has EDITION_CONTROL", () => {
+  it("Only CEO and PlatformOwner have EDITION_CONTROL", () => {
     const othersWithEdition = users.filter(
-      (u) => u.id !== CEO.id && u.governancePermissions.includes("EDITION_CONTROL")
+      (u) => u.id !== CEO.id && u.role !== "PlatformOwner" && u.governancePermissions.includes("EDITION_CONTROL")
     );
     expect(othersWithEdition).toHaveLength(0);
   });

@@ -190,16 +190,16 @@ export default function PricingPage() {
           <ArrowLeft className="h-4 w-4 text-primary shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-foreground">
-              Filtré par produit : <span className="text-primary">{filteredProduct.name}</span>
+          {t("pricing.pricingPage.filteredByProduct", "Filtré par produit")} : <span className="text-primary">{filteredProduct.name}</span>
               <span className="text-muted-foreground ml-2 font-mono text-xs">{filteredProduct.sku}</span>
             </p>
           </div>
           <Button variant="ghost" size="sm" onClick={clearFilter} className="gap-1 text-muted-foreground hover:text-foreground">
-            <X className="h-3.5 w-3.5" /> Voir tous
+            <X className="h-3.5 w-3.5" /> {t("pricing.pricingPage.viewAll", "Voir tous")}
           </Button>
           <Button variant="outline" size="sm" asChild className="gap-1">
             <Link to="/wms/products">
-              <Package className="h-3.5 w-3.5" /> Retour catalogue
+              <Package className="h-3.5 w-3.5" /> {t("pricing.pricingPage.backToCatalog", "Retour catalogue")}
             </Link>
           </Button>
         </div>
@@ -213,7 +213,7 @@ export default function PricingPage() {
         <div className="flex items-center gap-3">
           {selected.size > 0 && (
             <Button variant="outline" onClick={() => setBulkOpen(true)}>
-              <TrendingUp className="mr-2 h-4 w-4" /> Mise à jour en masse ({selected.size})
+              <TrendingUp className="mr-2 h-4 w-4" /> {t("pricing.pricingPage.bulkUpdate", "Mise à jour en masse")} ({selected.size})
             </Button>
           )}
           <Select value={selectedClientType} onValueChange={setSelectedClientType}>
@@ -299,7 +299,7 @@ export default function PricingPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Grille tarifaire — {activeClientTypes.find((ct) => ct.id === selectedClientType)?.name ?? ""}
+            {t("pricing.pricingPage.priceGrid", "Grille tarifaire")} — {activeClientTypes.find((ct) => ct.id === selectedClientType)?.name ?? ""}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -312,14 +312,14 @@ export default function PricingPage() {
                     onCheckedChange={toggleAll}
                   />
                 </TableHead>
-                <TableHead>Produit</TableHead>
+                <TableHead>{t("pricing.pricingPage.product", "Produit")}</TableHead>
                 <TableHead>SKU</TableHead>
-                {canViewFinancials && <TableHead>Coût</TableHead>}
-                <TableHead>Prix unitaire</TableHead>
-                {canViewFinancials && <TableHead>Marge</TableHead>}
-                <TableHead>Qté min</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                {canViewFinancials && <TableHead>{t("pricing.pricingPage.cost", "Coût")}</TableHead>}
+                <TableHead>{t("pricing.pricingPage.unitPrice", "Prix unitaire")}</TableHead>
+                {canViewFinancials && <TableHead>{t("pricing.pricingPage.margin", "Marge")}</TableHead>}
+                <TableHead>{t("pricing.pricingPage.minQty", "Qté min")}</TableHead>
+                <TableHead>{t("pricing.pricingPage.status", "Statut")}</TableHead>
+                <TableHead className="text-right">{t("pricing.pricingPage.actions", "Actions")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -383,14 +383,14 @@ export default function PricingPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground">
-                Page {page + 1} / {totalPages} — {filteredRows.length} résultat(s)
+                {t("pricing.pricingPage.page", "Page")} {page + 1} / {totalPages} — {filteredRows.length} {t("pricing.pricingPage.results", "résultat(s)")}
               </p>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>
-                  Précédent
+                  {t("pricing.pricingPage.previous", "Précédent")}
                 </Button>
                 <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>
-                  Suivant
+                  {t("pricing.pricingPage.next", "Suivant")}
                 </Button>
               </div>
             </div>

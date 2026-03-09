@@ -185,3 +185,14 @@ export const historicalCycleCounts: CycleCount[] = [
   { id: "CC-20250930-H05", warehouseId: "wh-oran-food", warehouseName: "Entrepôt Agroalimentaire Oran", zone: "B", scheduledDate: "2025-09-30", countedBy: "Mourad Ziani", reviewedBy: "Samir Rafik", status: "Approved", totalItems: 2, itemsCounted: 2, totalVariance: -5, lines: [{ productId: "P013", productName: "Lait UHT 1L", locationId: "ORA-B1-01", expectedQty: 800, countedQty: 797, variance: -3, variancePct: -0.38 }, { productId: "P010", productName: "Huile de tournesol 5L", locationId: "ORA-A1-01", expectedQty: 1500, countedQty: 1498, variance: -2, variancePct: -0.13 }] },
   { id: "CC-20251130-H06", warehouseId: "wh-constantine-tech", warehouseName: "Entrepôt Technologie Constantine", zone: "A", scheduledDate: "2025-11-30", countedBy: "Hassan Nour", reviewedBy: "Rachid Benali", status: "Approved", totalItems: 2, itemsCounted: 2, totalVariance: 0, lines: [{ productId: "P017", productName: "Laptop HP ProBook 450", locationId: "CST-A1-01", expectedQty: 70, countedQty: 70, variance: 0, variancePct: 0 }, { productId: "P023", productName: "Routeur WiFi 6 TP-Link", locationId: "CST-B1-01", expectedQty: 180, countedQty: 180, variance: 0, variancePct: 0 }] },
 ];
+
+// --- TENANT ENRICHMENT ---
+import { assignTenant } from "@/lib/tenantEnrichment";
+
+
+historicalPOs.forEach(x => assignTenant(x, "warehouse"));
+historicalSOs.forEach(x => assignTenant(x, "warehouse"));
+historicalInvoices.forEach(x => assignTenant(x, "customerVendor"));
+historicalPayments.forEach(x => assignTenant(x, "customerVendor"));
+historicalGrns.forEach(x => assignTenant(x, "warehouse"));
+historicalCycleCounts.forEach(x => assignTenant(x, "warehouse"));

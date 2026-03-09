@@ -6,6 +6,10 @@
 
 @layer base {
   :root {
+    /* ──────────────────────────────────────────────
+       Phase A — Core Palette (Light)
+       Inspired by Vantus ERP: clean whites, soft grays
+    ────────────────────────────────────────────── */
     --background: 220 25% 97%;
     --foreground: 222 45% 10%;
 
@@ -15,7 +19,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 45% 10%;
 
-    /* Corporate teal-green (deeper, more professional) */
+    /* Corporate teal-green */
     --primary: 160 82% 34%;
     --primary-foreground: 0 0% 100%;
 
@@ -37,7 +41,7 @@
 
     --radius: 0.75rem;
 
-    /* Custom semantic tokens */
+    /* ── Semantic Status Tokens ── */
     --warning: 38 95% 48%;
     --warning-foreground: 0 0% 100%;
     --success: 160 82% 34%;
@@ -45,65 +49,241 @@
     --info: 217 90% 58%;
     --info-foreground: 0 0% 100%;
 
+    /* ── Subtle Status Backgrounds (for badges, cards) ── */
+    --success-subtle-bg: 158 64% 95%;
+    --success-subtle-fg: 160 82% 28%;
+    --success-subtle-border: 158 50% 85%;
+
+    --warning-subtle-bg: 38 92% 95%;
+    --warning-subtle-fg: 32 95% 38%;
+    --warning-subtle-border: 38 70% 82%;
+
+    --info-subtle-bg: 217 92% 95%;
+    --info-subtle-fg: 217 80% 45%;
+    --info-subtle-border: 217 70% 85%;
+
+    --destructive-subtle-bg: 2 80% 96%;
+    --destructive-subtle-fg: 2 74% 42%;
+    --destructive-subtle-border: 2 60% 85%;
+
+    /* ── Extended Accent Tokens (replaces hardcoded purple/cyan/orange/indigo) ── */
+    --accent-purple: 280 65% 58%;
+    --accent-purple-subtle-bg: 280 60% 96%;
+    --accent-purple-subtle-fg: 280 65% 42%;
+    --accent-purple-subtle-border: 280 40% 85%;
+
+    --accent-cyan: 190 80% 42%;
+    --accent-cyan-subtle-bg: 190 70% 95%;
+    --accent-cyan-subtle-fg: 190 80% 30%;
+    --accent-cyan-subtle-border: 190 50% 82%;
+
+    --accent-orange: 25 95% 53%;
+    --accent-orange-subtle-bg: 25 90% 96%;
+    --accent-orange-subtle-fg: 25 90% 38%;
+    --accent-orange-subtle-border: 25 60% 82%;
+
+    --accent-indigo: 235 70% 58%;
+    --accent-indigo-subtle-bg: 235 60% 96%;
+    --accent-indigo-subtle-fg: 235 70% 42%;
+    --accent-indigo-subtle-border: 235 40% 85%;
+
+    /* ── KPI Tokens ── */
     --kpi-up: 160 82% 34%;
     --kpi-down: 2 74% 50%;
 
+    /* ── Chart Palette ── */
     --chart-1: 160 82% 34%;
     --chart-2: 217 90% 58%;
     --chart-3: 38 95% 48%;
     --chart-4: 280 65% 58%;
     --chart-5: 340 75% 53%;
 
-    /* Sidebar */
-    --sidebar-bg: 224 35% 9%;
-    --sidebar-fg: 220 20% 78%;
-    --sidebar-fg-active: 0 0% 100%;
-    --sidebar-accent: 160 82% 34%;
-    --sidebar-hover: 224 28% 14%;
-    --sidebar-border: 224 22% 17%;
+    /* ── Surfaces (elevation layers) ── */
+    --surface-elevated: 0 0% 100%;
+    --surface-sunken: 220 25% 95%;
+    --surface-overlay: 0 0% 100% / 0.9;
 
-    --sidebar-background: 224 35% 9%;
-    --sidebar-foreground: 220 20% 78%;
-    --sidebar-primary: 160 82% 34%;
+    /* ── Sidebar (Dark default) ── */
+    --sidebar-background: 220 30% 8%;
+    --sidebar-foreground: 218 18% 72%;
+    --sidebar-primary: 160 72% 38%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 28% 14%;
+    --sidebar-accent: 220 24% 13%;
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 224 22% 17%;
-    --sidebar-ring: 160 82% 34%;
+    --sidebar-border: 220 20% 16%;
+    --sidebar-ring: 160 72% 38%;
+    --sidebar-muted: 218 14% 50%;
 
-    /* Dialog-specific */
+    /* ── Sidebar Light Theme (applied via .sidebar-light) ── */
+    --sidebar-light-background: 220 16% 97%;
+    --sidebar-light-foreground: 222 40% 15%;
+    --sidebar-light-primary: 160 82% 28%;
+    --sidebar-light-primary-foreground: 0 0% 100%;
+    --sidebar-light-accent: 220 18% 92%;
+    --sidebar-light-accent-foreground: 222 40% 12%;
+    --sidebar-light-border: 220 14% 82%;
+
+    /* ── Dialog ── */
     --dialog-shadow: 0 25px 60px -12px rgb(0 0 0 / 0.25);
+
+    /* ── Gradients ── */
+    --gradient-primary: linear-gradient(135deg, hsl(160 82% 34%) 0%, hsl(160 82% 42%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(160 82% 34% / 0.12) 0%, hsl(217 90% 58% / 0.08) 100%);
+
+    /* ── Shadows ── */
+    --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+    --shadow-card-hover: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.04);
+    --shadow-dialog: 0 20px 60px -15px rgb(0 0 0 / 0.2), 0 8px 20px -8px rgb(0 0 0 / 0.1);
+    --shadow-dropdown: 0 4px 16px -2px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+
+    /* ── Typography (Phase B) ── */
+    --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-code: 'JetBrains Mono', monospace;
+
+    /* Type scale (Phase B2) */
+    --text-xs: 0.625rem;    /* 10px */
+    --text-sm: 0.75rem;     /* 12px */
+    --text-base: 0.875rem;  /* 14px */
+    --text-lg: 1rem;        /* 16px */
+    --text-xl: 1.25rem;     /* 20px */
+    --text-2xl: 1.5rem;     /* 24px */
+    --text-3xl: 1.875rem;   /* 30px */
+
+    /* Spacing scale (Phase C1) — 4px base */
+    --space-1: 0.25rem;   /* 4px */
+    --space-2: 0.5rem;    /* 8px */
+    --space-3: 0.75rem;   /* 12px */
+    --space-4: 1rem;      /* 16px */
+    --space-5: 1.25rem;   /* 20px */
+    --space-6: 1.5rem;    /* 24px */
+    --space-8: 2rem;      /* 32px */
+    --space-10: 2.5rem;   /* 40px */
+    --space-12: 3rem;     /* 48px */
+    --space-16: 4rem;     /* 64px */
+
+    /* Page layout (Phase C2/C5) */
+    --page-padding-x: 1.5rem;   /* px-6 desktop */
+    --page-padding-y: 1rem;     /* py-4 desktop */
+    --page-max-width: 87.5rem;  /* 1400px */
   }
 
   .dark {
-    --background: 224 35% 7%;
-    --foreground: 220 20% 91%;
-    --card: 224 30% 11%;
-    --card-foreground: 220 20% 91%;
-    --popover: 224 30% 11%;
-    --popover-foreground: 220 20% 91%;
-    --primary: 160 82% 40%;
+    /* ── Core — warm charcoal base with clear layer separation ── */
+    --background: 225 20% 10%;
+    --foreground: 220 15% 90%;
+
+    --card: 225 18% 14%;
+    --card-foreground: 220 15% 92%;
+
+    --popover: 225 18% 14%;
+    --popover-foreground: 220 15% 92%;
+
+    --primary: 160 72% 42%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 224 26% 17%;
-    --secondary-foreground: 220 20% 91%;
-    --muted: 224 26% 14%;
-    --muted-foreground: 220 10% 55%;
-    --accent: 160 82% 40%;
+
+    --secondary: 225 16% 20%;
+    --secondary-foreground: 220 15% 88%;
+
+    --muted: 225 14% 18%;
+    --muted-foreground: 220 10% 58%;
+
+    --accent: 160 72% 42%;
     --accent-foreground: 0 0% 100%;
-    --destructive: 2 74% 52%;
+
+    --destructive: 2 74% 55%;
     --destructive-foreground: 0 0% 100%;
-    --border: 224 22% 17%;
-    --input: 224 22% 17%;
-    --ring: 160 82% 40%;
-    --sidebar-background: 224 38% 5%;
-    --sidebar-foreground: 220 15% 78%;
-    --sidebar-primary: 160 82% 45%;
+
+    --border: 225 14% 20%;
+    --input: 225 14% 22%;
+    --ring: 160 72% 42%;
+
+    /* ── Dark Subtle Status ── */
+    --success-subtle-bg: 160 40% 14%;
+    --success-subtle-fg: 160 65% 58%;
+    --success-subtle-border: 160 35% 24%;
+
+    --warning-subtle-bg: 38 40% 14%;
+    --warning-subtle-fg: 38 75% 60%;
+    --warning-subtle-border: 38 35% 24%;
+
+    --info-subtle-bg: 217 40% 14%;
+    --info-subtle-fg: 217 70% 65%;
+    --info-subtle-border: 217 35% 24%;
+
+    --destructive-subtle-bg: 2 40% 14%;
+    --destructive-subtle-fg: 2 65% 62%;
+    --destructive-subtle-border: 2 35% 24%;
+
+    /* ── Dark Extended Accents ── */
+    --accent-purple: 280 60% 68%;
+    --accent-purple-subtle-bg: 280 35% 14%;
+    --accent-purple-subtle-fg: 280 55% 68%;
+    --accent-purple-subtle-border: 280 30% 26%;
+
+    --accent-cyan: 190 65% 52%;
+    --accent-cyan-subtle-bg: 190 35% 14%;
+    --accent-cyan-subtle-fg: 190 60% 58%;
+    --accent-cyan-subtle-border: 190 30% 24%;
+
+    --accent-orange: 25 85% 58%;
+    --accent-orange-subtle-bg: 25 40% 14%;
+    --accent-orange-subtle-fg: 25 75% 62%;
+    --accent-orange-subtle-border: 25 35% 24%;
+
+    --accent-indigo: 235 60% 68%;
+    --accent-indigo-subtle-bg: 235 35% 14%;
+    --accent-indigo-subtle-fg: 235 55% 68%;
+    --accent-indigo-subtle-border: 235 30% 26%;
+
+    /* ── Dark Sidebar ── */
+    --sidebar-background: 225 22% 7%;
+    --sidebar-foreground: 218 15% 72%;
+    --sidebar-primary: 160 72% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 224 28% 14%;
+    --sidebar-accent: 225 20% 13%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 224 22% 15%;
-    --sidebar-ring: 160 82% 45%;
+    --sidebar-border: 225 16% 16%;
+    --sidebar-ring: 160 72% 42%;
+    --sidebar-muted: 218 12% 48%;
+
+    /* ── Dark mode: Sidebar Light Theme (light sidebar on dark dashboard) ── */
+    --sidebar-light-background: 220 20% 96%;
+    --sidebar-light-foreground: 222 30% 22%;
+    --sidebar-light-primary: 160 82% 32%;
+    --sidebar-light-primary-foreground: 0 0% 100%;
+    --sidebar-light-accent: 220 18% 90%;
+    --sidebar-light-accent-foreground: 222 45% 10%;
+    --sidebar-light-border: 220 16% 84%;
+
     --dialog-shadow: 0 25px 60px -12px rgb(0 0 0 / 0.55);
+
+    /* ── Dark Gradients ── */
+    --gradient-primary: linear-gradient(135deg, hsl(160 72% 42%) 0%, hsl(160 72% 50%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(160 72% 42% / 0.15) 0%, hsl(217 80% 58% / 0.10) 100%);
+
+    /* ── Dark Shadows ── */
+    --shadow-card: 0 1px 4px 0 rgb(0 0 0 / 0.25), 0 1px 2px -1px rgb(0 0 0 / 0.18);
+    --shadow-card-hover: 0 4px 14px -2px rgb(0 0 0 / 0.35), 0 2px 6px -2px rgb(0 0 0 / 0.22);
+    --shadow-dialog: 0 20px 60px -15px rgb(0 0 0 / 0.5), 0 8px 20px -8px rgb(0 0 0 / 0.3);
+    --shadow-dropdown: 0 4px 16px -2px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.22);
+
+    /* ── Dark Surfaces — clear elevation steps ── */
+    --surface-elevated: 225 16% 16%;
+    --surface-sunken: 225 22% 7%;
+    --surface-overlay: 225 18% 14% / 0.95;
+  }
+
+  /* ── Sidebar Light Theme Override ──
+     Apply class "sidebar-light" on the sidebar root to switch theme */
+  .sidebar-light {
+    --sidebar-background: var(--sidebar-light-background);
+    --sidebar-foreground: var(--sidebar-light-foreground);
+    --sidebar-primary: var(--sidebar-light-primary);
+    --sidebar-primary-foreground: var(--sidebar-light-primary-foreground);
+    --sidebar-accent: var(--sidebar-light-accent);
+    --sidebar-accent-foreground: var(--sidebar-light-accent-foreground);
+    --sidebar-border: var(--sidebar-light-border);
   }
 }
 
@@ -123,7 +303,7 @@
 }
 
 @layer utilities {
-  /* D6 — Print styles */
+  /* ── Print styles ── */
   @media print {
     .no-print, nav, header, .sidebar, [data-sidebar] {
       display: none !important;
@@ -139,51 +319,121 @@
     }
   }
 
-  /* D9 — Consistent icon sizes */
+  /* ── Icon sizes ── */
   .icon-sm { @apply h-3.5 w-3.5; }
   .icon-md { @apply h-4 w-4; }
   .icon-lg { @apply h-5 w-5; }
   .icon-xl { @apply h-6 w-6; }
-  /* Glass card utility */
+
+  /* ── Glass card ── */
   .glass-card {
     @apply bg-card/90 backdrop-blur-sm border border-border/50 shadow-sm;
   }
 
-  /* KPI card glow */
+  /* ── KPI card glow ── */
   .kpi-glow {
     box-shadow: 0 0 24px -5px hsl(var(--primary) / 0.18);
   }
 
-  /* Dialog hero headers */
+  /* ── Dialog hero headers ── */
   .dialog-header-primary {
     @apply flex items-center gap-3 px-6 py-4 -mx-6 -mt-2 mb-4 rounded-t-xl border-b border-primary/20;
     background: linear-gradient(135deg, hsl(var(--primary) / 0.10) 0%, hsl(var(--primary) / 0.04) 100%);
   }
-
   .dialog-header-destructive {
     @apply flex items-center gap-3 px-6 py-4 -mx-6 -mt-2 mb-4 rounded-t-xl border-b border-destructive/20;
     background: linear-gradient(135deg, hsl(var(--destructive) / 0.10) 0%, hsl(var(--destructive) / 0.03) 100%);
   }
-
   .dialog-header-warning {
-    @apply flex items-center gap-3 px-6 py-4 -mx-6 -mt-2 mb-4 rounded-t-xl border-b border-warning/20;
+    @apply flex items-center gap-3 px-6 py-4 -mx-6 -mt-2 mb-4 rounded-t-xl;
+    border-bottom: 1px solid hsl(var(--warning) / 0.2);
     background: linear-gradient(135deg, hsl(var(--warning) / 0.10) 0%, hsl(var(--warning) / 0.03) 100%);
   }
 
-  /* Icon box in dialog headers */
+  /* ── Dialog icon boxes ── */
   .dialog-icon-primary {
     @apply flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20;
   }
-
   .dialog-icon-destructive {
     @apply flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-destructive/10 text-destructive ring-1 ring-destructive/20;
   }
-
   .dialog-icon-warning {
-    @apply flex h-9 w-9 flex-none items-center justify-center rounded-xl bg-yellow-500/10 text-yellow-600 ring-1 ring-yellow-500/20;
+    @apply flex h-9 w-9 flex-none items-center justify-center rounded-xl;
+    background: hsl(var(--warning) / 0.1);
+    color: hsl(var(--warning));
+    box-shadow: inset 0 0 0 1px hsl(var(--warning) / 0.2);
   }
 
-  /* C1 — Mobile table improvements */
+  /* ── Semantic status utilities (use instead of hardcoded colors) ── */
+  .status-success {
+    background: hsl(var(--success-subtle-bg));
+    color: hsl(var(--success-subtle-fg));
+    border-color: hsl(var(--success-subtle-border));
+  }
+  .status-warning {
+    background: hsl(var(--warning-subtle-bg));
+    color: hsl(var(--warning-subtle-fg));
+    border-color: hsl(var(--warning-subtle-border));
+  }
+  .status-info {
+    background: hsl(var(--info-subtle-bg));
+    color: hsl(var(--info-subtle-fg));
+    border-color: hsl(var(--info-subtle-border));
+  }
+  .status-error {
+    background: hsl(var(--destructive-subtle-bg));
+    color: hsl(var(--destructive-subtle-fg));
+    border-color: hsl(var(--destructive-subtle-border));
+  }
+  .status-purple {
+    background: hsl(var(--accent-purple-subtle-bg));
+    color: hsl(var(--accent-purple-subtle-fg));
+    border-color: hsl(var(--accent-purple-subtle-border));
+  }
+  .status-cyan {
+    background: hsl(var(--accent-cyan-subtle-bg));
+    color: hsl(var(--accent-cyan-subtle-fg));
+    border-color: hsl(var(--accent-cyan-subtle-border));
+  }
+  .status-orange {
+    background: hsl(var(--accent-orange-subtle-bg));
+    color: hsl(var(--accent-orange-subtle-fg));
+    border-color: hsl(var(--accent-orange-subtle-border));
+  }
+  .status-indigo {
+    background: hsl(var(--accent-indigo-subtle-bg));
+    color: hsl(var(--accent-indigo-subtle-fg));
+    border-color: hsl(var(--accent-indigo-subtle-border));
+  }
+
+  /* ── Table Density (Phase F1) ── */
+  .table-compact th,
+  .table-compact td { height: 2.25rem; padding-top: 0.25rem; padding-bottom: 0.25rem; font-size: var(--text-sm); }
+  .table-default th,
+  .table-default td { height: 2.75rem; }
+  .table-comfortable th,
+  .table-comfortable td { height: 3.25rem; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+
+  /* ── Sticky table header (Phase F2) ── */
+  .table-sticky-header thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: hsl(var(--muted));
+  }
+  .dark .table-sticky-header thead {
+    background-color: hsl(var(--muted));
+  }
+
+  /* ── Bulk action bar (Phase F3) ── */
+  .table-bulk-bar {
+    @apply flex items-center gap-3 px-4 py-2 text-sm font-medium border-b;
+    background: hsl(var(--primary) / 0.08);
+    color: hsl(var(--primary));
+    border-color: hsl(var(--primary) / 0.15);
+  }
+
+  /* ── Mobile table ── */
   @media (max-width: 768px) {
     .responsive-table table {
       font-size: 0.75rem;
@@ -194,7 +444,7 @@
     }
   }
 
-  /* C3 — KPI grid: 2x2 on mobile instead of vertical stack */
+  /* ── KPI grid ── */
   .kpi-grid {
     @apply grid gap-4;
     grid-template-columns: repeat(2, 1fr);
@@ -205,7 +455,7 @@
     }
   }
 
-  /* C4 — Touch target minimum 44px on mobile */
+  /* ── Touch target (mobile a11y) ── */
   @media (max-width: 768px) {
     .touch-target {
       min-height: 44px;
@@ -219,13 +469,107 @@
     }
   }
 
-  /* Safe area for PWA bottom nav (iPhone notch) */
+  /* ── Safe area ── */
   .safe-area-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* RTL font adjustment */
+  /* ── RTL font (Phase B4) ── */
   [dir="rtl"] {
     font-family: 'Noto Sans Arabic', 'Inter', system-ui, sans-serif;
+    line-height: 1.7;
   }
+  [dir="rtl"] .text-heading,
+  [dir="rtl"] .text-heading-page,
+  [dir="rtl"] .text-display {
+    line-height: 1.4;
+  }
+
+  /* ── Typography scale (Phase B5) ── */
+  .text-caption    { font-size: var(--text-xs); @apply leading-tight; }
+  .text-overline   { font-size: var(--text-xs); @apply uppercase tracking-wider font-medium; }
+  .text-label      { font-size: var(--text-sm); @apply font-medium; }
+  .text-body       { font-size: var(--text-base); @apply leading-relaxed font-normal; }
+  .text-body-sm    { font-size: var(--text-sm); @apply leading-relaxed; }
+  .text-subtitle   { font-size: var(--text-lg); @apply font-medium tracking-tight; }
+  .text-heading    { font-size: var(--text-xl); @apply font-bold tracking-tight; }
+  .text-heading-page    { font-size: var(--text-2xl); @apply font-bold tracking-tight; }
+  .text-heading-section { font-size: var(--text-base); @apply font-semibold; }
+  .text-heading-card    { font-size: var(--text-base); @apply font-semibold; }
+  .text-display    { font-size: var(--text-3xl); @apply font-bold tracking-tight; }
+  .text-mono {
+    font-family: var(--font-code);
+    font-size: var(--text-sm);
+    @apply font-medium;
+  }
+
+  /* ── Shadow utilities ── */
+  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-card-hover { box-shadow: var(--shadow-card-hover); }
+  .shadow-dialog { box-shadow: var(--shadow-dialog); }
+  .shadow-dropdown { box-shadow: var(--shadow-dropdown); }
+
+  /* ── Surface utilities ── */
+  .bg-surface-elevated { background-color: hsl(var(--surface-elevated)); }
+  .bg-surface-sunken { background-color: hsl(var(--surface-sunken)); }
+
+  /* ── Gradient utilities ── */
+  .bg-gradient-primary { background: var(--gradient-primary); }
+  .bg-gradient-hero { background: var(--gradient-hero); }
+
+  /* ── Phase K7 — Reduced motion ── */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* ── Phase J4 — Responsive chart labels ── */
+  @media (max-width: 640px) {
+    .recharts-cartesian-axis-tick text {
+      font-size: 9px !important;
+    }
+    .recharts-legend-item-text {
+      font-size: 10px !important;
+    }
+  }
+
+  /* ── Phase L3 — RTL logical property helpers ── */
+  [dir="rtl"] .recharts-cartesian-axis-tick text {
+    text-anchor: start;
+  }
+
+  /* ── Phase M1 — Focus indicators ── */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  /* ── Phase M2 — Skip to content link ── */
+  .skip-to-content {
+    @apply sr-only;
+  }
+  .skip-to-content:focus {
+    @apply not-sr-only fixed top-2 left-2 z-[100] rounded-md bg-primary px-4 py-2 text-primary-foreground font-medium text-sm;
+  }
+}
+
+/* ── Theme transition — smooth color changes on mode switch ── */
+html,
+html *,
+html *::before,
+html *::after {
+  transition: background-color 0.35s ease, color 0.25s ease, border-color 0.3s ease, box-shadow 0.3s ease, fill 0.25s ease, stroke 0.25s ease;
+}
+/* Opt-out for elements where transition causes jank */
+.no-theme-transition,
+.no-theme-transition *,
+input, textarea, [data-radix-popper-content-wrapper] * {
+  transition: none !important;
 }

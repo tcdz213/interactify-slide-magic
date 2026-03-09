@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { Ruler, Plus, Pencil, Trash2, Search, AlertTriangle, Download, Upload, ArrowRightLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import type { UnitOfMeasure } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ interface QuickConversion { fromAbbr: string; toAbbr: string; factor: number; }
 const emptyQuickConv: QuickConversion = { fromAbbr: "", toAbbr: "", factor: 1 };
 
 export default function UomPage() {
+  const { t } = useTranslation();
   const { unitsOfMeasure: data, setUnitsOfMeasure: setData, products, setProducts, productUnitConversions, setProductUnitConversions } = useWMSData();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -55,7 +57,6 @@ export default function UomPage() {
     return { usedByProducts, derivedUoms, blocked: usedByProducts.length > 0 || derivedUoms.length > 0 };
   };
 
-  // Sprint 1: Cycle detection for derived UDM
   const wouldCreateCycle = (abbreviation: string, baseUnit: string): boolean => {
     const visited = new Set<string>();
     let current = baseUnit;
@@ -72,21 +73,19 @@ export default function UomPage() {
   const openCreate = () => { setEditing(null); setForm(empty); setShowForm(true); };
   const openEdit = (u: UnitOfMeasure) => { setEditing(u); setForm({ name: u.name, abbreviation: u.abbreviation, type: u.type, unitKind: u.unitKind, baseUnit: u.baseUnit, conversionFactor: u.conversionFactor }); setShowForm(true); };
 
-  // Sprint 1: Auto-cascade renommage UDM
   const handleSave = () => {
     if (!form.name || !form.abbreviation) return;
     if (form.baseUnit && (!form.conversionFactor || form.conversionFactor <= 0)) {
-      toast({ title: "Erreur de validation", description: "Le facteur de conversion doit être supérieur à 0.", variant: "destructive" });
+      toast({ title: t("uom.validationError"), description: t("uom.factorRequired"), variant: "destructive" });
       return;
     }
-    // Cycle detection
     if (form.baseUnit && editing && wouldCreateCycle(form.abbreviation, form.baseUnit)) {
-      toast({ title: "Erreur", description: "Référence circulaire détectée ! Cette UDM ne peut pas dériver de cette base.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("uom.circularRef"), variant: "destructive" });
       return;
     }
     const duplicate = data.find(u => u.abbreviation.toLowerCase() === form.abbreviation.toLowerCase() && u.id !== editing?.id);
     if (duplicate) {
-      toast({ title: "Abréviation en doublon", description: `"${form.abbreviation}" est déjà utilisée par ${duplicate.name}.`, variant: "destructive" });
+      toast({ title: t("uom.duplicateAbbr"), description: t("uom.duplicateAbbrDesc", { abbr: form.abbreviation, name: duplicate.name }), variant: "destructive" });
       return;
     }
     if (editing) {
@@ -97,41 +96,36 @@ export default function UomPage() {
       
       setData(prev => prev.map(u => u.id === editing.id ? { ...u, ...form, name: newName, abbreviation: newAbbr } : u));
       
-      // Sprint 1 P0: Auto-cascade abbreviation rename
       if (oldAbbr !== newAbbr) {
         let cascadeCount = 0;
-        // Cascade products.uom
         const affectedProducts = products.filter(p => p.uom === oldAbbr || p.uom === oldName);
         if (affectedProducts.length > 0) {
           setProducts(prev => prev.map(p => (p.uom === oldAbbr || p.uom === oldName) ? { ...p, uom: newAbbr } : p));
           cascadeCount += affectedProducts.length;
         }
-        // Cascade productUnitConversions
         const affectedConvs = productUnitConversions.filter(c => c.unitAbbreviation === oldAbbr);
         if (affectedConvs.length > 0) {
           setProductUnitConversions(prev => prev.map(c => c.unitAbbreviation === oldAbbr ? { ...c, unitAbbreviation: newAbbr } : c));
           cascadeCount += affectedConvs.length;
         }
-        // Cascade derived UDMs
         const derivedUdms = data.filter(u => u.baseUnit === oldAbbr);
         if (derivedUdms.length > 0) {
           setData(prev => prev.map(u => u.baseUnit === oldAbbr ? { ...u, baseUnit: newAbbr } : u));
           cascadeCount += derivedUdms.length;
         }
-        toast({ title: "UDM modifiée", description: `${newName}. ${cascadeCount} entité(s) mise(s) à jour automatiquement.` });
+        toast({ title: t("uom.uomModified"), description: t("uom.cascadeUpdate", { name: newName, count: cascadeCount }) });
       } else if (oldName !== newName) {
-        // Name-only rename — cascade products referencing by name
         const affectedProducts = products.filter(p => p.uom === oldName);
         if (affectedProducts.length > 0) {
           setProducts(prev => prev.map(p => p.uom === oldName ? { ...p, uom: newName } : p));
         }
-        toast({ title: "UDM modifiée", description: newName });
+        toast({ title: t("uom.uomModified"), description: newName });
       } else {
-        toast({ title: "UDM modifiée", description: form.name });
+        toast({ title: t("uom.uomModified"), description: form.name });
       }
     } else {
       setData(prev => [...prev, { id: `UOM-${String(prev.length + 1).padStart(3, "0")}`, ...form }]);
-      toast({ title: "UDM créée", description: form.name });
+      toast({ title: t("uom.uomCreated"), description: form.name });
     }
     setShowForm(false);
   };
@@ -141,27 +135,27 @@ export default function UomPage() {
     const { blocked } = getDeleteBlockers(deleteConfirm);
     if (blocked) return;
     setData(prev => prev.filter(u => u.id !== deleteConfirm.id));
-    toast({ title: "UDM supprimée" }); setDeleteConfirm(null);
+    toast({ title: t("uom.uomDeleted") }); setDeleteConfirm(null);
   };
 
   const baseUoms = data.filter(u => !u.baseUnit && !(u as any).isDeleted);
 
   const handleExportCSV = () => {
     const cols: ExportColumn<UnitOfMeasure>[] = [
-      { key: "abbreviation", label: "Abréviation" },
-      { key: "name", label: "Nom" },
-      { key: "type", label: "Type" },
-      { key: "baseUnit", label: "UDM de base" },
-      { key: "conversionFactor", label: "Facteur" },
+      { key: "abbreviation", label: t("uom.abbreviationFull") },
+      { key: "name", label: t("common.name") },
+      { key: "type", label: t("common.type") },
+      { key: "baseUnit", label: t("uom.baseUom") },
+      { key: "conversionFactor", label: t("uom.factor") },
     ];
     exportToCSV(filtered, cols, "unites-de-mesure");
-    toast({ title: "Export CSV", description: `${filtered.length} UDM exportées.` });
+    toast({ title: t("common.exportCSV"), description: t("uom.exportDesc", { count: filtered.length }) });
   };
 
   const handleImportCSV = () => {
     const lines = importText.trim().split("\n").filter(l => l.trim());
     if (lines.length < 2) {
-      toast({ title: "Fichier vide", description: "Le CSV doit avoir un en-tête + au moins 1 ligne.", variant: "destructive" });
+      toast({ title: t("uom.importEmpty"), description: t("uom.importEmptyDesc"), variant: "destructive" });
       return;
     }
     const header = lines[0].split(",").map(h => h.replace(/"/g, "").trim().toLowerCase());
@@ -171,7 +165,7 @@ export default function UomPage() {
     const baseIdx = header.findIndex(h => h.includes("base"));
     const factorIdx = header.findIndex(h => h.includes("facteur") || h.includes("factor"));
     if (abbrIdx === -1 || nameIdx === -1) {
-      toast({ title: "Format invalide", description: "Colonnes 'Abréviation' et 'Nom' requises.", variant: "destructive" });
+      toast({ title: t("uom.importInvalidFormat"), description: t("uom.importColumnsRequired"), variant: "destructive" });
       return;
     }
     const validTypes = ["Weight", "Volume", "Count", "Length", "Area"];
@@ -190,33 +184,30 @@ export default function UomPage() {
       imported++;
     }
     if (newUoms.length > 0) setData(prev => [...prev, ...newUoms]);
-    toast({ title: "Import terminé", description: `${imported} ajoutée(s), ${skipped} ignorée(s).` });
+    toast({ title: t("uom.importDone"), description: t("uom.importResult", { imported, skipped }) });
     setShowImportDialog(false);
     setImportText("");
   };
 
-  // GAP 2.14: Quick inter-UoM conversion creation
   const handleQuickConversion = () => {
     if (!quickConv.fromAbbr || !quickConv.toAbbr || quickConv.factor <= 0) return;
     if (quickConv.fromAbbr === quickConv.toAbbr) {
-      toast({ title: "Erreur", description: "Les deux UDM doivent être différentes.", variant: "destructive" });
+      toast({ title: t("common.error"), description: t("uom.sameUomError"), variant: "destructive" });
       return;
     }
     const fromUom = data.find(u => u.abbreviation === quickConv.fromAbbr);
     const toUom = data.find(u => u.abbreviation === quickConv.toAbbr);
     if (!fromUom || !toUom) return;
-    // Check if this derived relationship already exists
     const exists = data.some(u => u.abbreviation === quickConv.fromAbbr && u.baseUnit === quickConv.toAbbr);
     if (exists) {
-      toast({ title: "Existe déjà", description: `${fromUom.name} est déjà dérivée de ${toUom.name}.`, variant: "destructive" });
+      toast({ title: t("uom.alreadyExists"), description: t("uom.alreadyExistsDesc", { from: fromUom.name, to: toUom.name }), variant: "destructive" });
       return;
     }
-    // Update the "from" UoM to set its base unit and factor
     setData(prev => prev.map(u => u.abbreviation === quickConv.fromAbbr
       ? { ...u, baseUnit: quickConv.toAbbr, conversionFactor: quickConv.factor }
       : u
     ));
-    toast({ title: "Conversion enregistrée", description: `1 ${fromUom.name} = ${quickConv.factor} ${toUom.name}` });
+    toast({ title: t("uom.conversionSaved"), description: `1 ${fromUom.name} = ${quickConv.factor} ${toUom.name}` });
     setQuickConv(emptyQuickConv);
     setShowQuickConv(false);
   };
@@ -226,37 +217,37 @@ export default function UomPage() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10"><Ruler className="h-5 w-5 text-primary" /></div>
-          <div><h1 className="text-xl font-bold tracking-tight">Unités de mesure</h1><p className="text-sm text-muted-foreground">{data.filter(u => !(u as any).isDeleted).length} UDM configurées</p></div>
+          <div><h1 className="text-xl font-bold tracking-tight">{t("uom.title")}</h1><p className="text-sm text-muted-foreground">{t("uom.subtitle", { count: data.filter(u => !(u as any).isDeleted).length })}</p></div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1.5"><Download className="h-3.5 w-3.5" /> Export CSV</Button>
-          <Button variant="outline" size="sm" onClick={() => setShowImportDialog(true)} className="gap-1.5"><Upload className="h-3.5 w-3.5" /> Import CSV</Button>
-          <Button variant="outline" size="sm" onClick={() => setShowQuickConv(true)} className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Conversion</Button>
-          <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> Nouvelle UDM</Button>
+          <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1.5"><Download className="h-3.5 w-3.5" /> {t("common.exportCSV")}</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowImportDialog(true)} className="gap-1.5"><Upload className="h-3.5 w-3.5" /> {t("common.importCSV")}</Button>
+          <Button variant="outline" size="sm" onClick={() => setShowQuickConv(true)} className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> {t("common.conversion")}</Button>
+          <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> {t("uom.newUom")}</Button>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
+          <input type="text" placeholder={t("common.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)} className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
         <select value={filterType} onChange={e => setFilterType(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="all">Tous types</option>
-          <option value="Weight">Poids</option><option value="Volume">Volume</option><option value="Count">Unité</option><option value="Length">Longueur</option><option value="Area">Surface</option>
+          <option value="all">{t("common.allTypes")}</option>
+          <option value="Weight">{t("uom.typeWeight")}</option><option value="Volume">{t("uom.typeVolume")}</option><option value="Count">{t("uom.typeCount")}</option><option value="Length">{t("uom.typeLength")}</option><option value="Area">{t("uom.typeArea")}</option>
         </select>
       </div>
 
       <div className="glass-card rounded-xl overflow-hidden">
         <table className="w-full text-sm">
           <thead><tr className="border-b border-border/50 bg-muted/30">
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Abrév.</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Nom</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">Type</th>
-            <th className="px-4 py-3 text-left font-medium text-muted-foreground">UDM de base</th>
-            <th className="px-4 py-3 text-right font-medium text-muted-foreground">Facteur</th>
-            <th className="px-4 py-3 text-center font-medium text-muted-foreground">Produits</th>
-            <th className="px-4 py-3 text-center font-medium text-muted-foreground">Actions</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("uom.abbreviation")}</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.name")}</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("common.type")}</th>
+            <th className="px-4 py-3 text-left font-medium text-muted-foreground">{t("uom.baseUom")}</th>
+            <th className="px-4 py-3 text-right font-medium text-muted-foreground">{t("uom.factor")}</th>
+            <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("uom.productsCol")}</th>
+            <th className="px-4 py-3 text-center font-medium text-muted-foreground">{t("common.actions")}</th>
           </tr></thead>
           <tbody>
             {filtered.map(u => {
@@ -282,35 +273,35 @@ export default function UomPage() {
             })}
           </tbody>
         </table>
-        {filtered.length === 0 && <div className="py-12 text-center text-muted-foreground">Aucune UDM trouvée.</div>}
+        {filtered.length === 0 && <div className="py-12 text-center text-muted-foreground">{t("uom.noUomFound")}</div>}
       </div>
 
-      {/* GAP 2.15: m² Calculator */}
+      {/* m² Calculator */}
       <div className="glass-card rounded-xl p-4 space-y-3">
         <h3 className="text-sm font-semibold flex items-center gap-2">
           <Ruler className="h-4 w-4 text-primary" />
-          Calculateur m² → Pièces
+          {t("uom.m2Calculator")}
         </h3>
-        <p className="text-xs text-muted-foreground">Pour les produits surfaciques (carrelage, panneaux). Entrez les dimensions d'une pièce.</p>
+        <p className="text-xs text-muted-foreground">{t("uom.m2Hint")}</p>
         <div className="flex items-end gap-3 flex-wrap">
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Largeur (cm)</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("uom.width")}</label>
             <input type="number" min="1" className={`${formInputClass} w-24`} placeholder="50" id="calc-w" />
           </div>
           <span className="pb-2 text-muted-foreground">×</span>
           <div>
-            <label className="text-xs font-medium text-muted-foreground">Hauteur (cm)</label>
+            <label className="text-xs font-medium text-muted-foreground">{t("uom.height")}</label>
             <input type="number" min="1" className={`${formInputClass} w-24`} placeholder="50" id="calc-h" />
           </div>
           <Button variant="outline" size="sm" onClick={() => {
             const w = +(document.getElementById("calc-w") as HTMLInputElement)?.value || 0;
             const h = +(document.getElementById("calc-h") as HTMLInputElement)?.value || 0;
-            if (w <= 0 || h <= 0) { toast({ title: "Erreur", description: "Dimensions invalides", variant: "destructive" }); return; }
+            if (w <= 0 || h <= 0) { toast({ title: t("common.error"), description: t("uom.invalidDimensions"), variant: "destructive" }); return; }
             const area = areaPieceM2(w, h);
             const pieces = piecesForArea(1, w, h, false);
-            toast({ title: `${w}×${h} cm = ${area.toFixed(4)} m²/pièce`, description: `1 m² = ${pieces} pièces (arrondi supérieur)` });
+            toast({ title: `${w}×${h} cm = ${area.toFixed(4)} m²/pièce`, description: `1 m² = ${pieces} pièces` });
           }}>
-            Calculer
+            {t("common.calculate")}
           </Button>
         </div>
       </div>
@@ -318,29 +309,29 @@ export default function UomPage() {
       {/* Create / Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>{editing ? "Modifier l'UDM" : "Nouvelle UDM"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editing ? t("uom.editUom") : t("uom.newUom")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <FormField label="Nom" required><input className={formInputClass} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></FormField>
-            <FormField label="Abréviation" required><input className={formInputClass} value={form.abbreviation} onChange={e => setForm({ ...form, abbreviation: e.target.value })} maxLength={10} /></FormField>
-            <FormField label="Type">
+            <FormField label={t("common.name")} required><input className={formInputClass} value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} /></FormField>
+            <FormField label={t("uom.abbreviationFull")} required><input className={formInputClass} value={form.abbreviation} onChange={e => setForm({ ...form, abbreviation: e.target.value })} maxLength={10} /></FormField>
+            <FormField label={t("common.type")}>
               <select className={formSelectClass} value={form.type} onChange={e => setForm({ ...form, type: e.target.value as UnitOfMeasure["type"] })}>
-                <option value="Weight">Poids</option><option value="Volume">Volume</option><option value="Count">Unité</option><option value="Length">Longueur</option><option value="Area">Surface</option>
+                <option value="Weight">{t("uom.typeWeight")}</option><option value="Volume">{t("uom.typeVolume")}</option><option value="Count">{t("uom.typeCount")}</option><option value="Length">{t("uom.typeLength")}</option><option value="Area">{t("uom.typeArea")}</option>
               </select>
             </FormField>
-            <FormField label="UDM de base (optionnel)">
+            <FormField label={t("uom.baseUomOptional")}>
               <select className={formSelectClass} value={form.baseUnit ?? ""} onChange={e => setForm({ ...form, baseUnit: e.target.value || undefined })}>
-                <option value="">Aucune (UDM de base)</option>
+                <option value="">{t("uom.noneBase")}</option>
                 {baseUoms.filter(b => b.id !== editing?.id).map(b => <option key={b.id} value={b.abbreviation}>{b.name} ({b.abbreviation})</option>)}
               </select>
             </FormField>
-            {form.baseUnit && <FormField label="Facteur de conversion"><input type="number" step="0.001" className={formInputClass} value={form.conversionFactor ?? ""} onChange={e => setForm({ ...form, conversionFactor: +e.target.value || undefined })} /></FormField>}
-            <FormField label="Précision d'arrondi" hint="Décimales (ex: 0.001 pour poids, 1 pour discret)">
+            {form.baseUnit && <FormField label={t("uom.conversionFactor")}><input type="number" step="0.001" className={formInputClass} value={form.conversionFactor ?? ""} onChange={e => setForm({ ...form, conversionFactor: +e.target.value || undefined })} /></FormField>}
+            <FormField label={t("uom.roundingPrecision")} hint={t("uom.roundingHint")}>
               <input type="number" step="0.001" min="0.001" className={formInputClass} value={(form as any).roundingPrecision ?? (form.unitKind === "PHYSICAL" ? 1 : 0.001)} onChange={e => setForm({ ...form, roundingPrecision: +e.target.value || undefined } as any)} />
             </FormField>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowForm(false)}>Annuler</Button>
-            <Button onClick={handleSave} disabled={!form.name || !form.abbreviation}>{editing ? "Enregistrer" : "Créer"}</Button>
+            <Button variant="outline" onClick={() => setShowForm(false)}>{t("common.cancel")}</Button>
+            <Button onClick={handleSave} disabled={!form.name || !form.abbreviation}>{editing ? t("common.save") : t("common.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -348,35 +339,35 @@ export default function UomPage() {
       {/* Delete Confirmation Dialog */}
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Supprimer l'UDM ?</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("uom.deleteUom")}</DialogTitle></DialogHeader>
           {deleteConfirm && (() => {
             const { usedByProducts, derivedUoms, blocked } = getDeleteBlockers(deleteConfirm);
             return (
               <div className="space-y-3">
                 {blocked ? (
                   <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-2">
-                    <div className="flex items-center gap-2 text-destructive font-medium text-sm"><AlertTriangle className="h-4 w-4" /> Suppression impossible</div>
+                    <div className="flex items-center gap-2 text-destructive font-medium text-sm"><AlertTriangle className="h-4 w-4" /> {t("uom.deleteImpossible")}</div>
                     {usedByProducts.length > 0 && (
                       <p className="text-sm text-muted-foreground">
-                        <strong>{usedByProducts.length}</strong> produit{usedByProducts.length > 1 ? "s" : ""} utilise{usedByProducts.length > 1 ? "nt" : ""} cette UDM : <span className="font-mono text-xs">{usedByProducts.slice(0, 5).map(p => p.sku).join(", ")}{usedByProducts.length > 5 ? "…" : ""}</span>
+                        {t("uom.productsUsing", { count: usedByProducts.length })} : <span className="font-mono text-xs">{usedByProducts.slice(0, 5).map(p => p.sku).join(", ")}{usedByProducts.length > 5 ? "…" : ""}</span>
                       </p>
                     )}
                     {derivedUoms.length > 0 && (
                       <p className="text-sm text-muted-foreground">
-                        <strong>{derivedUoms.length}</strong> UDM dérivée{derivedUoms.length > 1 ? "s" : ""} : <span className="font-mono text-xs">{derivedUoms.map(u => u.abbreviation).join(", ")}</span>
+                        {t("uom.derivedUoms", { count: derivedUoms.length })} : <span className="font-mono text-xs">{derivedUoms.map(u => u.abbreviation).join(", ")}</span>
                       </p>
                     )}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Supprimer <strong>{deleteConfirm.name}</strong> ?</p>
+                  <p className="text-sm text-muted-foreground">{t("uom.deleteConfirm", { name: deleteConfirm.name })}</p>
                 )}
               </div>
             );
           })()}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>{deleteConfirm && getDeleteBlockers(deleteConfirm).blocked ? "Fermer" : "Annuler"}</Button>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>{deleteConfirm && getDeleteBlockers(deleteConfirm).blocked ? t("common.close") : t("common.cancel")}</Button>
             {deleteConfirm && !getDeleteBlockers(deleteConfirm).blocked && (
-              <Button variant="destructive" onClick={handleDelete}>Supprimer</Button>
+              <Button variant="destructive" onClick={handleDelete}>{t("common.delete")}</Button>
             )}
           </DialogFooter>
         </DialogContent>
@@ -385,9 +376,9 @@ export default function UomPage() {
       {/* CSV Import Dialog */}
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader><DialogTitle>Importer des UDM (CSV)</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{t("uom.importTitle")}</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">Collez le contenu CSV. Colonnes : <strong>Abréviation, Nom, Type, UDM de base, Facteur</strong>.</p>
+            <p className="text-sm text-muted-foreground">{t("uom.importHint")}</p>
             <textarea
               className="w-full h-40 rounded-lg border border-input bg-muted/50 p-3 text-xs font-mono placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20"
               placeholder={`"Abréviation","Nom","Type","UDM de base","Facteur"\n"PCE","Pièce","Count","",""\n"DZ","Douzaine","Count","PCE","12"`}
@@ -395,30 +386,30 @@ export default function UomPage() {
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowImportDialog(false); setImportText(""); }}>Annuler</Button>
-            <Button onClick={handleImportCSV} disabled={!importText.trim()}>Importer</Button>
+            <Button variant="outline" onClick={() => { setShowImportDialog(false); setImportText(""); }}>{t("common.cancel")}</Button>
+            <Button onClick={handleImportCSV} disabled={!importText.trim()}>{t("common.import")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* GAP 2.14: Quick Conversion Dialog */}
+      {/* Quick Conversion Dialog */}
       <Dialog open={showQuickConv} onOpenChange={setShowQuickConv}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><ArrowRightLeft className="h-5 w-5 text-primary" /> Conversion inter-UDM</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Définir qu'une UDM se convertit en une autre (ex: 1 Palette = 50 Sacs).</p>
+          <DialogHeader><DialogTitle className="flex items-center gap-2"><ArrowRightLeft className="h-5 w-5 text-primary" /> {t("uom.conversionTitle")}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("uom.conversionHint")}</p>
           <div className="space-y-4">
-            <FormField label="UDM source (la plus grande)" required>
+            <FormField label={t("uom.sourceUom")} required>
               <select className={formSelectClass} value={quickConv.fromAbbr} onChange={e => setQuickConv({ ...quickConv, fromAbbr: e.target.value })}>
-                <option value="">Sélectionner…</option>
+                <option value="">{t("common.select")}</option>
                 {data.filter(u => !(u as any).isDeleted).map(u => <option key={u.id} value={u.abbreviation}>{u.name} ({u.abbreviation})</option>)}
               </select>
             </FormField>
-            <FormField label="Facteur de conversion" required hint="1 source = X destination">
+            <FormField label={t("uom.conversionFactor")} required hint={t("uom.factorHint")}>
               <input type="number" step="0.001" min="0.001" className={formInputClass} value={quickConv.factor || ""} onChange={e => setQuickConv({ ...quickConv, factor: +e.target.value })} placeholder="ex: 50" />
             </FormField>
-            <FormField label="UDM destination (unité de base)" required>
+            <FormField label={t("uom.destUom")} required>
               <select className={formSelectClass} value={quickConv.toAbbr} onChange={e => setQuickConv({ ...quickConv, toAbbr: e.target.value })}>
-                <option value="">Sélectionner…</option>
+                <option value="">{t("common.select")}</option>
                 {data.filter(u => !(u as any).isDeleted && u.abbreviation !== quickConv.fromAbbr).map(u => <option key={u.id} value={u.abbreviation}>{u.name} ({u.abbreviation})</option>)}
               </select>
             </FormField>
@@ -429,8 +420,8 @@ export default function UomPage() {
             )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowQuickConv(false); setQuickConv(emptyQuickConv); }}>Annuler</Button>
-            <Button onClick={handleQuickConversion} disabled={!quickConv.fromAbbr || !quickConv.toAbbr || quickConv.factor <= 0}>Enregistrer</Button>
+            <Button variant="outline" onClick={() => { setShowQuickConv(false); setQuickConv(emptyQuickConv); }}>{t("common.cancel")}</Button>
+            <Button onClick={handleQuickConversion} disabled={!quickConv.fromAbbr || !quickConv.toAbbr || quickConv.factor <= 0}>{t("common.save")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -81,7 +81,7 @@ const MOCK_FISCAL_POSITIONS: FiscalPosition[] = [
   },
 ];
 
-const TAX_TYPE_LABELS: Record<string, string> = { purchase: "Achat", sale: "Vente", both: "Achat & Vente" };
+const TAX_TYPE_LABELS_MAP = { purchase: "taxConfig.purchase", sale: "taxConfig.sale", both: "taxConfig.both" } as const;
 const COUNTRY_OPTIONS = [
   { value: "DZ", label: "Algérie" },
   { value: "EU", label: "Union Européenne" },
@@ -138,24 +138,24 @@ export default function TaxConfigPage() {
 
   const saveTax = () => {
     const rate = parseFloat(fRate);
-    if (!fCode || !fName || isNaN(rate) || rate < 0) { toast.error("Données invalides"); return; }
+    if (!fCode || !fName || isNaN(rate) || rate < 0) { toast.error(t('taxConfig.invalidData')); return; }
     if (editTax) {
       setTaxes((prev) => prev.map((t) => t.id === editTax.id ? { ...t, code: fCode, name: fName, rate, type: fType, isActive: fActive, isDefault: fDefault, description: fDesc } : (fDefault ? { ...t, isDefault: false } : t)));
-      toast.success(`Taxe ${fCode} mise à jour`);
+      toast.success(t('taxConfig.taxUpdated', { code: fCode }));
     } else {
-      if (taxes.some((t) => t.code === fCode)) { toast.error("Ce code taxe existe déjà"); return; }
+      if (taxes.some((t) => t.code === fCode)) { toast.error(t('taxConfig.codeExists')); return; }
       const newTax: TaxCode = { id: `tax_${Date.now()}`, code: fCode, name: fName, rate, type: fType, isActive: fActive, isDefault: fDefault, description: fDesc };
       setTaxes((prev) => fDefault ? [...prev.map((t) => ({ ...t, isDefault: false })), newTax] : [...prev, newTax]);
-      toast.success(`Taxe ${fCode} ajoutée`);
+      toast.success(t('taxConfig.taxAdded', { code: fCode }));
     }
     setTaxDialog(false);
   };
 
   const deleteTax = (id: string) => {
     const used = fiscalPositions.some((fp) => fp.taxMappings.some((m) => m.sourceTaxId === id || m.destinationTaxId === id));
-    if (used) { toast.error("Taxe utilisée dans une position fiscale"); return; }
+    if (used) { toast.error(t('taxConfig.taxUsedInFp')); return; }
     setTaxes((prev) => prev.filter((t) => t.id !== id));
-    toast.success("Taxe supprimée");
+    toast.success(t('taxConfig.taxDeleted'));
   };
 
   /* ─── FP CRUD ─── */
@@ -183,20 +183,20 @@ export default function TaxConfigPage() {
   };
 
   const saveFp = () => {
-    if (!fpName) { toast.error("Le nom est requis"); return; }
+    if (!fpName) { toast.error(t('taxConfig.nameRequired')); return; }
     if (editFp) {
       setFiscalPositions((prev) => prev.map((fp) => fp.id === editFp.id ? { ...fp, name: fpName, description: fpDesc, country: fpCountry, isActive: fpActive, autoApply: fpAutoApply, taxMappings: fpMappings } : fp));
-      toast.success(`Position fiscale mise à jour`);
+      toast.success(t('taxConfig.fpUpdated'));
     } else {
       setFiscalPositions((prev) => [...prev, { id: `fp_${Date.now()}`, name: fpName, description: fpDesc, country: fpCountry, isActive: fpActive, autoApply: fpAutoApply, taxMappings: fpMappings }]);
-      toast.success(`Position fiscale ajoutée`);
+      toast.success(t('taxConfig.fpAdded'));
     }
     setFpDialog(false);
   };
 
   const deleteFp = (id: string) => {
     setFiscalPositions((prev) => prev.filter((fp) => fp.id !== id));
-    toast.success("Position fiscale supprimée");
+    toast.success(t('taxConfig.fpDeleted'));
   };
 
   const getTaxLabel = (id: string) => {
@@ -208,29 +208,29 @@ export default function TaxConfigPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Configuration Fiscale</h1>
-        <p className="text-sm text-muted-foreground">Codes TVA, taxes à l'achat/vente et positions fiscales</p>
+        <h1 className="text-2xl font-bold tracking-tight">{t('taxConfig.title')}</h1>
+        <p className="text-sm text-muted-foreground">{t('taxConfig.subtitle')}</p>
       </div>
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxes actives</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('taxConfig.activeTaxes')}</CardTitle>
             <Percent className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent><div className="text-2xl font-bold">{activeTaxes.length}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Positions fiscales</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('taxConfig.fiscalPositions')}</CardTitle>
             <MapPin className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent><div className="text-2xl font-bold">{fiscalPositions.filter((fp) => fp.isActive).length}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">TVA par défaut</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('taxConfig.defaultVat')}</CardTitle>
             <Receipt className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -240,7 +240,7 @@ export default function TaxConfigPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mappings actifs</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('taxConfig.activeMappings')}</CardTitle>
             <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent><div className="text-2xl font-bold">{fiscalPositions.reduce((sum, fp) => sum + fp.taxMappings.length, 0)}</div></CardContent>
@@ -250,27 +250,27 @@ export default function TaxConfigPage() {
       {/* Tabs */}
       <Tabs defaultValue="taxes" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="taxes">Codes Taxes / TVA</TabsTrigger>
-          <TabsTrigger value="fiscal">Positions Fiscales</TabsTrigger>
+          <TabsTrigger value="taxes">{t('taxConfig.taxCodesTab')}</TabsTrigger>
+          <TabsTrigger value="fiscal">{t('taxConfig.fiscalTab')}</TabsTrigger>
         </TabsList>
 
         {/* Tax Codes Tab */}
         <TabsContent value="taxes">
           <Card>
             <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <CardTitle className="text-base">Codes Taxes</CardTitle>
+              <CardTitle className="text-base">{t('taxConfig.taxCodes')}</CardTitle>
               <div className="flex items-center gap-2">
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder="Type" /></SelectTrigger>
+                  <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue placeholder={t('taxConfig.type')} /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tous</SelectItem>
-                    <SelectItem value="purchase">Achat</SelectItem>
-                    <SelectItem value="sale">Vente</SelectItem>
-                    <SelectItem value="both">Achat & Vente</SelectItem>
+                    <SelectItem value="all">{t('taxConfig.all')}</SelectItem>
+                    <SelectItem value="purchase">{t('taxConfig.purchase')}</SelectItem>
+                    <SelectItem value="sale">{t('taxConfig.sale')}</SelectItem>
+                    <SelectItem value="both">{t('taxConfig.both')}</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button size="sm" onClick={() => openTaxForm()}>
-                  <Plus className="mr-1.5 h-3.5 w-3.5" /> Ajouter taxe
+                  <Plus className="mr-1.5 h-3.5 w-3.5" /> {t('taxConfig.addTax')}
                 </Button>
               </div>
             </CardHeader>
@@ -278,13 +278,13 @@ export default function TaxConfigPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Nom</TableHead>
-                    <TableHead className="text-right">Taux</TableHead>
-                    <TableHead className="text-center">Type</TableHead>
-                    <TableHead className="text-center">Statut</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('taxConfig.code')}</TableHead>
+                    <TableHead>{t('taxConfig.name')}</TableHead>
+                    <TableHead className="text-right">{t('taxConfig.rate')}</TableHead>
+                    <TableHead className="text-center">{t('taxConfig.type')}</TableHead>
+                    <TableHead className="text-center">{t('taxConfig.status')}</TableHead>
+                    <TableHead>{t('taxConfig.description')}</TableHead>
+                    <TableHead className="text-right">{t('taxConfig.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -292,15 +292,15 @@ export default function TaxConfigPage() {
                     <TableRow key={tax.id}>
                       <TableCell className="font-mono font-semibold">
                         {tax.code}
-                        {tax.isDefault && <Badge variant="outline" className="ml-2 text-[10px]">Défaut</Badge>}
+                        {tax.isDefault && <Badge variant="outline" className="ml-2 text-[10px]">{t('taxConfig.default')}</Badge>}
                       </TableCell>
                       <TableCell>{tax.name}</TableCell>
                       <TableCell className="text-right font-mono">{tax.rate}%</TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="secondary" className="text-[10px]">{TAX_TYPE_LABELS[tax.type]}</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{t(`taxConfig.${tax.type}`)}</Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant={tax.isActive ? "default" : "secondary"}>{tax.isActive ? "Actif" : "Inactif"}</Badge>
+                        <Badge variant={tax.isActive ? "default" : "secondary"}>{tax.isActive ? t('taxConfig.activeStatus') : t('taxConfig.inactiveStatus')}</Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">{tax.description}</TableCell>
                       <TableCell className="text-right">
@@ -325,22 +325,22 @@ export default function TaxConfigPage() {
         <TabsContent value="fiscal">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Positions Fiscales</CardTitle>
+              <CardTitle className="text-base">{t('taxConfig.fiscalPositions')}</CardTitle>
               <Button size="sm" onClick={() => openFpForm()}>
-                <Plus className="mr-1.5 h-3.5 w-3.5" /> Ajouter position
+                <Plus className="mr-1.5 h-3.5 w-3.5" /> {t('taxConfig.addPosition')}
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               {fiscalPositions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Aucune position fiscale configurée</p>
+                <p className="text-center text-muted-foreground py-8">{t('taxConfig.noFiscalPositions')}</p>
               ) : fiscalPositions.map((fp) => (
                 <Card key={fp.id} className="border">
                   <CardHeader className="flex flex-row items-start justify-between pb-2">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-sm">{fp.name}</CardTitle>
-                        <Badge variant={fp.isActive ? "default" : "secondary"} className="text-[10px]">{fp.isActive ? "Actif" : "Inactif"}</Badge>
-                        {fp.autoApply && <Badge variant="outline" className="text-[10px]">Auto</Badge>}
+                        <Badge variant={fp.isActive ? "default" : "secondary"} className="text-[10px]">{fp.isActive ? t('taxConfig.activeStatus') : t('taxConfig.inactiveStatus')}</Badge>
+                        {fp.autoApply && <Badge variant="outline" className="text-[10px]">{t('taxConfig.auto')}</Badge>}
                         <Badge variant="secondary" className="text-[10px]">{COUNTRY_OPTIONS.find((c) => c.value === fp.country)?.label ?? fp.country}</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">{fp.description}</p>
@@ -360,9 +360,9 @@ export default function TaxConfigPage() {
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead className="text-xs">Taxe source</TableHead>
+                              <TableHead className="text-xs">{t('taxConfig.sourceTax')}</TableHead>
                               <TableHead className="text-xs text-center">→</TableHead>
-                              <TableHead className="text-xs">Taxe destination</TableHead>
+                              <TableHead className="text-xs">{t('taxConfig.destinationTax')}</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -389,52 +389,52 @@ export default function TaxConfigPage() {
       <Dialog open={taxDialog} onOpenChange={setTaxDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editTax ? "Modifier la taxe" : "Ajouter une taxe"}</DialogTitle>
+            <DialogTitle>{editTax ? t('taxConfig.editTax') : t('taxConfig.addTaxTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Code</Label>
+                <Label>{t('taxConfig.code')}</Label>
                 <Input value={fCode} onChange={(e) => setFCode(e.target.value.toUpperCase())} placeholder="TVA19" />
               </div>
               <div className="space-y-2">
-                <Label>Taux (%)</Label>
+                <Label>{t('taxConfig.rate')} (%)</Label>
                 <Input type="number" min="0" max="100" step="0.01" value={fRate} onChange={(e) => setFRate(e.target.value)} placeholder="19" />
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Nom</Label>
+              <Label>{t('taxConfig.name')}</Label>
               <Input value={fName} onChange={(e) => setFName(e.target.value)} placeholder="TVA 19%" />
             </div>
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>{t('taxConfig.type')}</Label>
               <Select value={fType} onValueChange={(v) => setFType(v as any)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="purchase">Achat uniquement</SelectItem>
-                  <SelectItem value="sale">Vente uniquement</SelectItem>
-                  <SelectItem value="both">Achat & Vente</SelectItem>
+                  <SelectItem value="purchase">{t('taxConfig.purchaseOnly')}</SelectItem>
+                  <SelectItem value="sale">{t('taxConfig.saleOnly')}</SelectItem>
+                  <SelectItem value="both">{t('taxConfig.both')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t('taxConfig.description')}</Label>
               <Input value={fDesc} onChange={(e) => setFDesc(e.target.value)} placeholder="Description…" />
             </div>
             <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
                 <Switch checked={fActive} onCheckedChange={setFActive} />
-                <Label>Active</Label>
+                <Label>{t('taxConfig.activeStatus')}</Label>
               </div>
               <div className="flex items-center gap-2">
                 <Switch checked={fDefault} onCheckedChange={setFDefault} />
-                <Label>Par défaut</Label>
+                <Label>{t('taxConfig.byDefault')}</Label>
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setTaxDialog(false)}>Annuler</Button>
-            <Button onClick={saveTax}>{editTax ? "Enregistrer" : "Ajouter"}</Button>
+            <Button variant="outline" onClick={() => setTaxDialog(false)}>{t('taxConfig.cancel')}</Button>
+            <Button onClick={saveTax}>{editTax ? t('taxConfig.save') : t('taxConfig.add')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -443,20 +443,20 @@ export default function TaxConfigPage() {
       <Dialog open={fpDialog} onOpenChange={setFpDialog}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editFp ? "Modifier la position fiscale" : "Ajouter une position fiscale"}</DialogTitle>
+            <DialogTitle>{editFp ? t('taxConfig.editFp') : t('taxConfig.addFpTitle')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Nom</Label>
+              <Label>{t('taxConfig.name')}</Label>
               <Input value={fpName} onChange={(e) => setFpName(e.target.value)} placeholder="Régime national standard" />
             </div>
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>{t('taxConfig.description')}</Label>
               <Input value={fpDesc} onChange={(e) => setFpDesc(e.target.value)} placeholder="Description…" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Pays / Région</Label>
+                <Label>{t('taxConfig.country')}</Label>
                 <Select value={fpCountry} onValueChange={setFpCountry}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -469,11 +469,11 @@ export default function TaxConfigPage() {
               <div className="space-y-4 pt-6">
                 <div className="flex items-center gap-2">
                   <Switch checked={fpActive} onCheckedChange={setFpActive} />
-                  <Label>Active</Label>
+                  <Label>{t('taxConfig.activeStatus')}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch checked={fpAutoApply} onCheckedChange={setFpAutoApply} />
-                  <Label>Auto-appliquer</Label>
+                  <Label>{t('taxConfig.autoApply')}</Label>
                 </div>
               </div>
             </div>
@@ -481,13 +481,13 @@ export default function TaxConfigPage() {
             {/* Tax Mappings */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Correspondances de taxes</Label>
+                <Label>{t('taxConfig.taxMappings')}</Label>
                 <Button variant="outline" size="sm" onClick={addMapping}>
-                  <Plus className="mr-1 h-3 w-3" /> Mapping
+                  <Plus className="mr-1 h-3 w-3" /> {t('taxConfig.addMapping')}
                 </Button>
               </div>
               {fpMappings.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-3 border rounded-md">Aucune correspondance — les taxes source seront appliquées telles quelles</p>
+                <p className="text-xs text-muted-foreground text-center py-3 border rounded-md">{t('taxConfig.noMappings')}</p>
               ) : (
                 <div className="space-y-2">
                   {fpMappings.map((m, idx) => (
@@ -519,8 +519,8 @@ export default function TaxConfigPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFpDialog(false)}>Annuler</Button>
-            <Button onClick={saveFp}>{editFp ? "Enregistrer" : "Ajouter"}</Button>
+            <Button variant="outline" onClick={() => setFpDialog(false)}>{t('taxConfig.cancel')}</Button>
+            <Button onClick={saveFp}>{editFp ? t('taxConfig.save') : t('taxConfig.add')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

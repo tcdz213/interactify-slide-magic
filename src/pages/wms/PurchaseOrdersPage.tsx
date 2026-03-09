@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ShoppingBag, Eye, Plus, Send, CheckCircle, XCircle, Search, Package, FileText, Pencil, Copy, Printer, ChevronDown, ChevronUp, Lock, MapPin, Calendar, MessageSquare, User, RotateCcw, Download } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { DateFilter } from "@/components/DateFilter";
 import { products, currency, users, warehouses } from "@/data/mockData";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,9 +20,9 @@ import ExportDialog from "@/components/ExportDialog";
 import type { ExportColumn } from "@/lib/exportUtils";
 
 const PO_TAX_RATE = 0.19;
-const PAYMENT_TERMS_LABELS: Record<string, string> = { Comptant: "Comptant", Net_15: "Net 15 jours", Net_30: "Net 30 jours", Net_45: "Net 45 jours", Net_60: "Net 60 jours", "30_jours_fin_mois": "30 jours fin de mois" };
 
 export default function PurchaseOrdersPage() {
+  const { t } = useTranslation();
   const { purchaseOrders: data, setPurchaseOrders: setData, vendors } = useWMSData();
   const { canOperateOn, operationalWarehouses, operationalWarehouseIds, isOperationalRole } = useWarehouseScope();
   const { canCreate } = useAuth();
@@ -36,10 +37,19 @@ export default function PurchaseOrdersPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [exportOpen, setExportOpen] = useState(false);
 
+  const PAYMENT_TERMS_LABELS: Record<string, string> = {
+    Comptant: t("purchaseOrders.paymentTermsCash"),
+    Net_15: t("purchaseOrders.paymentTermsNet15"),
+    Net_30: t("purchaseOrders.paymentTermsNet30"),
+    Net_45: t("purchaseOrders.paymentTermsNet45"),
+    Net_60: t("purchaseOrders.paymentTermsNet60"),
+    "30_jours_fin_mois": t("purchaseOrders.paymentTerms30EOM"),
+  };
+
   const poExportCols: ExportColumn<PurchaseOrder>[] = [
-    { key: "id", label: "N° PO" }, { key: "vendorName", label: "Fournisseur" },
-    { key: "orderDate", label: "Date commande" }, { key: "expectedDate", label: "Livraison prévue" },
-    { key: "totalAmount", label: "Total TTC" }, { key: "status", label: "Statut" },
+    { key: "id", label: t("purchaseOrders.colPO") }, { key: "vendorName", label: t("purchaseOrders.colVendor") },
+    { key: "orderDate", label: t("purchaseOrders.orderDate") }, { key: "expectedDate", label: t("purchaseOrders.colExpectedDate") },
+    { key: "totalAmount", label: t("purchaseOrders.colTotalTTC") }, { key: "status", label: t("purchaseOrders.colStatus") },
   ];
 
   const [newVendor, setNewVendor] = useState("");
@@ -154,7 +164,7 @@ export default function PurchaseOrdersPage() {
       setData(prev => prev.map(p => p.id === editingPO.id ? updated : p));
       setShowCreate(false);
       resetForm();
-      toast({ title: "PO mise à jour", description: updated.id });
+      toast({ title: t("purchaseOrders.poUpdated"), description: updated.id });
       return;
     }
 
@@ -170,7 +180,7 @@ export default function PurchaseOrdersPage() {
     setData([newPO, ...data]);
     setShowCreate(false);
     resetForm();
-    toast({ title: "Commande d'achat créée", description: newPO.id });
+    toast({ title: t("purchaseOrders.poCreated"), description: newPO.id });
   };
 
   const handleAction = (poId: string, action: "send" | "approve" | "cancel") => {
@@ -180,7 +190,7 @@ export default function PurchaseOrdersPage() {
       if (action === "approve") return { ...po, status: "Confirmed" as const, approvedBy: users.find(u => u.role === "CEO")?.name ?? "Ahmed Mansour" };
       return { ...po, status: "Cancelled" as const };
     }));
-    toast({ title: action === "send" ? "PO envoyée" : action === "approve" ? "PO confirmée" : "PO annulée" });
+    toast({ title: action === "send" ? t("purchaseOrders.poSent") : action === "approve" ? t("purchaseOrders.poConfirmed") : t("purchaseOrders.poCancelled") });
   };
 
   const handlePrint = (po: PurchaseOrder) => {
@@ -189,22 +199,22 @@ export default function PurchaseOrdersPage() {
     if (w) {
       const linesHtml = po.lines.map(l => `<tr><td>${l.productName} ${l.uom ? `(${l.uom})` : ""}</td><td>${l.qty}</td><td>${currency(l.unitCost)}</td><td>${currency(l.lineTotal)}</td></tr>`).join("");
       w.document.write(`<!DOCTYPE html><html><head><title>PO ${po.id}</title><style>body{font-family:system-ui;padding:24px;font-size:12px;} table{border-collapse:collapse;width:100%;} th,td{border:1px solid #ddd;padding:6px 8px;text-align:left;} th{background:#f5f5f5;} .right{text-align:right;}</style></head><body>
-        <h1>Commande d'achat ${po.id}</h1>
-        <p><strong>Fournisseur:</strong> ${po.vendorName} | <strong>Contact:</strong> ${vendor?.contact ?? ""} ${vendor?.phone ?? ""}</p>
-        <p><strong>Date:</strong> ${po.orderDate} | <strong>Livraison prévue:</strong> ${po.expectedDate} | <strong>Livraison:</strong> ${po.deliveryWarehouseName ?? "—"} | <strong>Paiement:</strong> ${PAYMENT_TERMS_LABELS[po.paymentTerms ?? ""] ?? po.paymentTerms ?? "—"}</p>
-        <table><thead><tr><th>Produit</th><th class="right">Qté</th><th class="right">Prix unit.</th><th class="right">Total</th></tr></thead><tbody>${linesHtml}</tbody></table>
-        <p style="margin-top:16px;"><strong>Sous-total:</strong> ${currency(po.subtotal)} | <strong>TVA 19%:</strong> ${currency(po.taxAmount)} | <strong>Total TTC:</strong> ${currency(po.totalAmount)}</p>
-        ${po.notes ? `<p><strong>Notes:</strong> ${po.notes}</p>` : ""}
+        <h1>${t("purchaseOrders.title")} ${po.id}</h1>
+        <p><strong>${t("purchaseOrders.vendor")}:</strong> ${po.vendorName} | <strong>${t("purchaseOrders.contact")}:</strong> ${vendor?.contact ?? ""} ${vendor?.phone ?? ""}</p>
+        <p><strong>${t("purchaseOrders.colDate")}:</strong> ${po.orderDate} | <strong>${t("purchaseOrders.expectedDate")}:</strong> ${po.expectedDate} | <strong>${t("purchaseOrders.delivery")}:</strong> ${po.deliveryWarehouseName ?? "—"} | <strong>${t("purchaseOrders.payment")}:</strong> ${PAYMENT_TERMS_LABELS[po.paymentTerms ?? ""] ?? po.paymentTerms ?? "—"}</p>
+        <table><thead><tr><th>${t("purchaseOrders.colProduct")}</th><th class="right">${t("purchaseOrders.colOrdered")}</th><th class="right">${t("purchaseOrders.colUnitCost")}</th><th class="right">${t("purchaseOrders.colTotal")}</th></tr></thead><tbody>${linesHtml}</tbody></table>
+        <p style="margin-top:16px;"><strong>${t("purchaseOrders.subtotalHT")}:</strong> ${currency(po.subtotal)} | <strong>${t("purchaseOrders.tva19")}:</strong> ${currency(po.taxAmount)} | <strong>${t("purchaseOrders.totalTTC")}:</strong> ${currency(po.totalAmount)}</p>
+        ${po.notes ? `<p><strong>${t("purchaseOrders.notes")}:</strong> ${po.notes}</p>` : ""}
         </body></html>`);
       w.document.close();
       w.focus();
       w.print();
       w.close();
     }
-    toast({ title: "Impression", description: "Fenêtre d'impression ouverte." });
+    toast({ title: t("purchaseOrders.printTitle"), description: t("purchaseOrders.printDesc") });
   };
 
-  const dateValidationError = newOrderDate && newExpected && newOrderDate > newExpected ? "La date de livraison doit être ≥ date de commande" : null;
+  const dateValidationError = newOrderDate && newExpected && newOrderDate > newExpected ? t("purchaseOrders.dateError") : null;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -215,25 +225,25 @@ export default function PurchaseOrdersPage() {
             <ShoppingBag className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Commandes d'achat (PO)</h1>
-            <p className="text-sm text-muted-foreground">{data.length} commandes — TVA 19%</p>
+            <h1 className="text-xl font-bold tracking-tight">{t("purchaseOrders.title")}</h1>
+            <p className="text-sm text-muted-foreground">{t("purchaseOrders.subtitle", { count: data.length })}</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-2"><Download className="h-4 w-4" /> Exporter</Button>
+          <Button variant="outline" size="sm" onClick={() => setExportOpen(true)} className="gap-2"><Download className="h-4 w-4" /> {t("purchaseOrders.export")}</Button>
           {isOperationalRole && canCreate("purchaseOrder") && (operationalWarehouseIds === null || (operationalWarehouseIds?.length ?? 0) > 0) && (
-            <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> Nouvelle PO</Button>
+            <Button onClick={openCreate} className="gap-2"><Plus className="h-4 w-4" /> {t("purchaseOrders.newPO")}</Button>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { label: "Brouillons", value: data.filter(p => p.status === "Draft").length },
-          { label: "Envoyées", value: data.filter(p => p.status === "Sent").length },
-          { label: "Confirmées", value: data.filter(p => p.status === "Confirmed").length },
-          { label: "En réception", value: data.filter(p => p.status === "Partially_Received").length },
-          { label: "Reçues", value: data.filter(p => p.status === "Received").length },
+          { label: t("purchaseOrders.drafts"), value: data.filter(p => p.status === "Draft").length },
+          { label: t("purchaseOrders.sent"), value: data.filter(p => p.status === "Sent").length },
+          { label: t("purchaseOrders.confirmed"), value: data.filter(p => p.status === "Confirmed").length },
+          { label: t("purchaseOrders.inReception"), value: data.filter(p => p.status === "Partially_Received").length },
+          { label: t("purchaseOrders.received"), value: data.filter(p => p.status === "Received").length },
         ].map(c => (
           <div key={c.label} className="glass-card rounded-xl p-4">
             <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{c.label}</p>
@@ -245,47 +255,47 @@ export default function PurchaseOrdersPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher PO ou fournisseur..." value={search} onChange={e => setSearch(e.target.value)}
+          <input type="text" placeholder={t("purchaseOrders.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)}
             className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
-        <DateFilter value={dateFrom} onChange={setDateFrom} placeholder="Du" />
-        <DateFilter value={dateTo} onChange={setDateTo} placeholder="Au" />
+        <DateFilter value={dateFrom} onChange={setDateFrom} placeholder={t("purchaseOrders.from")} />
+        <DateFilter value={dateTo} onChange={setDateTo} placeholder={t("purchaseOrders.to")} />
         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="all">Tous les statuts</option>
-          <option value="Draft">Brouillon</option>
-          <option value="Sent">Envoyée</option>
-          <option value="Confirmed">Confirmée</option>
-          <option value="Partially_Received">Partiellement reçue</option>
-          <option value="Received">Reçue</option>
-          <option value="Cancelled">Annulée</option>
+          <option value="all">{t("purchaseOrders.allStatuses")}</option>
+          <option value="Draft">{t("purchaseOrders.statusDraft")}</option>
+          <option value="Sent">{t("purchaseOrders.statusSent")}</option>
+          <option value="Confirmed">{t("purchaseOrders.statusConfirmed")}</option>
+          <option value="Partially_Received">{t("purchaseOrders.statusPartiallyReceived")}</option>
+          <option value="Received">{t("purchaseOrders.statusReceived")}</option>
+          <option value="Cancelled">{t("purchaseOrders.statusCancelled")}</option>
         </select>
         <select value={sortBy} onChange={e => setSortBy(e.target.value as typeof sortBy)} className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="date">Tri: Date</option>
-          <option value="vendor">Tri: Fournisseur</option>
-          <option value="amount">Tri: Montant</option>
-          <option value="status">Tri: Statut</option>
+          <option value="date">{t("purchaseOrders.sortDate")}</option>
+          <option value="vendor">{t("purchaseOrders.sortVendor")}</option>
+          <option value="amount">{t("purchaseOrders.sortAmount")}</option>
+          <option value="status">{t("purchaseOrders.sortStatus")}</option>
         </select>
-        <button type="button" onClick={() => setSortDir(d => d === "asc" ? "desc" : "asc")} className="h-9 px-2 rounded-lg border border-input bg-muted/50" title={sortDir === "asc" ? "Descendant" : "Ascendant"}>{sortDir === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</button>
+        <button type="button" onClick={() => setSortDir(d => d === "asc" ? "desc" : "asc")} className="h-9 px-2 rounded-lg border border-input bg-muted/50">{sortDir === "asc" ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}</button>
       </div>
 
       <div className="glass-card rounded-xl overflow-hidden">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
             <FileText className="h-12 w-12 mb-3 opacity-50" />
-            <p className="font-medium">Aucune commande d'achat</p>
-            <p className="text-sm mt-1">Ajustez les filtres ou créez une nouvelle PO.</p>
+            <p className="font-medium">{t("purchaseOrders.noPO")}</p>
+            <p className="text-sm mt-1">{t("purchaseOrders.noPOHint")}</p>
           </div>
         ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/30">
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">PO #</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Fournisseur</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Date</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Livraison prévue</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Total TTC</th>
-              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">Statut</th>
-              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground sticky right-0 bg-muted/30 min-w-[140px]">Actions</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("purchaseOrders.colPO")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("purchaseOrders.colVendor")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("purchaseOrders.colDate")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("purchaseOrders.colExpectedDate")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("purchaseOrders.colTotalTTC")}</th>
+              <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground">{t("purchaseOrders.colStatus")}</th>
+              <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-muted-foreground sticky right-0 bg-muted/30 min-w-[140px]">{t("purchaseOrders.colActions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -299,37 +309,36 @@ export default function PurchaseOrdersPage() {
                 <td className="px-4 py-3"><StatusBadge status={po.status} /></td>
                 <td className="px-4 py-3 text-right sticky right-0 bg-card/90 backdrop-blur-sm min-w-[140px]">
                   <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => setSelectedPO(po)} className="p-1.5 rounded-md hover:bg-muted" title="Voir"><Eye className="h-3.5 w-3.5 text-muted-foreground" /></button>
-                    <button onClick={() => handlePrint(po)} className="p-1.5 rounded-md hover:bg-muted" title="Imprimer"><Printer className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                    <button onClick={() => setSelectedPO(po)} className="p-1.5 rounded-md hover:bg-muted" title={t("purchaseOrders.view")}><Eye className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                    <button onClick={() => handlePrint(po)} className="p-1.5 rounded-md hover:bg-muted" title={t("purchaseOrders.print")}><Printer className="h-3.5 w-3.5 text-muted-foreground" /></button>
                     {po.status === "Draft" && canOperateOn(po.deliveryWarehouseId || "") && (
                       <>
-                        <button onClick={() => openEdit(po)} className="p-1.5 rounded-md hover:bg-muted" title="Modifier"><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
-                        <button onClick={() => handleAction(po.id, "send")} className="p-1.5 rounded-md hover:bg-info/10" title="Envoyer"><Send className="h-3.5 w-3.5 text-info" /></button>
+                        <button onClick={() => openEdit(po)} className="p-1.5 rounded-md hover:bg-muted" title={t("purchaseOrders.edit")}><Pencil className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                        <button onClick={() => handleAction(po.id, "send")} className="p-1.5 rounded-md hover:bg-info/10" title={t("purchaseOrders.send")}><Send className="h-3.5 w-3.5 text-info" /></button>
                       </>
                     )}
                     {canOperateOn(po.deliveryWarehouseId || "") && (
-                      <button onClick={() => openDuplicate(po)} className="p-1.5 rounded-md hover:bg-muted" title="Dupliquer"><Copy className="h-3.5 w-3.5 text-muted-foreground" /></button>
+                      <button onClick={() => openDuplicate(po)} className="p-1.5 rounded-md hover:bg-muted" title={t("purchaseOrders.duplicate")}><Copy className="h-3.5 w-3.5 text-muted-foreground" /></button>
                     )}
                     {po.status === "Sent" && canOperateOn(po.deliveryWarehouseId || "") && (
-                      <button onClick={() => handleAction(po.id, "approve")} className="p-1.5 rounded-md hover:bg-success/10" title="Confirmer"><CheckCircle className="h-3.5 w-3.5 text-success" /></button>
+                      <button onClick={() => handleAction(po.id, "approve")} className="p-1.5 rounded-md hover:bg-success/10" title={t("purchaseOrders.confirm")}><CheckCircle className="h-3.5 w-3.5 text-success" /></button>
                     )}
                     {(po.status === "Draft" || po.status === "Sent") && canOperateOn(po.deliveryWarehouseId || "") && (
-                      <button onClick={() => handleAction(po.id, "cancel")} className="p-1.5 rounded-md hover:bg-destructive/10" title="Annuler"><XCircle className="h-3.5 w-3.5 text-destructive" /></button>
+                      <button onClick={() => handleAction(po.id, "cancel")} className="p-1.5 rounded-md hover:bg-destructive/10" title={t("purchaseOrders.cancel")}><XCircle className="h-3.5 w-3.5 text-destructive" /></button>
                     )}
                     {!canOperateOn(po.deliveryWarehouseId || "") && (po.status === "Draft" || po.status === "Sent") && (
-                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" title="Hors périmètre"><Lock className="h-3.5 w-3.5" /></span>
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground" title={t("purchaseOrders.outOfScope")}><Lock className="h-3.5 w-3.5" /></span>
                     )}
-                    {/* Change status dropdown */}
                     {canOperateOn(po.deliveryWarehouseId || "") && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="p-1.5 rounded-md hover:bg-muted transition-colors" title="Changer statut">
+                          <button className="p-1.5 rounded-md hover:bg-muted transition-colors" title={t("purchaseOrders.changeStatus")}>
                             <RotateCcw className="h-3.5 w-3.5 text-muted-foreground" />
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           {(["Draft", "Sent", "Confirmed", "Partially_Received", "Received", "Cancelled"] as const).filter(s => s !== po.status).map(s => (
-                            <DropdownMenuItem key={s} onClick={() => { setData(prev => prev.map(p => p.id === po.id ? { ...p, status: s } : p)); toast({ title: "Statut modifié", description: `${po.id} → ${s}` }); }}>
+                            <DropdownMenuItem key={s} onClick={() => { setData(prev => prev.map(p => p.id === po.id ? { ...p, status: s } : p)); toast({ title: t("purchaseOrders.statusChanged"), description: `${po.id} → ${s}` }); }}>
                               <StatusBadge status={s} />
                             </DropdownMenuItem>
                           ))}
@@ -352,41 +361,41 @@ export default function PurchaseOrdersPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center justify-between gap-3">
                   <span className="flex items-center gap-3"><span className="font-mono">{selectedPO.id}</span><StatusBadge status={selectedPO.status} /></span>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => handlePrint(selectedPO)}><Printer className="h-4 w-4" /> Imprimer</Button>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => handlePrint(selectedPO)}><Printer className="h-4 w-4" /> {t("purchaseOrders.print")}</Button>
                 </DialogTitle>
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 text-sm mt-4">
-                <div><span className="text-muted-foreground">Fournisseur :</span> <span className="font-medium">{selectedPO.vendorName}</span></div>
-                <div><span className="text-muted-foreground">Contact :</span> {vendors.find(v => v.id === selectedPO.vendorId)?.contact} — {vendors.find(v => v.id === selectedPO.vendorId)?.phone}</div>
-                <div><span className="text-muted-foreground">Créé par :</span> {selectedPO.createdBy}</div>
-                <div><span className="text-muted-foreground">Date commande :</span> {selectedPO.orderDate}</div>
-                <div><span className="text-muted-foreground">Livraison prévue :</span> {selectedPO.expectedDate}</div>
-                <div><span className="text-muted-foreground">Livraison :</span> {selectedPO.deliveryWarehouseName ?? "—"}</div>
-                <div><span className="text-muted-foreground">Paiement :</span> {PAYMENT_TERMS_LABELS[selectedPO.paymentTerms ?? ""] ?? selectedPO.paymentTerms ?? "—"}</div>
-                <div><span className="text-muted-foreground">Réf. fournisseur :</span> {selectedPO.vendorRef ?? "—"}</div>
-                <div><span className="text-muted-foreground">Approuvé par :</span> {selectedPO.approvedBy || "—"}</div>
-                <div><span className="text-muted-foreground">Total TTC :</span> <span className="font-medium">{currency(selectedPO.totalAmount)}</span></div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.vendor")} :</span> <span className="font-medium">{selectedPO.vendorName}</span></div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.contact")} :</span> {vendors.find(v => v.id === selectedPO.vendorId)?.contact} — {vendors.find(v => v.id === selectedPO.vendorId)?.phone}</div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.createdBy")} :</span> {selectedPO.createdBy}</div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.orderDate")} :</span> {selectedPO.orderDate}</div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.expectedDate")} :</span> {selectedPO.expectedDate}</div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.delivery")} :</span> {selectedPO.deliveryWarehouseName ?? "—"}</div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.payment")} :</span> {PAYMENT_TERMS_LABELS[selectedPO.paymentTerms ?? ""] ?? selectedPO.paymentTerms ?? "—"}</div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.vendorRef")} :</span> {selectedPO.vendorRef ?? "—"}</div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.approvedBy")} :</span> {selectedPO.approvedBy || "—"}</div>
+                <div><span className="text-muted-foreground">{t("purchaseOrders.colTotalTTC")} :</span> <span className="font-medium">{currency(selectedPO.totalAmount)}</span></div>
                 {(selectedPO.status === "Sent" || selectedPO.status === "Confirmed") && selectedPO.lines.some((l: { receivedQty: number; qty: number }) => l.receivedQty < l.qty) && (
                   <div className="col-span-2">
                     <Link to="/wms/grn" className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/20 transition-colors">
-                      <Package className="h-4 w-4" /> Créer une réception (GRN)
+                      <Package className="h-4 w-4" /> {t("purchaseOrders.createGRN")}
                     </Link>
                   </div>
                 )}
-                {selectedPO.notes && <div className="col-span-2"><span className="text-muted-foreground">Notes :</span> {selectedPO.notes}</div>}
+                {selectedPO.notes && <div className="col-span-2"><span className="text-muted-foreground">{t("purchaseOrders.notes")} :</span> {selectedPO.notes}</div>}
               </div>
               <div className="mt-4">
-                <h4 className="text-sm font-semibold mb-2">Lignes de commande</h4>
+                <h4 className="text-sm font-semibold mb-2">{t("purchaseOrders.orderLines")}</h4>
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-2 px-2 text-muted-foreground">Produit</th>
-                      <th className="text-left py-2 px-2 text-muted-foreground">Unité</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Commandée</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Reçue</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Progression</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Coût unit.</th>
-                      <th className="text-right py-2 px-2 text-muted-foreground">Total</th>
+                      <th className="text-left py-2 px-2 text-muted-foreground">{t("purchaseOrders.colProduct")}</th>
+                      <th className="text-left py-2 px-2 text-muted-foreground">{t("purchaseOrders.colUnit")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("purchaseOrders.colOrdered")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("purchaseOrders.colReceived")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("purchaseOrders.colProgress")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("purchaseOrders.colUnitCost")}</th>
+                      <th className="text-right py-2 px-2 text-muted-foreground">{t("purchaseOrders.colTotal")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -422,36 +431,36 @@ export default function PurchaseOrdersPage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
                 <ShoppingBag className="h-4 w-4 text-primary" />
               </div>
-              {editingPO ? "Modifier la commande d'achat" : "Nouvelle commande d'achat"}
+              {editingPO ? t("purchaseOrders.editPO") : t("purchaseOrders.newPO")}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-5 mt-2">
-            <FormSection title="Fournisseur" icon={<User className="h-3.5 w-3.5" />}>
+            <FormSection title={t("purchaseOrders.vendor")} icon={<User className="h-3.5 w-3.5" />}>
               <div className="grid grid-cols-2 gap-4">
-                <FormField label="Fournisseur" required
-                  hint={selectedVendor ? `Paiement: ${PAYMENT_TERMS_LABELS[selectedVendor.paymentTerms ?? ""] ?? selectedVendor.paymentTerms} | Délai: ${selectedVendor.avgLeadDays}j` : undefined}>
+                <FormField label={t("purchaseOrders.vendor")} required
+                  hint={selectedVendor ? `${t("purchaseOrders.payment")}: ${PAYMENT_TERMS_LABELS[selectedVendor.paymentTerms ?? ""] ?? selectedVendor.paymentTerms}` : undefined}>
                   <select value={newVendor} onChange={e => setNewVendor(e.target.value)} className={formSelectClass}>
-                    <option value="">Sélectionner un fournisseur...</option>
+                    <option value="">{t("purchaseOrders.selectVendor")}</option>
                     {vendors.filter(v => v.status === "Active").map(v => (
                       <option key={v.id} value={v.id}>{v.name} — {v.city}</option>
                     ))}
                   </select>
                 </FormField>
-                <FormField label="Réf. fournisseur" hint="N° devis ou commande">
+                <FormField label={t("purchaseOrders.vendorRef")} hint={t("purchaseOrders.vendorRefHint")}>
                   <input value={newVendorRef} onChange={e => setNewVendorRef(e.target.value)} placeholder="Ex: CEV-PO-12345" className={formInputClass} />
                 </FormField>
               </div>
             </FormSection>
 
-            <FormSection title="Planning" icon={<Calendar className="h-3.5 w-3.5" />}>
+            <FormSection title={t("purchaseOrders.planning")} icon={<Calendar className="h-3.5 w-3.5" />}>
               <div className="grid grid-cols-3 gap-4">
-                <FormField label="Date commande" required>
-                  <DateFilter value={newOrderDate} onChange={setNewOrderDate} placeholder="Date commande" className="w-full" />
+                <FormField label={t("purchaseOrders.orderDate")} required>
+                  <DateFilter value={newOrderDate} onChange={setNewOrderDate} placeholder={t("purchaseOrders.orderDate")} className="w-full" />
                 </FormField>
-                <FormField label="Livraison prévue" required error={dateValidationError}>
-                  <DateFilter value={newExpected} onChange={setNewExpected} placeholder="Date livraison" className="w-full" />
+                <FormField label={t("purchaseOrders.expectedDate")} required error={dateValidationError}>
+                  <DateFilter value={newExpected} onChange={setNewExpected} placeholder={t("purchaseOrders.expectedDate")} className="w-full" />
                 </FormField>
-                <FormField label="Livraison à" icon={<MapPin className="h-3.5 w-3.5" />} required>
+                <FormField label={t("purchaseOrders.deliveryTo")} icon={<MapPin className="h-3.5 w-3.5" />} required>
                   <select value={newWarehouse} onChange={e => setNewWarehouse(e.target.value)} className={formSelectClass}>
                     {(operationalWarehouseIds === null ? warehouses : operationalWarehouses).map(w => <option key={w.id} value={w.id}>{w.name}</option>)}
                   </select>
@@ -459,12 +468,12 @@ export default function PurchaseOrdersPage() {
               </div>
             </FormSection>
 
-            <FormSection title="Articles" icon={<Package className="h-3.5 w-3.5" />}>
+            <FormSection title={t("purchaseOrders.articles")} icon={<Package className="h-3.5 w-3.5" />}>
               <div className="rounded-xl border border-border overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 bg-muted/40 border-b border-border/50">
-                  <span className="text-xs font-semibold text-muted-foreground">{newLines.filter(l => l.productId).length} article(s)</span>
+                  <span className="text-xs font-semibold text-muted-foreground">{t("purchaseOrders.articleCount", { count: newLines.filter(l => l.productId).length })}</span>
                   <Button variant="ghost" size="sm" className="h-7 gap-1 text-xs" onClick={() => setNewLines([...newLines, { productId: "", qty: 0 }])}>
-                    <Plus className="h-3 w-3" /> Ajouter
+                    <Plus className="h-3 w-3" /> {t("purchaseOrders.addArticle")}
                   </Button>
                 </div>
                 <div className="divide-y divide-border/50">
@@ -475,7 +484,7 @@ export default function PurchaseOrdersPage() {
                           products={productOptions}
                           value={line.productId}
                           onSelect={(p) => { const u = [...newLines]; u[i].productId = p.id; setNewLines(u); }}
-                          placeholder="Rechercher un produit..."
+                          placeholder={t("purchaseOrders.searchProduct")}
                           className="w-full"
                         />
                       </div>
@@ -496,22 +505,22 @@ export default function PurchaseOrdersPage() {
                 </div>
               </div>
               <div className="flex justify-end gap-5 text-sm pt-1 px-1">
-                <span className="text-muted-foreground">Sous-total HT: <strong className="text-foreground">{currency(liveTotals.subtotal)}</strong></span>
-                <span className="text-muted-foreground">TVA 19%: <strong className="text-foreground">{currency(liveTotals.taxAmount)}</strong></span>
-                <span className="text-primary font-bold text-base">Total TTC: {currency(liveTotals.totalAmount)}</span>
+                <span className="text-muted-foreground">{t("purchaseOrders.subtotalHT")}: <strong className="text-foreground">{currency(liveTotals.subtotal)}</strong></span>
+                <span className="text-muted-foreground">{t("purchaseOrders.tva19")}: <strong className="text-foreground">{currency(liveTotals.taxAmount)}</strong></span>
+                <span className="text-primary font-bold text-base">{t("purchaseOrders.totalTTC")}: {currency(liveTotals.totalAmount)}</span>
               </div>
             </FormSection>
 
-            <FormSection title="Notes" icon={<MessageSquare className="h-3.5 w-3.5" />}>
-              <FormField label="Instructions / remarques">
-                <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} placeholder="Instructions livraison, remarques..." className={formTextareaClass} />
+            <FormSection title={t("purchaseOrders.notes")} icon={<MessageSquare className="h-3.5 w-3.5" />}>
+              <FormField label={t("purchaseOrders.notes")}>
+                <textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} placeholder={t("purchaseOrders.notesPlaceholder")} className={formTextareaClass} />
               </FormField>
             </FormSection>
           </div>
           <DialogFooter className="mt-2">
-            <Button variant="outline" onClick={() => { setShowCreate(false); resetForm(); }}>Annuler</Button>
+            <Button variant="outline" onClick={() => { setShowCreate(false); resetForm(); }}>{t("purchaseOrders.cancel")}</Button>
             <Button onClick={handleSave} disabled={!newVendor || !newExpected || newLines.every(l => !l.productId) || !!dateValidationError} className="gap-1.5">
-              {editingPO ? <><Pencil className="h-4 w-4" /> Enregistrer</> : <><Plus className="h-4 w-4" /> Créer PO</>}
+              {editingPO ? <><Pencil className="h-4 w-4" /> {t("purchaseOrders.save")}</> : <><Plus className="h-4 w-4" /> {t("purchaseOrders.createPO")}</>}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -67,6 +67,7 @@ import type { ProductUnitConversion, ProductDimensions, WarehouseProduct } from 
 import type { ProductBaseUnit } from "@/data/productUnitConversions";
 import type { ProductHistory } from "@/types/productHistory";
 import { loadPersistedState, savePersistedState, type PersistedWMSState } from "@/lib/wmsStorage";
+import { useCurrentTenantId, filterByTenant } from "@/lib/tenantFilter";
 
 type SetState<T> = React.Dispatch<React.SetStateAction<T>>;
 
@@ -185,15 +186,45 @@ interface WMSDataContextValue {
 
 const WMSDataContext = createContext<WMSDataContextValue | null>(null);
 
-function makeSetter<T>(setState: React.Dispatch<React.SetStateAction<PersistedWMSState>>, key: keyof PersistedWMSState): SetState<T[]> {
+function makeSetter<T>(
+  setState: React.Dispatch<React.SetStateAction<PersistedWMSState>>, 
+  key: keyof PersistedWMSState,
+  tenantId: string | null | undefined
+): SetState<T[]> {
   return useCallback(
     (action: React.SetStateAction<T[]>) => {
-      setState((prev) => ({
-        ...prev,
-        [key]: typeof action === "function" ? (action as (prev: T[]) => T[])(prev[key] as T[]) : action,
-      }));
+      setState((globalState) => {
+        const globalArray = globalState[key] as T[];
+        const isOwner = !tenantId || tenantId === "T-OWN-01";
+        
+        // Compute what the user currently sees
+        const tenantArray = isOwner 
+          ? globalArray 
+          : globalArray.filter((item: any) => (item.tenantId || "T-ENT-01") === tenantId);
+        
+        // Run the action on the scoped array
+        const newTenantArray = typeof action === "function" 
+          ? (action as (prev: T[]) => T[])(tenantArray) 
+          : action;
+        
+        // If owner, the new array is the global array
+        if (isOwner) {
+          return { ...globalState, [key]: newTenantArray };
+        }
+        
+        // Otherwise, merge back: keep items from other tenants
+        const otherTenantsArray = globalArray.filter((item: any) => {
+           const itemTenant = item.tenantId || "T-ENT-01";
+           return itemTenant !== tenantId;
+        });
+        
+        return {
+          ...globalState,
+          [key]: [...otherTenantsArray, ...newTenantArray],
+        };
+      });
     },
-    [key, setState]
+    [key, setState, tenantId]
   );
 }
 
@@ -256,61 +287,63 @@ export function WMSDataProvider({ children }: { children: ReactNode }) {
     setState(getDefaultPersistedState());
   }, []);
 
+  const tenantId = useCurrentTenantId();
+
   return (
     <WMSDataContext.Provider
       value={{
-        grns: state.grns as Grn[], setGrns: makeSetter<Grn>(setState, "grns"),
-        purchaseOrders: state.purchaseOrders as PurchaseOrder[], setPurchaseOrders: makeSetter<PurchaseOrder>(setState, "purchaseOrders"),
-        inventory: state.inventory as InventoryItem[], setInventory: makeSetter<InventoryItem>(setState, "inventory"),
-        stockAdjustments: state.stockAdjustments as StockAdjustment[], setStockAdjustments: makeSetter<StockAdjustment>(setState, "stockAdjustments"),
-        stockTransfers: state.stockTransfers as StockTransfer[], setStockTransfers: makeSetter<StockTransfer>(setState, "stockTransfers"),
-        cycleCounts: state.cycleCounts as CycleCount[], setCycleCounts: makeSetter<CycleCount>(setState, "cycleCounts"),
-        returns: state.returns as ReturnOrder[], setReturns: makeSetter<ReturnOrder>(setState, "returns"),
-        salesOrders: state.salesOrders as SalesOrder[], setSalesOrders: makeSetter<SalesOrder>(setState, "salesOrders"),
-        customers: state.customers as Customer[], setCustomers: makeSetter<Customer>(setState, "customers"),
-        invoices: state.invoices as Invoice[], setInvoices: makeSetter<Invoice>(setState, "invoices"),
-        payments: state.payments as Payment[], setPayments: makeSetter<Payment>(setState, "payments"),
-        deliveryTrips: state.deliveryTrips as DeliveryTrip[], setDeliveryTrips: makeSetter<DeliveryTrip>(setState, "deliveryTrips"),
-        alerts: state.alerts as Alert[], setAlerts: makeSetter<Alert>(setState, "alerts"),
-        vendors: state.vendors as Vendor[], setVendors: makeSetter<Vendor>(setState, "vendors"),
-        paymentTerms: state.paymentTerms as PaymentTerm[], setPaymentTerms: makeSetter<PaymentTerm>(setState, "paymentTerms"),
-        warehouses: state.warehouses as Warehouse[], setWarehouses: makeSetter<Warehouse>(setState, "warehouses"),
-        warehouseLocations: state.warehouseLocations as WarehouseLocation[], setWarehouseLocations: makeSetter<WarehouseLocation>(setState, "warehouseLocations"),
-        products: state.products as Product[], setProducts: makeSetter<Product>(setState, "products"),
-        sectors: state.sectors as Sector[], setSectors: makeSetter<Sector>(setState, "sectors"),
-        productCategories: state.productCategories as ProductCategory[], setProductCategories: makeSetter<ProductCategory>(setState, "productCategories"),
-        subCategories: state.subCategories as SubCategory[], setSubCategories: makeSetter<SubCategory>(setState, "subCategories"),
-        unitsOfMeasure: state.unitsOfMeasure as UnitOfMeasure[], setUnitsOfMeasure: makeSetter<UnitOfMeasure>(setState, "unitsOfMeasure"),
-        carriers: state.carriers as Carrier[], setCarriers: makeSetter<Carrier>(setState, "carriers"),
-        barcodes: state.barcodes as Barcode[], setBarcodes: makeSetter<Barcode>(setState, "barcodes"),
-        qcInspections: state.qcInspections as QCInspection[], setQCInspections: makeSetter<QCInspection>(setState, "qcInspections"),
-        putawayTasks: state.putawayTasks as PutawayTask[], setPutawayTasks: makeSetter<PutawayTask>(setState, "putawayTasks"),
-        stockMovements: state.stockMovements as StockMovement[], setStockMovements: makeSetter<StockMovement>(setState, "stockMovements"),
-        crossDocks: state.crossDocks as CrossDock[], setCrossDocks: makeSetter<CrossDock>(setState, "crossDocks"),
-        kitRecipes: state.kitRecipes as KitRecipe[], setKitRecipes: makeSetter<KitRecipe>(setState, "kitRecipes"),
-        kitOrders: state.kitOrders as KitOrder[], setKitOrders: makeSetter<KitOrder>(setState, "kitOrders"),
-        stockBlocks: state.stockBlocks as StockBlock[], setStockBlocks: makeSetter<StockBlock>(setState, "stockBlocks"),
-        repackOrders: state.repackOrders as RepackOrder[], setRepackOrders: makeSetter<RepackOrder>(setState, "repackOrders"),
-        lotBatches: state.lotBatches as LotBatch[], setLotBatches: makeSetter<LotBatch>(setState, "lotBatches"),
-        serialNumbers: state.serialNumbers as SerialNumber[], setSerialNumbers: makeSetter<SerialNumber>(setState, "serialNumbers"),
+        grns: filterByTenant(state.grns, tenantId) as Grn[], setGrns: makeSetter<Grn>(setState, "grns", tenantId),
+        purchaseOrders: filterByTenant(state.purchaseOrders, tenantId) as PurchaseOrder[], setPurchaseOrders: makeSetter<PurchaseOrder>(setState, "purchaseOrders", tenantId),
+        inventory: filterByTenant(state.inventory, tenantId) as InventoryItem[], setInventory: makeSetter<InventoryItem>(setState, "inventory", tenantId),
+        stockAdjustments: filterByTenant(state.stockAdjustments, tenantId) as StockAdjustment[], setStockAdjustments: makeSetter<StockAdjustment>(setState, "stockAdjustments", tenantId),
+        stockTransfers: filterByTenant(state.stockTransfers, tenantId) as StockTransfer[], setStockTransfers: makeSetter<StockTransfer>(setState, "stockTransfers", tenantId),
+        cycleCounts: filterByTenant(state.cycleCounts, tenantId) as CycleCount[], setCycleCounts: makeSetter<CycleCount>(setState, "cycleCounts", tenantId),
+        returns: filterByTenant(state.returns, tenantId) as ReturnOrder[], setReturns: makeSetter<ReturnOrder>(setState, "returns", tenantId),
+        salesOrders: filterByTenant(state.salesOrders, tenantId) as SalesOrder[], setSalesOrders: makeSetter<SalesOrder>(setState, "salesOrders", tenantId),
+        customers: filterByTenant(state.customers, tenantId) as Customer[], setCustomers: makeSetter<Customer>(setState, "customers", tenantId),
+        invoices: filterByTenant(state.invoices, tenantId) as Invoice[], setInvoices: makeSetter<Invoice>(setState, "invoices", tenantId),
+        payments: filterByTenant(state.payments, tenantId) as Payment[], setPayments: makeSetter<Payment>(setState, "payments", tenantId),
+        deliveryTrips: filterByTenant(state.deliveryTrips, tenantId) as DeliveryTrip[], setDeliveryTrips: makeSetter<DeliveryTrip>(setState, "deliveryTrips", tenantId),
+        alerts: filterByTenant(state.alerts, tenantId) as Alert[], setAlerts: makeSetter<Alert>(setState, "alerts", tenantId),
+        vendors: filterByTenant(state.vendors, tenantId) as Vendor[], setVendors: makeSetter<Vendor>(setState, "vendors", tenantId),
+        paymentTerms: filterByTenant(state.paymentTerms, tenantId) as PaymentTerm[], setPaymentTerms: makeSetter<PaymentTerm>(setState, "paymentTerms", tenantId),
+        warehouses: filterByTenant(state.warehouses, tenantId) as Warehouse[], setWarehouses: makeSetter<Warehouse>(setState, "warehouses", tenantId),
+        warehouseLocations: filterByTenant(state.warehouseLocations, tenantId) as WarehouseLocation[], setWarehouseLocations: makeSetter<WarehouseLocation>(setState, "warehouseLocations", tenantId),
+        products: filterByTenant(state.products, tenantId) as Product[], setProducts: makeSetter<Product>(setState, "products", tenantId),
+        sectors: filterByTenant(state.sectors, tenantId) as Sector[], setSectors: makeSetter<Sector>(setState, "sectors", tenantId),
+        productCategories: filterByTenant(state.productCategories, tenantId) as ProductCategory[], setProductCategories: makeSetter<ProductCategory>(setState, "productCategories", tenantId),
+        subCategories: filterByTenant(state.subCategories, tenantId) as SubCategory[], setSubCategories: makeSetter<SubCategory>(setState, "subCategories", tenantId),
+        unitsOfMeasure: filterByTenant(state.unitsOfMeasure, tenantId) as UnitOfMeasure[], setUnitsOfMeasure: makeSetter<UnitOfMeasure>(setState, "unitsOfMeasure", tenantId),
+        carriers: filterByTenant(state.carriers, tenantId) as Carrier[], setCarriers: makeSetter<Carrier>(setState, "carriers", tenantId),
+        barcodes: filterByTenant(state.barcodes, tenantId) as Barcode[], setBarcodes: makeSetter<Barcode>(setState, "barcodes", tenantId),
+        qcInspections: filterByTenant(state.qcInspections, tenantId) as QCInspection[], setQCInspections: makeSetter<QCInspection>(setState, "qcInspections", tenantId),
+        putawayTasks: filterByTenant(state.putawayTasks, tenantId) as PutawayTask[], setPutawayTasks: makeSetter<PutawayTask>(setState, "putawayTasks", tenantId),
+        stockMovements: filterByTenant(state.stockMovements, tenantId) as StockMovement[], setStockMovements: makeSetter<StockMovement>(setState, "stockMovements", tenantId),
+        crossDocks: filterByTenant(state.crossDocks, tenantId) as CrossDock[], setCrossDocks: makeSetter<CrossDock>(setState, "crossDocks", tenantId),
+        kitRecipes: filterByTenant(state.kitRecipes, tenantId) as KitRecipe[], setKitRecipes: makeSetter<KitRecipe>(setState, "kitRecipes", tenantId),
+        kitOrders: filterByTenant(state.kitOrders, tenantId) as KitOrder[], setKitOrders: makeSetter<KitOrder>(setState, "kitOrders", tenantId),
+        stockBlocks: filterByTenant(state.stockBlocks, tenantId) as StockBlock[], setStockBlocks: makeSetter<StockBlock>(setState, "stockBlocks", tenantId),
+        repackOrders: filterByTenant(state.repackOrders, tenantId) as RepackOrder[], setRepackOrders: makeSetter<RepackOrder>(setState, "repackOrders", tenantId),
+        lotBatches: filterByTenant(state.lotBatches, tenantId) as LotBatch[], setLotBatches: makeSetter<LotBatch>(setState, "lotBatches", tenantId),
+        serialNumbers: filterByTenant(state.serialNumbers, tenantId) as SerialNumber[], setSerialNumbers: makeSetter<SerialNumber>(setState, "serialNumbers", tenantId),
         // Phase 20-22
-        dockSlots: state.dockSlots as DockSlot[], setDockSlots: makeSetter<DockSlot>(setState, "dockSlots"),
-        truckCheckIns: state.truckCheckIns as TruckCheckIn[], setTruckCheckIns: makeSetter<TruckCheckIn>(setState, "truckCheckIns"),
-        gateLogs: state.gateLogs as GateLog[], setGateLogs: makeSetter<GateLog>(setState, "gateLogs"),
-        putawayRules: state.putawayRules as PutawayRule[], setPutawayRules: makeSetter<PutawayRule>(setState, "putawayRules"),
-        alertRules: state.alertRules as AlertRule[], setAlertRules: makeSetter<AlertRule>(setState, "alertRules"),
-        locationTypes: state.locationTypes as LocationType[], setLocationTypes: makeSetter<LocationType>(setState, "locationTypes"),
-        integrations: state.integrations as Integration[], setIntegrations: makeSetter<Integration>(setState, "integrations"),
-        importJobs: state.importJobs as ImportJob[], setImportJobs: makeSetter<ImportJob>(setState, "importJobs"),
+        dockSlots: filterByTenant(state.dockSlots, tenantId) as DockSlot[], setDockSlots: makeSetter<DockSlot>(setState, "dockSlots", tenantId),
+        truckCheckIns: filterByTenant(state.truckCheckIns, tenantId) as TruckCheckIn[], setTruckCheckIns: makeSetter<TruckCheckIn>(setState, "truckCheckIns", tenantId),
+        gateLogs: filterByTenant(state.gateLogs, tenantId) as GateLog[], setGateLogs: makeSetter<GateLog>(setState, "gateLogs", tenantId),
+        putawayRules: filterByTenant(state.putawayRules, tenantId) as PutawayRule[], setPutawayRules: makeSetter<PutawayRule>(setState, "putawayRules", tenantId),
+        alertRules: filterByTenant(state.alertRules, tenantId) as AlertRule[], setAlertRules: makeSetter<AlertRule>(setState, "alertRules", tenantId),
+        locationTypes: filterByTenant(state.locationTypes, tenantId) as LocationType[], setLocationTypes: makeSetter<LocationType>(setState, "locationTypes", tenantId),
+        integrations: filterByTenant(state.integrations, tenantId) as Integration[], setIntegrations: makeSetter<Integration>(setState, "integrations", tenantId),
+        importJobs: filterByTenant(state.importJobs, tenantId) as ImportJob[], setImportJobs: makeSetter<ImportJob>(setState, "importJobs", tenantId),
         // Unit conversion system
-        productUnitConversions: state.productUnitConversions as ProductUnitConversion[], setProductUnitConversions: makeSetter<ProductUnitConversion>(setState, "productUnitConversions"),
-        productBaseUnits: state.productBaseUnits as ProductBaseUnit[], setProductBaseUnits: makeSetter<ProductBaseUnit>(setState, "productBaseUnits"),
-        productDimensions: state.productDimensions as ProductDimensions[], setProductDimensions: makeSetter<ProductDimensions>(setState, "productDimensions"),
-        warehouseProducts: state.warehouseProducts as WarehouseProduct[], setWarehouseProducts: makeSetter<WarehouseProduct>(setState, "warehouseProducts"),
-        productHistory: state.productHistory as ProductHistory[], setProductHistory: makeSetter<ProductHistory>(setState, "productHistory"),
+        productUnitConversions: filterByTenant(state.productUnitConversions, tenantId) as ProductUnitConversion[], setProductUnitConversions: makeSetter<ProductUnitConversion>(setState, "productUnitConversions", tenantId),
+        productBaseUnits: filterByTenant(state.productBaseUnits, tenantId) as ProductBaseUnit[], setProductBaseUnits: makeSetter<ProductBaseUnit>(setState, "productBaseUnits", tenantId),
+        productDimensions: filterByTenant(state.productDimensions, tenantId) as ProductDimensions[], setProductDimensions: makeSetter<ProductDimensions>(setState, "productDimensions", tenantId),
+        warehouseProducts: filterByTenant(state.warehouseProducts, tenantId) as WarehouseProduct[], setWarehouseProducts: makeSetter<WarehouseProduct>(setState, "warehouseProducts", tenantId),
+        productHistory: filterByTenant(state.productHistory, tenantId) as ProductHistory[], setProductHistory: makeSetter<ProductHistory>(setState, "productHistory", tenantId),
         // ERP Returns & Claims
-        creditNotes: state.creditNotes as CreditNote[], setCreditNotes: makeSetter<CreditNote>(setState, "creditNotes"),
-        qualityClaims: state.qualityClaims as QualityClaim[], setQualityClaims: makeSetter<QualityClaim>(setState, "qualityClaims"),
+        creditNotes: filterByTenant(state.creditNotes, tenantId) as CreditNote[], setCreditNotes: makeSetter<CreditNote>(setState, "creditNotes", tenantId),
+        qualityClaims: filterByTenant(state.qualityClaims, tenantId) as QualityClaim[], setQualityClaims: makeSetter<QualityClaim>(setState, "qualityClaims", tenantId),
         resetData,
       }}
     >

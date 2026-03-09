@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { TrendingUp, AlertTriangle, Bell, BellOff, Clock, CheckCircle2, Search } from "lucide-react";
 import { products, currency } from "@/data/mockData";
 import { useWMSData } from "@/contexts/WMSDataContext";
@@ -10,6 +11,7 @@ import {
 } from "recharts";
 
 export function PerformancePage() {
+  const { t } = useTranslation();
   const { inventory, salesOrders, deliveryTrips } = useWMSData();
   const { currentUser } = useAuth();
 
@@ -119,22 +121,22 @@ export function PerformancePage() {
           <TrendingUp className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-bold tracking-tight">Performance</h1>
-          <p className="text-sm text-muted-foreground">Analyses et KPIs — Février 2026</p>
+          <h1 className="text-xl font-bold tracking-tight">{t('biPerformance.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('biPerformance.subtitle')}</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Top Sellers */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-1">Top Ventes</h3>
-          <p className="text-xs text-muted-foreground mb-4">Par unités vendues ce mois</p>
+          <h3 className="text-sm font-semibold mb-1">{t('biPerformance.topSales')}</h3>
+          <p className="text-xs text-muted-foreground mb-4">{t('biPerformance.topSalesDesc')}</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={topSellers} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" horizontal={false} />
               <XAxis type="number" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} width={120} />
-              <Tooltip formatter={(v: number) => [v.toLocaleString(), "Unités"]} contentStyle={{ borderRadius: "8px", fontSize: "12px" }} />
+              <Tooltip formatter={(v: number) => [v.toLocaleString(), t('biPerformance.units')]} contentStyle={{ borderRadius: "8px", fontSize: "12px" }} />
               <Bar dataKey="units" fill="hsl(160, 84%, 39%)" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -142,14 +144,14 @@ export function PerformancePage() {
 
         {/* Profit Margins */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-1">Marges par catégorie</h3>
-          <p className="text-xs text-muted-foreground mb-4">Marge brute moyenne</p>
+          <h3 className="text-sm font-semibold mb-1">{t('biPerformance.marginsByCategory')}</h3>
+          <p className="text-xs text-muted-foreground mb-4">{t('biPerformance.marginsByCategoryDesc')}</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={profitMargins}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
               <XAxis dataKey="name" tick={{ fontSize: 9 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} domain={[0, 50]} tickFormatter={(v) => `${v}%`} />
-              <Tooltip formatter={(v: number) => [`${v}%`, "Marge"]} contentStyle={{ borderRadius: "8px", fontSize: "12px" }} />
+              <Tooltip formatter={(v: number) => [`${v}%`, t('biPerformance.margin')]} contentStyle={{ borderRadius: "8px", fontSize: "12px" }} />
               <Bar dataKey="margin" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -158,8 +160,8 @@ export function PerformancePage() {
 
       {/* Weekly Trend */}
       <div className="glass-card rounded-xl p-5">
-        <h3 className="text-sm font-semibold mb-1">Tendance hebdomadaire</h3>
-        <p className="text-xs text-muted-foreground mb-4">CA et volume de commandes</p>
+        <h3 className="text-sm font-semibold mb-1">{t('biPerformance.weeklyTrend')}</h3>
+        <p className="text-xs text-muted-foreground mb-4">{t('biPerformance.weeklyTrendDesc')}</p>
         <ResponsiveContainer width="100%" height={200}>
           <LineChart data={weeklyTrend}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 13%, 91%)" />
@@ -167,8 +169,8 @@ export function PerformancePage() {
             <YAxis yAxisId="revenue" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v / 1000}k`} />
             <YAxis yAxisId="orders" orientation="right" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
             <Tooltip contentStyle={{ borderRadius: "8px", fontSize: "12px" }} />
-            <Line yAxisId="revenue" type="monotone" dataKey="revenue" name="CA" stroke="hsl(160, 84%, 39%)" strokeWidth={2} dot={{ r: 4 }} />
-            <Line yAxisId="orders" type="monotone" dataKey="orders" name="Commandes" stroke="hsl(217, 91%, 60%)" strokeWidth={2} dot={{ r: 4 }} />
+            <Line yAxisId="revenue" type="monotone" dataKey="revenue" name={t('biPerformance.revenue')} stroke="hsl(160, 84%, 39%)" strokeWidth={2} dot={{ r: 4 }} />
+            <Line yAxisId="orders" type="monotone" dataKey="orders" name={t('biPerformance.orders')} stroke="hsl(217, 91%, 60%)" strokeWidth={2} dot={{ r: 4 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -178,20 +180,20 @@ export function PerformancePage() {
         <div className="glass-card rounded-xl p-5">
           <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-warning" />
-            Slow Moving / Dead Stock
+            {t('biPerformance.slowMoving')}
           </h3>
           <div className="space-y-3">
             {slowMoving.map((item) => (
               <div key={item.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                 <div>
                   <p className="text-sm font-medium">{item.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{item.qty} unités · Valeur: {currency(item.value)}</p>
+                  <p className="text-[10px] text-muted-foreground">{item.qty} {t('biPerformance.units')} · {t('biPerformance.margin')}: {currency(item.value)}</p>
                 </div>
                 <div className="text-right">
                   <p className={`text-sm font-bold ${item.days > 90 ? "text-destructive" : item.days > 45 ? "text-warning" : "text-muted-foreground"}`}>
                     {item.days} jours
                   </p>
-                  <p className="text-[10px] text-muted-foreground">sans mouvement</p>
+                  <p className="text-[10px] text-muted-foreground">{t('biPerformance.noMovement')}</p>
                 </div>
               </div>
             ))}
@@ -200,7 +202,7 @@ export function PerformancePage() {
 
         {/* Sales Rep Performance */}
         <div className="glass-card rounded-xl p-5">
-          <h3 className="text-sm font-semibold mb-3">Performance vendeurs</h3>
+          <h3 className="text-sm font-semibold mb-3">{t('biPerformance.salesRepPerf')}</h3>
           {salesByRep.map((rep) => (
             <div key={rep.name} className="space-y-3">
               <div className="flex items-center justify-between">
@@ -208,14 +210,14 @@ export function PerformancePage() {
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">OF</div>
                   <div>
                     <p className="text-sm font-medium">{rep.name}</p>
-                    <p className="text-[10px] text-muted-foreground">{rep.orders} commandes ce mois</p>
+                    <p className="text-[10px] text-muted-foreground">{t('biPerformance.ordersThisMonth', { count: rep.orders })}</p>
                   </div>
                 </div>
                 <span className="text-sm font-bold">{currency(rep.revenue)}</span>
               </div>
               <div>
                 <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                  <span>Objectif: {currency(rep.target)}</span>
+                  <span>{t('biPerformance.target', { target: currency(rep.target) })}</span>
                   <span>{Math.round((rep.revenue / rep.target) * 100)}%</span>
                 </div>
                 <div className="h-2 rounded-full bg-border overflow-hidden">
@@ -225,23 +227,23 @@ export function PerformancePage() {
             </div>
           ))}
 
-          <h3 className="text-sm font-semibold mt-6 mb-3">Performance chauffeurs</h3>
+          <h3 className="text-sm font-semibold mt-6 mb-3">{t('biPerformance.driverPerf')}</h3>
           {driverPerf.map((d) => (
             <div key={d.name} className="p-3 rounded-lg bg-muted/50 space-y-2">
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">YH</div>
                 <div>
                   <p className="text-sm font-medium">{d.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{d.trips} tournées · {d.deliveries} livraisons</p>
+                  <p className="text-[10px] text-muted-foreground">{t('biPerformance.tripsAndDeliveries', { trips: d.trips, deliveries: d.deliveries })}</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="p-2 rounded-md bg-card">
-                  <p className="text-muted-foreground">Ponctualité</p>
+                  <p className="text-muted-foreground">{t('biPerformance.punctuality')}</p>
                   <p className="font-bold text-success">{d.onTime}%</p>
                 </div>
                 <div className="p-2 rounded-md bg-card">
-                  <p className="text-muted-foreground">Temps moyen</p>
+                  <p className="text-muted-foreground">{t('biPerformance.avgTime')}</p>
                   <p className="font-bold">{d.avgTime}</p>
                 </div>
               </div>
@@ -254,7 +256,7 @@ export function PerformancePage() {
       <div className="glass-card rounded-xl p-5">
         <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
           <Clock className="h-4 w-4 text-warning" />
-          Produits proches de l'expiration ({"<"}30 jours)
+          {t('biPerformance.nearExpiry')}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {inventory.filter((i: any) => i.daysToExpiry <= 30).map((item: any) => (
@@ -264,7 +266,7 @@ export function PerformancePage() {
                 <span>{item.qtyOnHand} unités</span>
                 <span className="font-bold text-warning">{item.daysToExpiry} jours</span>
               </div>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Exp: {item.expiryDate}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">{t('biPerformance.expDate', { date: item.expiryDate })}</p>
             </div>
           ))}
         </div>
@@ -274,6 +276,7 @@ export function PerformancePage() {
 }
 
 export function AlertsPage() {
+  const { t } = useTranslation();
   const { alerts, setAlerts } = useWMSData();
   const { currentUser } = useAuth();
   const [filter, setFilter] = useState("all");
@@ -317,8 +320,8 @@ export function AlertsPage() {
             <AlertTriangle className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Alertes intelligentes</h1>
-            <p className="text-sm text-muted-foreground">{scopedAlerts.filter(a => !a.isRead).length} non lues sur {scopedAlerts.length}</p>
+            <h1 className="text-xl font-bold tracking-tight">{t('biAlerts.title')}</h1>
+            <p className="text-sm text-muted-foreground">{t('biAlerts.unreadCount', { unread: scopedAlerts.filter(a => !a.isRead).length, total: scopedAlerts.length })}</p>
           </div>
         </div>
         <button
@@ -329,18 +332,18 @@ export function AlertsPage() {
           className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <CheckCircle2 className="h-3.5 w-3.5" />
-          Tout marquer comme lu
+          {t('biAlerts.markAllRead')}
         </button>
       </div>
 
       {/* Summary */}
       <div className="grid grid-cols-5 gap-3">
         {[
-          { label: "Critiques", value: scopedAlerts.filter(a => a.priority === "Critical").length, color: "text-destructive" },
-          { label: "Hautes", value: scopedAlerts.filter(a => a.priority === "High").length, color: "text-warning" },
-          { label: "Moyennes", value: scopedAlerts.filter(a => a.priority === "Medium").length, color: "text-info" },
-          { label: "Faibles", value: scopedAlerts.filter(a => a.priority === "Low").length, color: "text-muted-foreground" },
-          { label: "Action requise", value: scopedAlerts.filter(a => a.actionRequired).length, color: "text-destructive" },
+          { label: t('biAlerts.critical'), value: scopedAlerts.filter(a => a.priority === "Critical").length, color: "text-destructive" },
+          { label: t('biAlerts.high'), value: scopedAlerts.filter(a => a.priority === "High").length, color: "text-warning" },
+          { label: t('biAlerts.medium'), value: scopedAlerts.filter(a => a.priority === "Medium").length, color: "text-info" },
+          { label: t('biAlerts.low'), value: scopedAlerts.filter(a => a.priority === "Low").length, color: "text-muted-foreground" },
+          { label: t('biAlerts.actionRequired'), value: scopedAlerts.filter(a => a.actionRequired).length, color: "text-destructive" },
         ].map((s) => (
           <div key={s.label} className="glass-card rounded-xl p-3 text-center">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
@@ -355,14 +358,14 @@ export function AlertsPage() {
           {["all", "Inventory", "Sales", "Delivery", "Finance", "Quality"].map((cat) => (
             <button key={cat} onClick={() => setFilter(cat)}
               className={`px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === cat ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground hover:text-foreground"}`}>
-              {cat === "all" ? "Toutes" : cat === "Inventory" ? "Stock" : cat === "Finance" ? "Finance" : cat === "Delivery" ? "Livraison" : cat === "Quality" ? "Qualité" : cat}
+              {cat === "all" ? t('biAlerts.all') : cat === "Inventory" ? t('biAlerts.inventory') : cat === "Finance" ? t('biAlerts.finance') : cat === "Delivery" ? t('biAlerts.delivery') : cat === "Quality" ? t('biAlerts.quality') : cat}
             </button>
           ))}
         </div>
         <button onClick={() => setShowRead(!showRead)}
           className="ml-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-muted text-muted-foreground hover:text-foreground transition-colors">
           {showRead ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
-          {showRead ? "Masquer lues" : "Afficher lues"}
+          {showRead ? t('biAlerts.hideRead') : t('biAlerts.showRead')}
         </button>
       </div>
 
@@ -375,21 +378,21 @@ export function AlertsPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <StatusBadge status={alert.priority} />
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">{alert.category}</span>
-                  {alert.actionRequired && <span className="text-[9px] uppercase font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">Action requise</span>}
+                  {alert.actionRequired && <span className="text-[9px] uppercase font-bold text-destructive bg-destructive/10 px-1.5 py-0.5 rounded">{t('biAlerts.actionRequired')}</span>}
                   {!alert.isRead && <span className="h-2 w-2 rounded-full bg-primary" />}
                 </div>
                 <h4 className="text-sm font-semibold">{alert.title}</h4>
                 <p className="text-xs text-muted-foreground mt-0.5">{alert.message}</p>
                 <div className="flex items-center gap-3 mt-2 text-[10px] text-muted-foreground">
                   <span className="flex items-center gap-1"><Clock className="h-2.5 w-2.5" />{alert.timestamp}</span>
-                  <span>Assigné à : {alert.assignedTo}</span>
+                  <span>{t('biAlerts.assignedTo', { name: alert.assignedTo })}</span>
                 </div>
               </div>
               <div className="flex gap-1 ml-4">
                 <button
                   onClick={() => setAlerts(prev => prev.map(a => a.id === alert.id ? { ...a, isRead: true } : a))}
                   className="p-1.5 rounded-md hover:bg-card transition-colors"
-                  title="Marquer comme lu"
+                  title={t('biAlerts.markAsRead')}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5 text-muted-foreground" />
                 </button>

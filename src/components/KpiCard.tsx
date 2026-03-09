@@ -1,3 +1,6 @@
+/**
+ * Phase E2 — Redesigned KPI Card: icon left, value + label right, optional trend badge.
+ */
 import { cn } from "@/lib/utils";
 import { LucideIcon, TrendingDown, TrendingUp } from "lucide-react";
 
@@ -27,10 +30,10 @@ export default function KpiCard({
   return (
     <div
       className={cn(
-        "glass-card rounded-xl p-3.5 md:p-5 animate-slide-in transition-all duration-200",
-        "hover:shadow-lg hover:-translate-y-0.5 hover:border-primary/30",
+        "rounded-xl border bg-card p-4 md:p-5 animate-slide-in transition-all duration-200",
+        "shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] hover:-translate-y-0.5",
         onClick && "cursor-pointer",
-        className
+        className,
       )}
       style={{ animationDelay: `${delay}ms` }}
       onClick={onClick}
@@ -38,42 +41,35 @@ export default function KpiCard({
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => { if (e.key === "Enter" || e.key === " ") onClick(); } : undefined}
     >
-      <div className="flex items-start justify-between">
-        <div className="space-y-2">
-          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider">
-            {title}
-          </p>
-          <p className="text-lg md:text-2xl font-bold tracking-tight text-foreground animate-count-up">
+      {/* Phase E2: icon left, content right */}
+      <div className="flex items-start gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <Icon className="h-5 w-5 text-primary" />
+        </div>
+        <div className="flex-1 min-w-0 space-y-1">
+          <p className="text-overline text-muted-foreground">{title}</p>
+          <p className="text-ds-xl md:text-ds-2xl font-bold tracking-tight text-foreground animate-count-up">
             {value}
           </p>
           {change && (
-            <div className="flex items-center gap-1">
-              {changeType === "up" && (
-                <TrendingUp className="h-3 w-3 text-success" />
-              )}
-              {changeType === "down" && (
-                <TrendingDown className="h-3 w-3 text-destructive" />
-              )}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {changeType === "up" && <TrendingUp className="h-3 w-3 text-success" />}
+              {changeType === "down" && <TrendingDown className="h-3 w-3 text-destructive" />}
               <span
                 className={cn(
-                  "text-[11px] font-medium",
+                  "text-ds-xs font-medium",
                   changeType === "up" && "text-success",
                   changeType === "down" && "text-destructive",
-                  changeType === "neutral" && "text-muted-foreground"
+                  changeType === "neutral" && "text-muted-foreground",
                 )}
               >
                 {change}
               </span>
               {subtitle && (
-                <span className="text-[11px] text-muted-foreground">
-                  {subtitle}
-                </span>
+                <span className="text-ds-xs text-muted-foreground">{subtitle}</span>
               )}
             </div>
           )}
-        </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 transition-colors group-hover:bg-primary/20">
-          <Icon className="h-5 w-5 text-primary" />
         </div>
       </div>
     </div>

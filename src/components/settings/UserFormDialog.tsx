@@ -98,6 +98,7 @@ const UserFormDialog = forwardRef<HTMLDivElement, UserFormDialogProps>(function 
       roleLabel: USER_ROLE_LABELS[role],
       avatar: user?.avatar ?? getInitials(name),
       company: "Flow ERP",
+      tenantId: user?.tenantId ?? "T-ENT-01",
       assignedWarehouseIds: isAllAccess ? "all" : assignedWHs,
       approvalThresholdPct: approvalThreshold ? Number(approvalThreshold) : null,
       canSelfApprove: false,

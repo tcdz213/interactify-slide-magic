@@ -176,6 +176,20 @@ const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
         accessScope: "all",
         canApproveFinancial: false,
     },
+    PlatformOwner: {
+        canApprove: ["grn", "stockAdjustment", "stockTransfer", "cycleCount", "purchaseOrder", "salesOrder", "invoice", "payment", "writeOff"],
+        canCreate: ["salesOrder", "invoice", "payment"],
+        canRead: ["grn", "stockAdjustment", "stockTransfer", "cycleCount", "purchaseOrder", "salesOrder", "invoice", "payment", "writeOff"],
+        accessScope: "all",
+        canApproveFinancial: true,
+    },
+    Supplier: {
+        canApprove: [],
+        canCreate: ["purchaseOrder"],
+        canRead: ["purchaseOrder", "grn", "invoice", "payment"],
+        accessScope: "assigned",
+        canApproveFinancial: false,
+    },
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -303,6 +317,8 @@ export function canReadDocument(user: User, docType: DocumentType): boolean {
 /** Level-based badge colors for role display */
 export function getRoleBadgeStyle(role: UserRole): string {
     switch (role) {
+        case "PlatformOwner":
+            return "bg-amber-100 text-amber-900 border-amber-300";
         case "CEO":
             return "bg-purple-100 text-purple-800 border-purple-200";
         case "FinanceDirector":
@@ -322,6 +338,8 @@ export function getRoleBadgeStyle(role: UserRole): string {
             return "bg-slate-100 text-slate-700 border-slate-200";
         case "Driver":
             return "bg-orange-100 text-orange-800 border-orange-200";
+        case "Supplier":
+            return "bg-emerald-100 text-emerald-800 border-emerald-200";
         default:
             return "bg-gray-100 text-gray-700 border-gray-200";
     }
@@ -333,6 +351,7 @@ export function getWarehouseBadgeStyle(warehouseId: string): string {
         case "wh-alger-construction": return "bg-orange-50 text-orange-700 border-orange-200";
         case "wh-oran-food": return "bg-emerald-50 text-emerald-700 border-emerald-200";
         case "wh-constantine-tech": return "bg-blue-50 text-blue-700 border-blue-200";
+        case "wh-sahel-supplier": return "bg-amber-50 text-amber-700 border-amber-200";
         default: return "bg-gray-50 text-gray-600 border-gray-200";
     }
 }
@@ -343,6 +362,7 @@ export function getWarehouseShortName(warehouseId: string): string {
         case "wh-alger-construction": return "Construction-Alger";
         case "wh-oran-food": return "Food-Oran";
         case "wh-constantine-tech": return "Tech-Constantine";
+        case "wh-sahel-supplier": return "Sahel-Supplier";
         default: return warehouseId;
     }
 }
@@ -350,6 +370,7 @@ export function getWarehouseShortName(warehouseId: string): string {
 /** Role hierarchy level 1–5 */
 export function getRoleLevel(role: UserRole): number {
     const levels: Record<UserRole, number> = {
+        PlatformOwner: 0,
         CEO: 1,
         FinanceDirector: 2,
         OpsDirector: 2,
@@ -361,6 +382,7 @@ export function getRoleLevel(role: UserRole): number {
         BIAnalyst: 4,
         Operator: 5,
         Driver: 5,
+        Supplier: 6,
     };
     return levels[role] ?? 5;
 }
@@ -458,6 +480,16 @@ export const ROLE_PERMISSIONS_DISPLAY: Record<UserRole, RolePermissionsDisplay> 
         create: [],
         approve: [],
     },
+    PlatformOwner: {
+        read: ["grn", "stockAdjustment", "stockTransfer", "cycleCount", "purchaseOrder", "salesOrder", "invoice", "payment", "writeOff"],
+        create: ["salesOrder", "invoice", "payment"],
+        approve: ["grn", "stockAdjustment", "stockTransfer", "cycleCount", "purchaseOrder", "salesOrder", "invoice", "payment", "writeOff"],
+    },
+    Supplier: {
+        read: ["purchaseOrder", "grn", "invoice", "payment"],
+        create: ["purchaseOrder"],
+        approve: [],
+    },
 };
 
 // ──────────────────────────────────────────────────────────────────────────
@@ -466,7 +498,7 @@ export const ROLE_PERMISSIONS_DISPLAY: Record<UserRole, RolePermissionsDisplay> 
 
 /** Roles allowed to see cost price, PMP, margin, and financial columns */
 const FINANCE_ROLES: UserRole[] = [
-    "CEO", "FinanceDirector", "OpsDirector", "Accountant", "BIAnalyst",
+    "PlatformOwner", "CEO", "FinanceDirector", "OpsDirector", "Accountant", "BIAnalyst",
 ];
 
 /**

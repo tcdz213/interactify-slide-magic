@@ -25,24 +25,31 @@ const LEVEL_COLORS = [
 const USER_PINS: Record<string, string> = {
   U001: "1234", U002: "2345", U003: "3456", U004: "4567", U005: "5678",
   U006: "6789", U007: "7890", U008: "8901", U009: "9012", U010: "0123",
-  U011: "1111", U012: "2222", U013: "3333", U014: "4444",
+  U011: "1111", U012: "2222", U013: "3333", U014: "4444", U015: "1515", 
+  U016: "1616", U017: "1717",
+  // Agro Sahel (Fournisseur-Entrepôt)
+  U020: "2020", U021: "2121", U022: "2222", U023: "2323",
 };
 
-type LoginStep = "select" | "pin";
+type LoginStep = "company" | "select" | "pin";
 
 export default function Login() {
   const { currentUser, login } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [ready, setReady] = useState(false);
-  const [step, setStep] = useState<LoginStep>("select");
+  const [step, setStep] = useState<LoginStep>("company");
+  const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
 
   useEffect(() => {
-    if (currentUser) navigate("/", { replace: true });
+    if (currentUser) {
+      const dest = currentUser.role === "Supplier" ? "/my/dashboard" : "/";
+      navigate(dest, { replace: true });
+    }
   }, [currentUser, navigate]);
 
   useEffect(() => {
@@ -108,14 +115,21 @@ export default function Login() {
     }
   }, [selectedUserId, selectedUser, login, t]);
 
-  const handleBack = () => {
+  const handleBackToSelect = () => {
     setStep("select");
     setSelectedUserId(null);
     setPin("");
     setPinError(false);
   };
 
-  const usersByLevel = [...users].sort((a, b) => getRoleLevel(a.role) - getRoleLevel(b.role));
+  const handleBackToCompany = () => {
+    setStep("company");
+    setSelectedCompany(null);
+  };
+
+  const companies = Array.from(new Set(users.map((u) => u.company)));
+  const filteredUsers = users.filter(u => u.company === selectedCompany);
+  const usersByLevel = [...filteredUsers].sort((a, b) => getRoleLevel(a.role) - getRoleLevel(b.role));
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
@@ -146,14 +160,48 @@ export default function Login() {
             {t("login.subtitle")}
           </p>
           <p className="text-sm text-muted-foreground mt-3 max-w-md mx-auto">
-            {step === "select"
-              ? t("login.selectProfile")
-              : t("login.authFor", { name: selectedUser?.name })}
+            {step === "company"
+              ? "Sélectionnez votre entreprise pour accéder à votre espace"
+              : step === "select"
+                ? t("login.selectProfile")
+                : t("login.authFor", { name: selectedUser?.name })}
           </p>
         </div>
 
+        {step === "company" && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {companies.map((company, i) => (
+              <button
+                key={company}
+                onClick={() => {
+                  setSelectedCompany(company);
+                  setStep("select");
+                }}
+                className={cn(
+                  "group flex items-center gap-4 rounded-xl border border-border/80 bg-card/80 backdrop-blur-sm p-4 text-left transition-all duration-200 hover:border-primary/40 hover:bg-card hover:shadow-md hover:-translate-y-0.5",
+                  ready ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+                )}
+                style={{ transitionDelay: ready ? `${300 + i * 40}ms` : '0ms' }}
+              >
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0 ring-1 ring-primary/10 group-hover:ring-primary/30">
+                  <Building2 className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="font-bold text-base group-hover:text-primary transition-colors">{company}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Accéder à l'espace</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+
         {step === "select" && (
           <>
+            <Button variant="ghost" size="sm" onClick={handleBackToCompany} className="mb-4 self-start">
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              {t("login.back")}
+            </Button>
+            
             <div className={cn(
               "mb-6 rounded-xl border border-border/60 bg-card/50 backdrop-blur-sm px-4 py-3 text-xs text-muted-foreground flex items-start gap-2.5 transition-all duration-500 delay-200",
               ready ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
@@ -243,7 +291,7 @@ export default function Login() {
 
         {step === "pin" && selectedUser && (
           <div className="flex flex-col items-center gap-6">
-            <Button variant="ghost" size="sm" onClick={handleBack} className="self-start">
+            <Button variant="ghost" size="sm" onClick={handleBackToSelect} className="self-start">
               <ArrowLeft className="h-4 w-4 mr-1" />
               {t("login.back")}
             </Button>

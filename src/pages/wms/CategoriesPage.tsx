@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { FolderTree, Plus, Pencil, Trash2, Search, AlertTriangle, Download, Upload, RotateCcw, ChevronRight, ChevronDown, Building2, Layers } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useWMSData } from "@/contexts/WMSDataContext";
 import type { Sector, ProductCategory, SubCategory } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
@@ -10,12 +11,17 @@ import StatusBadge from "@/components/StatusBadge";
 import { exportToCSV, type ExportColumn } from "@/lib/exportUtils";
 import { Badge } from "@/components/ui/badge";
 
+// Define a type for the edit target
+// This could be a sector, category, or subcategory
+// Used to determine which form to show and what data to populate it with
+
 type EditTarget = 
   | { level: "sector"; data: Sector }
   | { level: "category"; data: ProductCategory }
   | { level: "subcategory"; data: SubCategory };
 
 export default function CategoriesPage() {
+  const { t } = useTranslation();
   const {
     sectors, setSectors,
     productCategories: categories, setProductCategories: setCategories,
@@ -125,10 +131,10 @@ export default function CategoriesPage() {
     if (!sectorForm.name || !sectorForm.code) return;
     if (editTarget?.level === "sector") {
       setSectors(prev => prev.map(s => s.id === editTarget.data.id ? { ...s, ...sectorForm } : s));
-      toast({ title: "Secteur modifié", description: sectorForm.name });
+      toast({ title: t("categoriesPage.sectorModified"), description: sectorForm.name });
     } else {
       setSectors(prev => [...prev, { id: `SEC-${Date.now()}`, color: "hsl(200, 50%, 50%)", ...sectorForm }]);
-      toast({ title: "Secteur créé", description: sectorForm.name });
+      toast({ title: t("categoriesPage.sectorCreated"), description: sectorForm.name });
     }
     setShowSectorForm(false);
   };
@@ -151,13 +157,13 @@ export default function CategoriesPage() {
       if (oldName !== catForm.name) {
         const count = products.filter(p => p.category === oldName).length;
         setProducts(prev => prev.map(p => p.category === oldName ? { ...p, category: catForm.name } : p));
-        toast({ title: "Catégorie modifiée", description: `${catForm.name}. ${count} produit(s) mis à jour.` });
+        toast({ title: t("categoriesPage.categoryModified"), description: `${catForm.name}. ${t("categoriesPage.productsUpdated", { count })}` });
       } else {
-        toast({ title: "Catégorie modifiée", description: catForm.name });
+        toast({ title: t("categoriesPage.categoryModified"), description: catForm.name });
       }
     } else {
       setCategories(prev => [...prev, { id: `CAT-${Date.now()}`, ...catForm, productCount: 0 }]);
-      toast({ title: "Catégorie créée", description: catForm.name });
+      toast({ title: t("categoriesPage.categoryCreated"), description: catForm.name });
     }
     setShowCategoryForm(false);
   };
@@ -176,10 +182,10 @@ export default function CategoriesPage() {
     if (!subForm.name || !subForm.categoryId) return;
     if (editTarget?.level === "subcategory") {
       setSubCategories(prev => prev.map(sc => sc.id === editTarget.data.id ? { ...sc, ...subForm } : sc));
-      toast({ title: "Sous-catégorie modifiée", description: subForm.name });
+      toast({ title: t("categoriesPage.subcategoryModified"), description: subForm.name });
     } else {
       setSubCategories(prev => [...prev, { id: `SUB-${Date.now()}`, ...subForm }]);
-      toast({ title: "Sous-catégorie créée", description: subForm.name });
+      toast({ title: t("categoriesPage.subcategoryCreated"), description: subForm.name });
     }
     setShowSubCategoryForm(false);
   };
@@ -190,25 +196,25 @@ export default function CategoriesPage() {
     if (level === "sector") {
       const catCount = categoryCountBySector.get(data.id) ?? 0;
       if (catCount > 0) {
-        toast({ title: "Impossible", description: `Ce secteur contient ${catCount} catégorie(s). Supprimez-les d'abord.`, variant: "destructive" });
+        toast({ title: t("categoriesPage.impossible"), description: t("categoriesPage.sectorHasCategories", { count: catCount }), variant: "destructive" });
         setDeleteConfirm(null);
         return;
       }
       setSectors(prev => prev.filter(s => s.id !== data.id));
-      toast({ title: "Secteur supprimé" });
+      toast({ title: t("categoriesPage.sectorDeleted") });
     } else if (level === "category") {
       const prodCount = productCountByCategory.get(data.id) ?? 0;
       if (prodCount > 0) {
-        toast({ title: "Impossible", description: `Cette catégorie contient ${prodCount} produit(s). Réassignez-les d'abord.`, variant: "destructive" });
+        toast({ title: t("categoriesPage.impossible"), description: t("categoriesPage.categoryHasProducts", { count: prodCount }), variant: "destructive" });
         setDeleteConfirm(null);
         return;
       }
       setSubCategories(prev => prev.filter(sc => sc.categoryId !== data.id));
       setCategories(prev => prev.map(c => c.id === data.id ? { ...c, isDeleted: true, status: "Inactive" as const } : c));
-      toast({ title: "Catégorie archivée" });
+      toast({ title: t("categoriesPage.categoryArchived") });
     } else {
       setSubCategories(prev => prev.map(sc => sc.id === data.id ? { ...sc, isDeleted: true, status: "Inactive" as const } : sc));
-      toast({ title: "Sous-catégorie archivée" });
+      toast({ title: t("categoriesPage.subcategoryArchived") });
     }
     setDeleteConfirm(null);
   };
@@ -220,14 +226,14 @@ export default function CategoriesPage() {
       return { ...c, sectorName: sector?.name ?? "" };
     });
     const cols: ExportColumn<typeof rows[0]>[] = [
-      { key: "code" as any, label: "Code" },
-      { key: "sectorName" as any, label: "Secteur" },
-      { key: "name", label: "Catégorie" },
-      { key: "description", label: "Description" },
-      { key: "status", label: "Statut" },
+      { key: "code" as any, label: t("common.code") },
+      { key: "sectorName" as any, label: t("categoriesPage.sector") },
+      { key: "name", label: t("categoriesPage.category") },
+      { key: "description", label: t("common.description") },
+      { key: "status", label: t("common.status") },
     ];
     exportToCSV(rows, cols as any, "categories-hierarchy");
-    toast({ title: "Export CSV", description: `${rows.length} catégories exportées.` });
+    toast({ title: t("categoriesPage.exportCSV"), description: t("categoriesPage.exportDesc", { count: rows.length }) });
   };
 
   // Stats
@@ -244,24 +250,24 @@ export default function CategoriesPage() {
             <FolderTree className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Architecture des Catégories</h1>
+            <h1 className="text-xl font-bold tracking-tight">{t("categoriesPage.title")}</h1>
             <p className="text-sm text-muted-foreground">
-              {totalSectors} secteurs · {totalCategories} catégories · {totalSubCategories} sous-catégories
+              {t("categoriesPage.subtitle", { sectors: totalSectors, categories: totalCategories, subcategories: totalSubCategories })}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleExportCSV} className="gap-1.5">
-            <Download className="h-3.5 w-3.5" /> Export
+            <Download className="h-3.5 w-3.5" /> {t("common.export")}
           </Button>
           <Button variant="outline" size="sm" onClick={openCreateSector} className="gap-1.5">
-            <Building2 className="h-3.5 w-3.5" /> Secteur
+            <Building2 className="h-3.5 w-3.5" /> {t("categoriesPage.sector")}
           </Button>
           <Button variant="outline" size="sm" onClick={() => openCreateCategory()} className="gap-1.5">
-            <Layers className="h-3.5 w-3.5" /> Catégorie
+            <Layers className="h-3.5 w-3.5" /> {t("categoriesPage.category")}
           </Button>
           <Button onClick={() => openCreateSubCategory()} className="gap-2">
-            <Plus className="h-4 w-4" /> Sous-catégorie
+            <Plus className="h-4 w-4" /> {t("categoriesPage.subcategory")}
           </Button>
         </div>
       </div>
@@ -269,19 +275,19 @@ export default function CategoriesPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="glass-card rounded-xl p-4">
-          <p className="text-xs text-muted-foreground font-medium">Secteurs</p>
+          <p className="text-xs text-muted-foreground font-medium">{t("categoriesPage.sectors")}</p>
           <p className="text-2xl font-bold mt-1">{totalSectors}</p>
         </div>
         <div className="glass-card rounded-xl p-4">
-          <p className="text-xs text-muted-foreground font-medium">Catégories</p>
+          <p className="text-xs text-muted-foreground font-medium">{t("categoriesPage.categories")}</p>
           <p className="text-2xl font-bold mt-1">{totalCategories}</p>
         </div>
         <div className="glass-card rounded-xl p-4">
-          <p className="text-xs text-muted-foreground font-medium">Sous-catégories</p>
+          <p className="text-xs text-muted-foreground font-medium">{t("categoriesPage.subcategories")}</p>
           <p className="text-2xl font-bold mt-1">{totalSubCategories}</p>
         </div>
         <div className="glass-card rounded-xl p-4">
-          <p className="text-xs text-muted-foreground font-medium">Produits actifs</p>
+          <p className="text-xs text-muted-foreground font-medium">{t("categoriesPage.activeProducts")}</p>
           <p className="text-2xl font-bold mt-1">{products.filter(p => !p.isDeleted && p.isActive).length}</p>
         </div>
       </div>
@@ -290,18 +296,18 @@ export default function CategoriesPage() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}
+          <input type="text" placeholder={t("categoriesPage.searchPlaceholder")} value={search} onChange={e => setSearch(e.target.value)}
             className="h-9 w-full rounded-lg border border-input bg-muted/50 pl-9 pr-4 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/20" />
         </div>
         <select value={filterSector} onChange={e => setFilterSector(e.target.value)}
           className="h-9 rounded-lg border border-input bg-muted/50 px-3 text-sm">
-          <option value="all">Tous les secteurs</option>
+          <option value="all">{t("categoriesPage.allSectors")}</option>
           {sectors.filter(s => s.status === "Active").map(s => (
             <option key={s.id} value={s.id}>{s.icon} {s.name}</option>
           ))}
         </select>
-        <Button variant="ghost" size="sm" onClick={() => setExpandedSectors(new Set(sectors.map(s => s.id)))}>Tout ouvrir</Button>
-        <Button variant="ghost" size="sm" onClick={() => { setExpandedSectors(new Set()); setExpandedCategories(new Set()); }}>Tout fermer</Button>
+        <Button variant="ghost" size="sm" onClick={() => setExpandedSectors(new Set(sectors.map(s => s.id)))}>{t("categoriesPage.expandAll")}</Button>
+        <Button variant="ghost" size="sm" onClick={() => { setExpandedSectors(new Set()); setExpandedCategories(new Set()); }}>{t("categoriesPage.collapseAll")}</Button>
       </div>
 
       {/* Tree View */}
@@ -328,18 +334,18 @@ export default function CategoriesPage() {
                   <p className="text-xs text-muted-foreground">{sector.description}</p>
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>{sectorCats.length} catégories</span>
+                  <span>{sectorCats.length} {t("categoriesPage.categoriesLabel")}</span>
                   <span>·</span>
-                  <span>{prodCount} produits</span>
+                  <span>{prodCount} {t("categoriesPage.productsLabel")}</span>
                 </div>
                 <div className="flex items-center gap-1 ml-2">
-                  <button onClick={e => { e.stopPropagation(); openEditSector(sector); }} className="p-1.5 rounded-md hover:bg-muted" title="Modifier">
+                  <button onClick={e => { e.stopPropagation(); openEditSector(sector); }} className="p-1.5 rounded-md hover:bg-muted" title={t("common.edit")}>
                     <Pencil className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={e => { e.stopPropagation(); openCreateCategory(sector.id); }} className="p-1.5 rounded-md hover:bg-primary/10 text-primary" title="Ajouter catégorie">
+                  <button onClick={e => { e.stopPropagation(); openCreateCategory(sector.id); }} className="p-1.5 rounded-md hover:bg-primary/10 text-primary" title={t("categoriesPage.addCategory")}>
                     <Plus className="h-3.5 w-3.5" />
                   </button>
-                  <button onClick={e => { e.stopPropagation(); setDeleteConfirm({ level: "sector", data: sector }); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive" title="Supprimer">
+                  <button onClick={e => { e.stopPropagation(); setDeleteConfirm({ level: "sector", data: sector }); }} className="p-1.5 rounded-md hover:bg-destructive/10 text-destructive" title={t("common.delete")}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -349,7 +355,7 @@ export default function CategoriesPage() {
               {isExpanded && (
                 <div className="bg-muted/10">
                   {sectorCats.length === 0 && (
-                    <div className="px-12 py-4 text-sm text-muted-foreground italic">Aucune catégorie dans ce secteur</div>
+                    <div className="px-12 py-4 text-sm text-muted-foreground italic">{t("categoriesPage.noCategoryInSector")}</div>
                   )}
                   {sectorCats.map(cat => {
                     const catSubs = subCategories.filter(sc => sc.categoryId === cat.id && !sc.isDeleted);
@@ -369,15 +375,14 @@ export default function CategoriesPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <span className="font-medium text-sm">{cat.name}</span>
-                              <Badge variant="secondary" className="text-[10px] font-mono">{cat.code}</Badge>
+                              <Badge variant="outline" className="text-[10px] font-mono">{cat.code}</Badge>
                               <StatusBadge status={cat.status} />
                             </div>
-                            <p className="text-xs text-muted-foreground">{cat.description}</p>
+                            {cat.description && <p className="text-[10px] text-muted-foreground">{cat.description}</p>}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                            <span>{catSubs.length} sous-cat.</span>
-                            <span>·</span>
-                            <span className={catProdCount > 0 ? "font-semibold text-foreground" : ""}>{catProdCount} produits</span>
+                            <span>{catProdCount} {t("categoriesPage.productsLabel")}</span>
+                            {catSubs.length > 0 && <span>{catSubs.length} sub</span>}
                           </div>
                           <div className="flex items-center gap-1 ml-2">
                             <button onClick={e => { e.stopPropagation(); openEditCategory(cat); }} className="p-1.5 rounded-md hover:bg-muted"><Pencil className="h-3 w-3" /></button>
@@ -387,21 +392,19 @@ export default function CategoriesPage() {
                         </div>
 
                         {/* Subcategories */}
-                        {isCatExpanded && catSubs.length > 0 && (
-                          <div className="bg-muted/5">
-                            {catSubs.map(sc => (
-                              <div key={sc.id} className="flex items-center gap-3 px-14 py-2 hover:bg-muted/15 transition-colors border-b border-border/10">
-                                <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
-                                <span className="text-sm flex-1">{sc.name}</span>
-                                <StatusBadge status={sc.status} />
-                                <div className="flex items-center gap-1 ml-2">
-                                  <button onClick={() => openEditSubCategory(sc)} className="p-1 rounded-md hover:bg-muted"><Pencil className="h-3 w-3" /></button>
-                                  <button onClick={() => setDeleteConfirm({ level: "subcategory", data: sc })} className="p-1 rounded-md hover:bg-destructive/10 text-destructive"><Trash2 className="h-3 w-3" /></button>
-                                </div>
-                              </div>
-                            ))}
+                        {isCatExpanded && catSubs.map(sc => (
+                          <div key={sc.id} className="flex items-center gap-3 px-14 py-2 hover:bg-muted/10 transition-colors border-b border-border/10">
+                            <span className="w-3.5" />
+                            <div className="flex-1">
+                              <span className="text-sm">{sc.name}</span>
+                            </div>
+                            <StatusBadge status={sc.status} />
+                            <div className="flex items-center gap-1 ml-2">
+                              <button onClick={() => openEditSubCategory(sc)} className="p-1 rounded-md hover:bg-muted"><Pencil className="h-3 w-3" /></button>
+                              <button onClick={() => setDeleteConfirm({ level: "subcategory", data: sc })} className="p-1 rounded-md hover:bg-destructive/10 text-destructive"><Trash2 className="h-3 w-3" /></button>
+                            </div>
                           </div>
-                        )}
+                        ))}
                       </div>
                     );
                   })}
@@ -410,107 +413,75 @@ export default function CategoriesPage() {
             </div>
           );
         })}
-        {filteredSectors.length === 0 && (
-          <div className="py-12 text-center text-muted-foreground">Aucun résultat trouvé.</div>
-        )}
       </div>
 
-      {/* Sector Form Dialog */}
+      {/* Sector Form */}
       <Dialog open={showSectorForm} onOpenChange={setShowSectorForm}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>{editTarget?.level === "sector" ? "Modifier le secteur" : "Nouveau secteur"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editTarget?.level === "sector" ? t("categoriesPage.editSector") : t("categoriesPage.newSector")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <FormField label="Code" required><input className={formInputClass} placeholder="SEC-XX" value={sectorForm.code} onChange={e => setSectorForm({ ...sectorForm, code: e.target.value })} /></FormField>
-            <FormField label="Nom" required><input className={formInputClass} value={sectorForm.name} onChange={e => setSectorForm({ ...sectorForm, name: e.target.value })} /></FormField>
-            <FormField label="Icône"><input className={formInputClass} value={sectorForm.icon} onChange={e => setSectorForm({ ...sectorForm, icon: e.target.value })} /></FormField>
-            <FormField label="Description"><input className={formInputClass} value={sectorForm.description} onChange={e => setSectorForm({ ...sectorForm, description: e.target.value })} /></FormField>
+            <FormField label={t("common.name")} required><input className={formInputClass} value={sectorForm.name} onChange={e => setSectorForm({ ...sectorForm, name: e.target.value })} /></FormField>
+            <FormField label={t("common.code")} required><input className={formInputClass} value={sectorForm.code} onChange={e => setSectorForm({ ...sectorForm, code: e.target.value })} /></FormField>
+            <FormField label={t("categoriesPage.icon")}><input className={formInputClass} value={sectorForm.icon} onChange={e => setSectorForm({ ...sectorForm, icon: e.target.value })} /></FormField>
+            <FormField label={t("common.description")}><input className={formInputClass} value={sectorForm.description} onChange={e => setSectorForm({ ...sectorForm, description: e.target.value })} /></FormField>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSectorForm(false)}>Annuler</Button>
-            <Button onClick={saveSector} disabled={!sectorForm.name || !sectorForm.code}>
-              {editTarget?.level === "sector" ? "Enregistrer" : "Créer"}
-            </Button>
+            <Button variant="outline" onClick={() => setShowSectorForm(false)}>{t("common.cancel")}</Button>
+            <Button onClick={saveSector} disabled={!sectorForm.name || !sectorForm.code}>{editTarget ? t("common.save") : t("common.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Category Form Dialog */}
+      {/* Category Form */}
       <Dialog open={showCategoryForm} onOpenChange={setShowCategoryForm}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>{editTarget?.level === "category" ? "Modifier la catégorie" : "Nouvelle catégorie"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editTarget?.level === "category" ? t("categoriesPage.editCategory") : t("categoriesPage.newCategory")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <FormField label="Secteur" required>
+            <FormField label={t("common.name")} required><input className={formInputClass} value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} /></FormField>
+            <FormField label={t("common.code")} required><input className={formInputClass} value={catForm.code} onChange={e => setCatForm({ ...catForm, code: e.target.value })} /></FormField>
+            <FormField label={t("categoriesPage.sector")} required>
               <select className={formSelectClass} value={catForm.sectorId} onChange={e => setCatForm({ ...catForm, sectorId: e.target.value })}>
-                <option value="">— Sélectionner —</option>
-                {sectors.filter(s => s.status === "Active").map(s => (
-                  <option key={s.id} value={s.id}>{s.icon} {s.name}</option>
-                ))}
+                <option value="">—</option>
+                {sectors.filter(s => s.status === "Active").map(s => <option key={s.id} value={s.id}>{s.icon} {s.name}</option>)}
               </select>
             </FormField>
-            <FormField label="Code" required><input className={formInputClass} placeholder="CEM-01" value={catForm.code} onChange={e => setCatForm({ ...catForm, code: e.target.value })} /></FormField>
-            <FormField label="Nom" required><input className={formInputClass} value={catForm.name} onChange={e => setCatForm({ ...catForm, name: e.target.value })} /></FormField>
-            <FormField label="Description"><input className={formInputClass} value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} /></FormField>
-            <FormField label="Statut">
-              <select className={formSelectClass} value={catForm.status} onChange={e => setCatForm({ ...catForm, status: e.target.value as "Active" | "Inactive" })}>
-                <option value="Active">Active</option><option value="Inactive">Inactive</option>
-              </select>
-            </FormField>
+            <FormField label={t("common.description")}><input className={formInputClass} value={catForm.description} onChange={e => setCatForm({ ...catForm, description: e.target.value })} /></FormField>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowCategoryForm(false)}>Annuler</Button>
-            <Button onClick={saveCategory} disabled={!catForm.name || !catForm.code || !catForm.sectorId}>
-              {editTarget?.level === "category" ? "Enregistrer" : "Créer"}
-            </Button>
+            <Button variant="outline" onClick={() => setShowCategoryForm(false)}>{t("common.cancel")}</Button>
+            <Button onClick={saveCategory} disabled={!catForm.name || !catForm.code}>{editTarget ? t("common.save") : t("common.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* SubCategory Form Dialog */}
+      {/* SubCategory Form */}
       <Dialog open={showSubCategoryForm} onOpenChange={setShowSubCategoryForm}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>{editTarget?.level === "subcategory" ? "Modifier la sous-catégorie" : "Nouvelle sous-catégorie"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{editTarget?.level === "subcategory" ? t("categoriesPage.editSubcategory") : t("categoriesPage.newSubcategory")}</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <FormField label="Catégorie parente" required>
+            <FormField label={t("common.name")} required><input className={formInputClass} value={subForm.name} onChange={e => setSubForm({ ...subForm, name: e.target.value })} /></FormField>
+            <FormField label={t("categoriesPage.category")} required>
               <select className={formSelectClass} value={subForm.categoryId} onChange={e => setSubForm({ ...subForm, categoryId: e.target.value })}>
-                <option value="">— Sélectionner —</option>
-                {categories.filter(c => !c.isDeleted).map(c => {
-                  const sector = sectors.find(s => s.id === c.sectorId);
-                  return <option key={c.id} value={c.id}>{sector?.icon} {c.name}</option>;
-                })}
-              </select>
-            </FormField>
-            <FormField label="Nom" required><input className={formInputClass} value={subForm.name} onChange={e => setSubForm({ ...subForm, name: e.target.value })} /></FormField>
-            <FormField label="Statut">
-              <select className={formSelectClass} value={subForm.status} onChange={e => setSubForm({ ...subForm, status: e.target.value as "Active" | "Inactive" })}>
-                <option value="Active">Active</option><option value="Inactive">Inactive</option>
+                <option value="">—</option>
+                {categories.filter(c => !c.isDeleted).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </FormField>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSubCategoryForm(false)}>Annuler</Button>
-            <Button onClick={saveSubCategory} disabled={!subForm.name || !subForm.categoryId}>
-              {editTarget?.level === "subcategory" ? "Enregistrer" : "Créer"}
-            </Button>
+            <Button variant="outline" onClick={() => setShowSubCategoryForm(false)}>{t("common.cancel")}</Button>
+            <Button onClick={saveSubCategory} disabled={!subForm.name || !subForm.categoryId}>{editTarget ? t("common.save") : t("common.create")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirm */}
+      {/* Delete Confirmation */}
       <Dialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>Confirmer la suppression</DialogTitle></DialogHeader>
-          {deleteConfirm && (
-            <div className="flex items-start gap-2 rounded-lg bg-destructive/5 border border-destructive/20 p-3 text-sm">
-              <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-destructive" />
-              <span>
-                Supprimer {deleteConfirm.level === "sector" ? "le secteur" : deleteConfirm.level === "category" ? "la catégorie" : "la sous-catégorie"}{" "}
-                <strong>"{deleteConfirm.data.name}"</strong> ?
-              </span>
-            </div>
-          )}
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>{t("categoriesPage.confirmDelete")}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{t("categoriesPage.confirmDeleteDesc")}</p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Annuler</Button>
-            <Button variant="destructive" onClick={handleDelete}>Supprimer</Button>
+            <Button variant="outline" onClick={() => setDeleteConfirm(null)}>{t("common.cancel")}</Button>
+            <Button variant="destructive" onClick={handleDelete}>{t("common.delete")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

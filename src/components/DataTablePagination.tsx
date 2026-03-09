@@ -1,5 +1,9 @@
+/**
+ * Phase F8 — Redesigned pagination bar with page size selector and page info.
+ */
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import { Button } from "./ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 
 interface DataTablePaginationProps {
   currentPage: number;
@@ -26,36 +30,51 @@ export default function DataTablePagination({
   const end = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>{start}–{end} sur {totalItems}</span>
-        <span className="hidden sm:inline">|</span>
-        <select
-          value={pageSize}
-          onChange={(e) => onPageSizeChange(Number(e.target.value))}
-          className="h-7 rounded border border-input bg-muted/50 px-2 text-xs"
-        >
-          {PAGE_SIZES.map((s) => (
-            <option key={s} value={s}>{s} / page</option>
-          ))}
-        </select>
-      </div>
-      <div className="flex items-center gap-1">
-        <Button variant="outline" size="icon" className="h-7 w-7" disabled={currentPage <= 1} onClick={() => onPageChange(1)}>
-          <ChevronsLeft className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="outline" size="icon" className="h-7 w-7" disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)}>
-          <ChevronLeft className="h-3.5 w-3.5" />
-        </Button>
-        <span className="px-2 text-xs font-medium">
-          {currentPage} / {totalPages}
-        </span>
-        <Button variant="outline" size="icon" className="h-7 w-7" disabled={currentPage >= totalPages} onClick={() => onPageChange(currentPage + 1)}>
-          <ChevronRight className="h-3.5 w-3.5" />
-        </Button>
-        <Button variant="outline" size="icon" className="h-7 w-7" disabled={currentPage >= totalPages} onClick={() => onPageChange(totalPages)}>
-          <ChevronsRight className="h-3.5 w-3.5" />
-        </Button>
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-border/50 bg-muted/30">
+      {/* Left: item count */}
+      <p className="text-xs text-muted-foreground tabular-nums">
+        <span className="font-medium text-foreground">{start}–{end}</span>
+        {" "}sur{" "}
+        <span className="font-medium text-foreground">{totalItems}</span>
+        {" "}résultats
+      </p>
+
+      {/* Right: page size + nav */}
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground hidden sm:inline">Lignes</span>
+          <Select
+            value={String(pageSize)}
+            onValueChange={(v) => onPageSizeChange(Number(v))}
+          >
+            <SelectTrigger className="h-8 w-[70px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_SIZES.map((s) => (
+                <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex items-center gap-0.5">
+          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={currentPage <= 1} onClick={() => onPageChange(1)}>
+            <ChevronsLeft className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={currentPage <= 1} onClick={() => onPageChange(currentPage - 1)}>
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </Button>
+          <span className="px-3 text-xs font-medium tabular-nums text-muted-foreground">
+            {currentPage} / {totalPages}
+          </span>
+          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={currentPage >= totalPages} onClick={() => onPageChange(currentPage + 1)}>
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-8 w-8" disabled={currentPage >= totalPages} onClick={() => onPageChange(totalPages)}>
+            <ChevronsRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
       </div>
     </div>
   );

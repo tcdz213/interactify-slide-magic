@@ -14,7 +14,7 @@ i18n.use(initReactI18next).init({
   resources: { fr: { translation: fr }, en: { translation: en }, ar: { translation: ar } },
   lng: savedLang,
   fallbackLng: "fr",
-  interpolation: { escapeValue: false },
+  interpolation: { escapeValue: false, prefix: "{", suffix: "}" },
 });
 
 export default i18n;

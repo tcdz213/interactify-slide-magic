@@ -1,136 +1,178 @@
+/**
+ * Phase I — Unified StatusBadge mapping business statuses to Badge variants.
+ * I3: Maps all business statuses to visual states.
+ */
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
-const statusMap: Record<string, { label: string; className: string }> = {
-  Draft: { label: "Brouillon", className: "bg-muted text-muted-foreground" },
-  QC_Pending: { label: "QC en attente", className: "bg-warning/10 text-warning" },
-  Approval_Pending: { label: "Approbation", className: "bg-info/10 text-info" },
-  Pending_Approval: { label: "Approbation", className: "bg-info/10 text-info" },
-  Approved: { label: "Approuvé", className: "bg-success/10 text-success" },
-  Rejected: { label: "Rejeté", className: "bg-destructive/10 text-destructive" },
-  Credit_Hold: { label: "Crédit bloqué", className: "bg-destructive/10 text-destructive" },
-  Picking: { label: "Picking", className: "bg-warning/10 text-warning" },
-  Packed: { label: "Emballé", className: "bg-info/10 text-info" },
-  Shipped: { label: "Expédié", className: "bg-info/10 text-info" },
-  Partially_Delivered: { label: "Partiel", className: "bg-warning/10 text-warning" },
-  Delivered: { label: "Livré", className: "bg-success/10 text-success" },
-  Invoiced: { label: "Facturé", className: "bg-primary/10 text-primary" },
-  Cancelled: { label: "Annulé", className: "bg-muted text-muted-foreground" },
-  Planning: { label: "Planification", className: "bg-muted text-muted-foreground" },
-  Loading: { label: "Chargement", className: "bg-warning/10 text-warning" },
-  In_Transit: { label: "En transit", className: "bg-info/10 text-info" },
-  Completed: { label: "Terminé", className: "bg-success/10 text-success" },
-  Pending: { label: "En attente", className: "bg-muted text-muted-foreground" },
-  Loaded: { label: "Chargé", className: "bg-warning/10 text-warning" },
-  Partial: { label: "Partiel", className: "bg-warning/10 text-warning" },
-  Failed: { label: "Échoué", className: "bg-destructive/10 text-destructive" },
-  Returned: { label: "Retourné", className: "bg-destructive/10 text-destructive" },
-  Sent: { label: "Envoyée", className: "bg-info/10 text-info" },
-  Partially_Paid: { label: "Partiel", className: "bg-warning/10 text-warning" },
-  Paid: { label: "Payée", className: "bg-success/10 text-success" },
-  Overdue: { label: "En retard", className: "bg-destructive/10 text-destructive" },
-  Disputed: { label: "Contestée", className: "bg-destructive/10 text-destructive" },
-  Completed_payment: { label: "Complété", className: "bg-success/10 text-success" },
-  Pending_payment: { label: "En attente", className: "bg-warning/10 text-warning" },
-  Bounced: { label: "Rejeté", className: "bg-destructive/10 text-destructive" },
-  Cancelled_payment: { label: "Annulé", className: "bg-muted text-muted-foreground" },
-  Pending_QC: { label: "QC en attente", className: "bg-warning/10 text-warning" },
-  Submitted: { label: "Soumis", className: "bg-info/10 text-info" },
-  Processed: { label: "Traité", className: "bg-info/10 text-info" },
-  Credited: { label: "Crédité", className: "bg-success/10 text-success" },
-  Active: { label: "Actif", className: "bg-success/10 text-success" },
-  Inactive: { label: "Inactif", className: "bg-muted text-muted-foreground" },
-  Suspended: { label: "Suspendu", className: "bg-destructive/10 text-destructive" },
-  Blocked: { label: "Bloqué", className: "bg-destructive/10 text-destructive" },
-  Confirmed: { label: "Confirmée", className: "bg-success/10 text-success" },
-  Partially_Received: { label: "Partiel reçu", className: "bg-warning/10 text-warning" },
-  Received: { label: "Reçue", className: "bg-success/10 text-success" },
-  Scheduled: { label: "Planifié", className: "bg-muted text-muted-foreground" },
-  In_Progress: { label: "En cours", className: "bg-info/10 text-info" },
-  Pending_Review: { label: "Revue", className: "bg-warning/10 text-warning" },
-  Requires_Investigation: { label: "Enquête", className: "bg-destructive/10 text-destructive" },
-  Damage: { label: "Dommage", className: "bg-destructive/10 text-destructive" },
-  Expiry: { label: "Expiration", className: "bg-warning/10 text-warning" },
-  Correction: { label: "Correction", className: "bg-info/10 text-info" },
-  Theft: { label: "Vol", className: "bg-destructive/10 text-destructive" },
-  Shrinkage: { label: "Perte", className: "bg-warning/10 text-warning" },
-  Found: { label: "Trouvé", className: "bg-success/10 text-success" },
-  Available: { label: "Disponible", className: "bg-success/10 text-success" },
-  Full: { label: "Plein", className: "bg-destructive/10 text-destructive" },
-  Reserved: { label: "Réservé", className: "bg-warning/10 text-warning" },
-  Maintenance: { label: "Maintenance", className: "bg-muted text-muted-foreground" },
-  Passed: { label: "Conforme", className: "bg-success/10 text-success" },
-  Conditional: { label: "Conditionnel", className: "bg-warning/10 text-warning" },
-  Critical: { label: "Critique", className: "bg-destructive/10 text-destructive" },
-  High: { label: "Haute", className: "bg-warning/10 text-warning" },
-  Medium: { label: "Moyenne", className: "bg-info/10 text-info" },
-  Low: { label: "Faible", className: "bg-muted text-muted-foreground" },
-  Customer: { label: "Client", className: "bg-info/10 text-info" },
-  Vendor: { label: "Fournisseur", className: "bg-warning/10 text-warning" },
-  // Yard & Dock
-  Occupied: { label: "Occupé", className: "bg-warning/10 text-warning" },
-  Inbound: { label: "Réception", className: "bg-info/10 text-info" },
-  Outbound: { label: "Expédition", className: "bg-warning/10 text-warning" },
-  Both: { label: "Les deux", className: "bg-muted text-muted-foreground" },
-  Checked_In: { label: "Enregistré", className: "bg-info/10 text-info" },
-  Docked: { label: "Au quai", className: "bg-info/10 text-info" },
-  Unloading: { label: "Déchargement", className: "bg-warning/10 text-warning" },
-  Checked_Out: { label: "Sorti", className: "bg-success/10 text-success" },
-  Return: { label: "Retour", className: "bg-destructive/10 text-destructive" },
-  "Entrée": { label: "Entrée", className: "bg-success/10 text-success" },
-  "Sortie": { label: "Sortie", className: "bg-warning/10 text-warning" },
-  // Config
-  Category: { label: "Catégorie", className: "bg-info/10 text-info" },
-  Temperature: { label: "Température", className: "bg-info/10 text-info" },
-  Weight: { label: "Poids", className: "bg-muted text-muted-foreground" },
-  Custom: { label: "Custom", className: "bg-muted text-muted-foreground" },
-  // Integration
-  Connected: { label: "Connecté", className: "bg-success/10 text-success" },
-  Disconnected: { label: "Déconnecté", className: "bg-muted text-muted-foreground" },
-  Error: { label: "Erreur", className: "bg-destructive/10 text-destructive" },
-  Syncing: { label: "Sync…", className: "bg-info/10 text-info" },
-  ERP: { label: "ERP", className: "bg-primary/10 text-primary" },
-  "E-Commerce": { label: "E-Commerce", className: "bg-info/10 text-info" },
-  Carrier: { label: "Transporteur", className: "bg-warning/10 text-warning" },
-  Accounting: { label: "Comptabilité", className: "bg-muted text-muted-foreground" },
-  InApp: { label: "In-App", className: "bg-info/10 text-info" },
-  Email: { label: "Email", className: "bg-warning/10 text-warning" },
-  // Alert/Import
-  StockLevel: { label: "Niveau stock", className: "bg-warning/10 text-warning" },
-  ExpiryDate: { label: "Date exp.", className: "bg-destructive/10 text-destructive" },
-  OrderDelay: { label: "Retard cmd", className: "bg-warning/10 text-warning" },
-  CycleCountVariance: { label: "Variance", className: "bg-info/10 text-info" },
-  Products: { label: "Produits", className: "bg-primary/10 text-primary" },
-  Inventory: { label: "Inventaire", className: "bg-info/10 text-info" },
-  Vendors: { label: "Fournisseurs", className: "bg-warning/10 text-warning" },
-  Customers: { label: "Clients", className: "bg-info/10 text-info" },
-  PurchaseOrders: { label: "Commandes", className: "bg-primary/10 text-primary" },
-  Locations: { label: "Emplacements", className: "bg-muted text-muted-foreground" },
-  Unblocked: { label: "Débloqué", className: "bg-success/10 text-success" },
-  Processing: { label: "Traitement", className: "bg-info/10 text-info" },
-  Quarantine: { label: "Quarantaine", className: "bg-destructive/10 text-destructive" },
-  Expired: { label: "Expiré", className: "bg-destructive/10 text-destructive" },
-  Recalled: { label: "Rappelé", className: "bg-destructive/10 text-destructive" },
-  Consumed: { label: "Consommé", className: "bg-muted text-muted-foreground" },
-  In_Stock: { label: "En stock", className: "bg-success/10 text-success" },
-  Sold: { label: "Vendu", className: "bg-primary/10 text-primary" },
-  Defective: { label: "Défectueux", className: "bg-destructive/10 text-destructive" },
-  Scrapped: { label: "Mis au rebut", className: "bg-muted text-muted-foreground" },
-  Below: { label: "En dessous", className: "bg-warning/10 text-warning" },
-  Above: { label: "Au dessus", className: "bg-info/10 text-info" },
-  Equals: { label: "Égal", className: "bg-muted text-muted-foreground" },
-  Within: { label: "Dans", className: "bg-info/10 text-info" },
+type StatusType = "success" | "warning" | "error" | "info" | "neutral" | "processing";
+
+interface StatusConfig {
+  label: string;
+  type: StatusType;
+}
+
+const statusMap: Record<string, StatusConfig> = {
+  // ── Success states ──
+  Approved: { label: "Approuvé", type: "success" },
+  Delivered: { label: "Livré", type: "success" },
+  Completed: { label: "Terminé", type: "success" },
+  Passed: { label: "Conforme", type: "success" },
+  Active: { label: "Actif", type: "success" },
+  Online: { label: "En ligne", type: "success" },
+  Confirmed: { label: "Confirmée", type: "success" },
+  Received: { label: "Reçue", type: "success" },
+  Paid: { label: "Payée", type: "success" },
+  Credited: { label: "Crédité", type: "success" },
+  Found: { label: "Trouvé", type: "success" },
+  Available: { label: "Disponible", type: "success" },
+  Unblocked: { label: "Débloqué", type: "success" },
+  Checked_Out: { label: "Sorti", type: "success" },
+  Connected: { label: "Connecté", type: "success" },
+  Completed_payment: { label: "Complété", type: "success" },
+  "Entrée": { label: "Entrée", type: "success" },
+  In_Stock: { label: "En stock", type: "success" },
+
+  // ── Warning states ──
+  QC_Pending: { label: "QC en attente", type: "warning" },
+  Picking: { label: "Picking", type: "warning" },
+  Partially_Delivered: { label: "Partiel", type: "warning" },
+  Partial: { label: "Partiel", type: "warning" },
+  Partially_Paid: { label: "Partiel", type: "warning" },
+  Partially_Received: { label: "Partiel reçu", type: "warning" },
+  Loading: { label: "Chargement", type: "warning" },
+  Loaded: { label: "Chargé", type: "warning" },
+  Pending_QC: { label: "QC en attente", type: "warning" },
+  Pending_Review: { label: "Revue", type: "warning" },
+  Conditional: { label: "Conditionnel", type: "warning" },
+  High: { label: "Haute", type: "warning" },
+  Reserved: { label: "Réservé", type: "warning" },
+  Occupied: { label: "Occupé", type: "warning" },
+  Unloading: { label: "Déchargement", type: "warning" },
+  Pending_payment: { label: "En attente", type: "warning" },
+  Expiry: { label: "Expiration", type: "warning" },
+  Shrinkage: { label: "Perte", type: "warning" },
+  StockLevel: { label: "Niveau stock", type: "warning" },
+  OrderDelay: { label: "Retard cmd", type: "warning" },
+  "Sortie": { label: "Sortie", type: "warning" },
+  Below: { label: "En dessous", type: "warning" },
+  Vendor: { label: "Fournisseur", type: "warning" },
+  Vendors: { label: "Fournisseurs", type: "warning" },
+  Outbound: { label: "Expédition", type: "warning" },
+  Email: { label: "Email", type: "warning" },
+  Carrier: { label: "Transporteur", type: "warning" },
+
+  // ── Info states ──
+  Approval_Pending: { label: "Approbation", type: "info" },
+  Pending_Approval: { label: "Approbation", type: "info" },
+  Packed: { label: "Emballé", type: "info" },
+  Shipped: { label: "Expédié", type: "info" },
+  In_Transit: { label: "En transit", type: "info" },
+  In_Progress: { label: "En cours", type: "info" },
+  Sent: { label: "Envoyée", type: "info" },
+  Submitted: { label: "Soumis", type: "info" },
+  Processed: { label: "Traité", type: "info" },
+  Inbound: { label: "Réception", type: "info" },
+  Checked_In: { label: "Enregistré", type: "info" },
+  Docked: { label: "Au quai", type: "info" },
+  Correction: { label: "Correction", type: "info" },
+  Medium: { label: "Moyenne", type: "info" },
+  Customer: { label: "Client", type: "info" },
+  Customers: { label: "Clients", type: "info" },
+  InApp: { label: "In-App", type: "info" },
+  Inventory: { label: "Inventaire", type: "info" },
+  CycleCountVariance: { label: "Variance", type: "info" },
+  Category: { label: "Catégorie", type: "info" },
+  Temperature: { label: "Température", type: "info" },
+  "E-Commerce": { label: "E-Commerce", type: "info" },
+  Above: { label: "Au dessus", type: "info" },
+  Within: { label: "Dans", type: "info" },
+
+  // ── Error states ──
+  Rejected: { label: "Rejeté", type: "error" },
+  Credit_Hold: { label: "Crédit bloqué", type: "error" },
+  Failed: { label: "Échoué", type: "error" },
+  Returned: { label: "Retourné", type: "error" },
+  Overdue: { label: "En retard", type: "error" },
+  Disputed: { label: "Contestée", type: "error" },
+  Bounced: { label: "Rejeté", type: "error" },
+  Requires_Investigation: { label: "Enquête", type: "error" },
+  Damage: { label: "Dommage", type: "error" },
+  Theft: { label: "Vol", type: "error" },
+  Critical: { label: "Critique", type: "error" },
+  Full: { label: "Plein", type: "error" },
+  Blocked: { label: "Bloqué", type: "error" },
+  Suspended: { label: "Suspendu", type: "error" },
+  Error: { label: "Erreur", type: "error" },
+  Return: { label: "Retour", type: "error" },
+  Quarantine: { label: "Quarantaine", type: "error" },
+  Expired: { label: "Expiré", type: "error" },
+  Recalled: { label: "Rappelé", type: "error" },
+  Defective: { label: "Défectueux", type: "error" },
+  ExpiryDate: { label: "Date exp.", type: "error" },
+
+  // ── Neutral states ──
+  Draft: { label: "Brouillon", type: "neutral" },
+  Cancelled: { label: "Annulé", type: "neutral" },
+  Planning: { label: "Planification", type: "neutral" },
+  Pending: { label: "En attente", type: "neutral" },
+  Inactive: { label: "Inactif", type: "neutral" },
+  Offline: { label: "Hors ligne", type: "neutral" },
+  Scheduled: { label: "Planifié", type: "neutral" },
+  Cancelled_payment: { label: "Annulé", type: "neutral" },
+  Maintenance: { label: "Maintenance", type: "neutral" },
+  Low: { label: "Faible", type: "neutral" },
+  Weight: { label: "Poids", type: "neutral" },
+  Custom: { label: "Custom", type: "neutral" },
+  Disconnected: { label: "Déconnecté", type: "neutral" },
+  Accounting: { label: "Comptabilité", type: "neutral" },
+  Both: { label: "Les deux", type: "neutral" },
+  Locations: { label: "Emplacements", type: "neutral" },
+  Consumed: { label: "Consommé", type: "neutral" },
+  Scrapped: { label: "Mis au rebut", type: "neutral" },
+  Equals: { label: "Égal", type: "neutral" },
+
+  // ── Processing states ──
+  Syncing: { label: "Sync…", type: "processing" },
+  Processing: { label: "Traitement", type: "processing" },
+  Executing: { label: "Exécution", type: "processing" },
+  Queued: { label: "En file", type: "neutral" },
+
+  // ── Primary accent ──
+  Invoiced: { label: "Facturé", type: "info" },
+  ERP: { label: "ERP", type: "info" },
+  Products: { label: "Produits", type: "info" },
+  PurchaseOrders: { label: "Commandes", type: "info" },
+  Sold: { label: "Vendu", type: "info" },
 };
 
 interface StatusBadgeProps {
   status: string;
   className?: string;
+  /** Show a dot indicator before the label */
+  showDot?: boolean;
 }
 
-export default function StatusBadge({ status, className }: StatusBadgeProps) {
-  const config = statusMap[status] || { label: status, className: "bg-muted text-muted-foreground" };
+export default function StatusBadge({ status, className, showDot = false }: StatusBadgeProps) {
+  const config = statusMap[status] || { label: status, type: "neutral" as StatusType };
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold", config.className, className)}>
+    <Badge
+      variant={config.type}
+      size="sm"
+      className={cn("gap-1.5", className)}
+    >
+      {showDot && (
+        <span className={cn(
+          "h-1.5 w-1.5 rounded-full flex-none",
+          config.type === "success" && "bg-[hsl(var(--success))]",
+          config.type === "warning" && "bg-[hsl(var(--warning))]",
+          config.type === "error" && "bg-[hsl(var(--destructive))]",
+          config.type === "info" && "bg-[hsl(var(--info))]",
+          config.type === "neutral" && "bg-muted-foreground",
+          config.type === "processing" && "bg-[hsl(var(--info))] animate-pulse",
+        )} />
+      )}
       {config.label}
-    </span>
+    </Badge>
   );
 }
