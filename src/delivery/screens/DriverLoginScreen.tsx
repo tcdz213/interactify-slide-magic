@@ -59,7 +59,7 @@ export default function DriverLoginScreen() {
                   onClick={() => {
                     if (key === null) return;
                     if (key === "⌫") setPin((p) => p.slice(0, -1));
-                    else if (pin.length < 4) setPin((p) => p + key);
+                    else if (pin.length < 6) setPin((p) => p + key);
                   }}
                   className={`h-12 rounded-lg text-lg font-semibold transition-colors ${
                     key === null
