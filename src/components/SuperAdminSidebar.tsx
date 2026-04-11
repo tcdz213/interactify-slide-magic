@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, Users, CreditCard, BarChart3, Settings, Shield } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, CreditCard, BarChart3, Settings, Shield, Receipt, FileText } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -11,7 +11,9 @@ const navKeys = [
   { key: 'nav.dashboard', url: '/admin', icon: LayoutDashboard },
   { key: 'nav.tenants', url: '/admin/tenants', icon: Building2 },
   { key: 'nav.subscriptions', url: '/admin/subscriptions', icon: CreditCard },
-  { key: 'nav.users', url: '/admin/users', icon: Users },
+  { key: 'admin.accounts', url: '/admin/accounts', icon: Users },
+  { key: 'admin.billing', url: '/admin/billing', icon: Receipt },
+  { key: 'admin.auditLogs', url: '/admin/audit-logs', icon: FileText },
   { key: 'nav.analytics', url: '/admin/analytics', icon: BarChart3 },
   { key: 'nav.settings', url: '/admin/settings', icon: Settings },
 ];
