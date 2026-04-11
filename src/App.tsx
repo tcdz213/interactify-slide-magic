@@ -31,6 +31,11 @@ const App = () => (
             <Route index element={<AdminDashboard />} />
             <Route path="tenants" element={<TenantsPage />} />
             <Route path="subscriptions" element={<SubscriptionsPage />} />
+            <Route path="accounts" element={<AccountsPage />} />
+            <Route path="billing" element={<BillingPage />} />
+            <Route path="audit-logs" element={<AuditLogsPage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
           </Route>
 
           {/* Business Manager */}
