@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, Users, Warehouse, UserCog, FileText, Settings } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, Users, Warehouse, UserCog, FileText, Settings, Activity, Bell, HelpCircle } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -13,8 +13,11 @@ const navKeys = [
   { key: 'nav.orders', url: '/business/orders', icon: ShoppingCart },
   { key: 'nav.customers', url: '/business/customers', icon: Users },
   { key: 'nav.warehouses', url: '/business/warehouses', icon: Warehouse },
-  { key: 'nav.team', url: '/business/team', icon: UserCog },
+  { key: 'nav.team', url: '/business/users', icon: UserCog },
   { key: 'nav.invoices', url: '/business/invoices', icon: FileText },
+  { key: 'business.activityLog', url: '/business/activity', icon: Activity },
+  { key: 'nav.notifications', url: '/business/notifications', icon: Bell },
+  { key: 'nav.help', url: '/business/help', icon: HelpCircle },
   { key: 'nav.settings', url: '/business/settings', icon: Settings },
 ];
 

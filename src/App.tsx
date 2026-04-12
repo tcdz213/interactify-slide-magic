@@ -19,6 +19,11 @@ import BusinessDashboard from "./pages/business/BusinessDashboard";
 import ProductsPage from "./pages/business/ProductsPage";
 import OrdersPage from "./pages/business/OrdersPage";
 import CustomersPage from "./pages/business/CustomersPage";
+import UsersPage from "./pages/business/UsersPage";
+import BusinessSettingsPage from "./pages/business/BusinessSettingsPage";
+import ActivityPage from "./pages/business/ActivityPage";
+import NotificationsPage from "./pages/business/NotificationsPage";
+import HelpPage from "./pages/business/HelpPage";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +54,11 @@ const App = () => (
             <Route path="products" element={<ProductsPage />} />
             <Route path="orders" element={<OrdersPage />} />
             <Route path="customers" element={<CustomersPage />} />
+            <Route path="users" element={<UsersPage />} />
+            <Route path="settings" element={<BusinessSettingsPage />} />
+            <Route path="activity" element={<ActivityPage />} />
+            <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="help" element={<HelpPage />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
