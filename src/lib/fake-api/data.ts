@@ -1,4 +1,4 @@
-import { Tenant, Product, Order, Customer, Warehouse, TenantUser, PlatformStats, BusinessStats } from './types';
+import { Tenant, Product, Order, Customer, Warehouse, TenantUser, PlatformStats, BusinessStats, Category, InventoryItem, StockAdjustment, Delivery, Driver, DeliveryRoute, Invoice, Payment, AccountingStats, AgingBucket, TopDebtor, SalesReportData, TaxReportData } from './types';
 
 export const platformStats: PlatformStats = {
   totalTenants: 47,
@@ -169,3 +169,219 @@ export const ordersByStatus = [
   { status: 'Delivered', count: 245, color: 'hsl(var(--success))' },
   { status: 'Settled', count: 210, color: 'hsl(var(--primary))' },
 ];
+
+export const categories: Category[] = [
+  { id: 'cat1', tenantId: 't1', name: 'Grains', description: 'Couscous, semoule, riz, pâtes', productsCount: 2, isActive: true, displayOrder: 1, createdAt: '2024-01-10' },
+  { id: 'cat2', tenantId: 't1', name: 'Oils', description: 'Huiles d\'olive, végétale, tournesol', productsCount: 1, isActive: true, displayOrder: 2, createdAt: '2024-01-10' },
+  { id: 'cat3', tenantId: 't1', name: 'Canned Goods', description: 'Tomate concentrée, conserves, harissa', productsCount: 1, isActive: true, displayOrder: 3, createdAt: '2024-01-10' },
+  { id: 'cat4', tenantId: 't1', name: 'Dairy', description: 'Lait UHT, fromage, beurre', productsCount: 1, isActive: true, displayOrder: 4, createdAt: '2024-01-10' },
+  { id: 'cat5', tenantId: 't1', name: 'Basics', description: 'Sucre, sel, farine, café', productsCount: 1, isActive: true, displayOrder: 5, createdAt: '2024-01-10' },
+  { id: 'cat6', tenantId: 't1', name: 'Beverages', description: 'Jus, eau, boissons gazeuses', productsCount: 0, isActive: false, displayOrder: 6, createdAt: '2024-02-15' },
+];
+
+export const inventoryItems: InventoryItem[] = [
+  { id: 'inv1', tenantId: 't1', productId: 'p1', productName: 'Couscous Fin 1kg', sku: 'CSC-001', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', category: 'Grains', baseUnit: 'piece', quantity: 10800, reorderPoint: 2000, stockStatus: 'normal', inventoryValue: 108000, lastUpdated: '2024-12-05' },
+  { id: 'inv2', tenantId: 't1', productId: 'p1', productName: 'Couscous Fin 1kg', sku: 'CSC-001', warehouseId: 'w2', warehouseName: 'Dépôt Ouest', category: 'Grains', baseUnit: 'piece', quantity: 3600, reorderPoint: 1000, stockStatus: 'normal', inventoryValue: 36000, lastUpdated: '2024-12-04' },
+  { id: 'inv3', tenantId: 't1', productId: 'p2', productName: 'Huile d\'Olive 1L', sku: 'OIL-001', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', category: 'Oils', baseUnit: 'bottle', quantity: 2400, reorderPoint: 500, stockStatus: 'normal', inventoryValue: 192000, lastUpdated: '2024-12-05' },
+  { id: 'inv4', tenantId: 't1', productId: 'p2', productName: 'Huile d\'Olive 1L', sku: 'OIL-001', warehouseId: 'w2', warehouseName: 'Dépôt Ouest', category: 'Oils', baseUnit: 'bottle', quantity: 1200, reorderPoint: 300, stockStatus: 'normal', inventoryValue: 96000, lastUpdated: '2024-12-03' },
+  { id: 'inv5', tenantId: 't1', productId: 'p3', productName: 'Semoule Extra 5kg', sku: 'SEM-001', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', category: 'Grains', baseUnit: 'bag', quantity: 180, reorderPoint: 200, stockStatus: 'low', inventoryValue: 63000, lastUpdated: '2024-12-05' },
+  { id: 'inv6', tenantId: 't1', productId: 'p4', productName: 'Tomate Concentrée 400g', sku: 'TOM-001', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', category: 'Canned Goods', baseUnit: 'can', quantity: 7200, reorderPoint: 1000, stockStatus: 'normal', inventoryValue: 72000, lastUpdated: '2024-12-04' },
+  { id: 'inv7', tenantId: 't1', productId: 'p5', productName: 'Lait UHT 1L', sku: 'MLK-001', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', category: 'Dairy', baseUnit: 'brick', quantity: 9600, reorderPoint: 2000, stockStatus: 'normal', inventoryValue: 48000, lastUpdated: '2024-12-05' },
+  { id: 'inv8', tenantId: 't1', productId: 'p6', productName: 'Sucre Blanc 1kg', sku: 'SUG-001', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', category: 'Basics', baseUnit: 'piece', quantity: 0, reorderPoint: 500, stockStatus: 'out', inventoryValue: 0, lastUpdated: '2024-12-01' },
+];
+
+export const stockAdjustments: StockAdjustment[] = [
+  { id: 'adj1', tenantId: 't1', productId: 'p1', productName: 'Couscous Fin 1kg', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', quantityChange: -48, reason: 'damage', notes: 'Palettes endommagées lors du transport', status: 'approved', createdBy: 'Rachid B.', approvedBy: 'Karim M.', createdAt: '2024-12-04T10:30:00', updatedAt: '2024-12-04T14:00:00' },
+  { id: 'adj2', tenantId: 't1', productId: 'p3', productName: 'Semoule Extra 5kg', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', quantityChange: 100, reason: 'count_correction', notes: 'Correction après inventaire physique', status: 'approved', createdBy: 'Rachid B.', approvedBy: 'Karim M.', createdAt: '2024-12-03T09:00:00', updatedAt: '2024-12-03T11:00:00' },
+  { id: 'adj3', tenantId: 't1', productId: 'p5', productName: 'Lait UHT 1L', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', quantityChange: -120, reason: 'expiry', notes: 'Lot expiré le 01/12', status: 'pending', createdBy: 'Sofiane T.', createdAt: '2024-12-05T16:00:00', updatedAt: '2024-12-05T16:00:00' },
+  { id: 'adj4', tenantId: 't1', productId: 'p4', productName: 'Tomate Concentrée 400g', warehouseId: 'w2', warehouseName: 'Dépôt Ouest', quantityChange: 240, reason: 'transfer', notes: 'Transfert depuis entrepôt principal', status: 'pending', createdBy: 'Fatima Z.', createdAt: '2024-12-06T08:00:00', updatedAt: '2024-12-06T08:00:00' },
+  { id: 'adj5', tenantId: 't1', productId: 'p2', productName: 'Huile d\'Olive 1L', warehouseId: 'w1', warehouseName: 'Entrepôt Principal', quantityChange: -6, reason: 'return', notes: 'Retour client — bouteilles cassées', status: 'rejected', createdBy: 'Yacine B.', approvedBy: 'Rachid B.', createdAt: '2024-12-02T14:00:00', updatedAt: '2024-12-02T16:30:00' },
+];
+
+export const drivers: Driver[] = [
+  { id: 'drv1', tenantId: 't1', name: 'Yacine Belkacem', phone: '+213 555 3001', vehicle: 'Hyundai HD72 — 00123-101-16', status: 'on_route', deliveriesToday: 5, completedToday: 3, onTimeRate: 92 },
+  { id: 'drv2', tenantId: 't1', name: 'Ahmed Khelifi', phone: '+213 555 3002', vehicle: 'Isuzu NQR — 00456-101-16', status: 'available', deliveriesToday: 4, completedToday: 4, onTimeRate: 97 },
+  { id: 'drv3', tenantId: 't1', name: 'Mohamed Saidi', phone: '+213 555 3003', vehicle: 'Mitsubishi Canter — 00789-101-16', status: 'on_route', deliveriesToday: 6, completedToday: 4, onTimeRate: 88 },
+  { id: 'drv4', tenantId: 't1', name: 'Amine Boudiaf', phone: '+213 555 3004', vehicle: 'Renault Master — 01012-101-16', status: 'offline', deliveriesToday: 0, completedToday: 0, onTimeRate: 94 },
+];
+
+export const deliveries: Delivery[] = [
+  { id: 'del1', tenantId: 't1', orderId: 'o1', customerName: 'Superette El Baraka', customerAddress: 'Rue Didouche, Alger', driverId: 'drv1', driverName: 'Yacine Belkacem', status: 'delivered', estimatedArrival: '2024-12-02T14:00:00', actualArrival: '2024-12-02T13:45:00', createdAt: '2024-12-01T10:30:00' },
+  { id: 'del2', tenantId: 't1', orderId: 'o5', customerName: 'Wholesale Center Blida', customerAddress: 'Zone Industrielle, Blida', driverId: 'drv1', driverName: 'Yacine Belkacem', status: 'in_transit', estimatedArrival: '2024-12-06T11:00:00', createdAt: '2024-12-06T06:30:00' },
+  { id: 'del3', tenantId: 't1', orderId: 'o2', customerName: 'Gros Bazar Oran', customerAddress: 'Boulevard Front de Mer, Oran', driverId: 'drv3', driverName: 'Mohamed Saidi', status: 'pending', estimatedArrival: '2024-12-07T10:00:00', createdAt: '2024-12-05T09:00:00' },
+  { id: 'del4', tenantId: 't1', orderId: 'o4', customerName: 'Alimentation Générale Nour', customerAddress: 'Cité 500, Sétif', driverId: 'drv2', driverName: 'Ahmed Khelifi', status: 'delivered', estimatedArrival: '2024-12-06T15:00:00', actualArrival: '2024-12-06T14:50:00', createdAt: '2024-12-05T14:30:00' },
+  { id: 'del5', tenantId: 't1', orderId: 'o6', customerName: 'Superette El Baraka', customerAddress: 'Rue Didouche, Alger', driverId: 'drv3', driverName: 'Mohamed Saidi', status: 'failed', estimatedArrival: '2024-11-30T12:00:00', createdAt: '2024-11-28T11:00:00' },
+];
+
+export const deliveryRoutes: DeliveryRoute[] = [
+  {
+    id: 'rt1', tenantId: 't1', driverId: 'drv1', driverName: 'Yacine Belkacem', date: '2024-12-06',
+    totalDistance: 45, estimatedDuration: '2h 30min', status: 'in_progress',
+    stops: [
+      { orderId: 'o5', customerName: 'Wholesale Center Blida', address: 'Zone Industrielle, Blida', estimatedTime: '09:30', status: 'completed' },
+      { orderId: 'o2', customerName: 'Gros Bazar Oran', address: 'Boulevard Front de Mer, Oran', estimatedTime: '11:00', status: 'pending' },
+    ],
+  },
+  {
+    id: 'rt2', tenantId: 't1', driverId: 'drv2', driverName: 'Ahmed Khelifi', date: '2024-12-06',
+    totalDistance: 28, estimatedDuration: '1h 45min', status: 'completed',
+    stops: [
+      { orderId: 'o4', customerName: 'Alimentation Générale Nour', address: 'Cité 500, Sétif', estimatedTime: '10:00', status: 'completed' },
+      { orderId: 'o1', customerName: 'Superette El Baraka', address: 'Rue Didouche, Alger', estimatedTime: '12:00', status: 'completed' },
+    ],
+  },
+  {
+    id: 'rt3', tenantId: 't1', driverId: 'drv3', driverName: 'Mohamed Saidi', date: '2024-12-07',
+    totalDistance: 62, estimatedDuration: '3h 15min', status: 'planned',
+    stops: [
+      { orderId: 'o3', customerName: 'Mini Market Saïd', address: 'Quartier Saïd, Blida', estimatedTime: '08:30', status: 'pending' },
+      { orderId: 'o2', customerName: 'Gros Bazar Oran', address: 'Boulevard Front de Mer, Oran', estimatedTime: '10:00', status: 'pending' },
+      { orderId: 'o7', customerName: 'Épicerie Fine Alger', address: 'Hydra, Alger', estimatedTime: '12:30', status: 'pending' },
+    ],
+  },
+];
+
+// ─── Phase 6: Finance & Reports Data ───
+
+const invoicePayments: Payment[] = [
+  { id: 'pay1', tenantId: 't1', invoiceId: 'inv1', invoiceNumber: 'FAC-2024-001', customerId: 'c1', customerName: 'Superette El Baraka', amount: 50000, method: 'bank_transfer', status: 'completed', reference: 'VIR-2024-0001', date: '2024-12-10', createdAt: '2024-12-10' },
+  { id: 'pay2', tenantId: 't1', invoiceId: 'inv2', invoiceNumber: 'FAC-2024-002', customerId: 'c2', customerName: 'Gros Bazar Oran', amount: 200000, method: 'cheque', status: 'completed', reference: 'CHQ-445566', date: '2024-12-08', createdAt: '2024-12-08' },
+  { id: 'pay3', tenantId: 't1', invoiceId: 'inv3', invoiceNumber: 'FAC-2024-003', customerId: 'c3', customerName: 'Mini Market Saïd', amount: 15000, method: 'cash', status: 'completed', reference: 'CASH-003', date: '2024-12-12', createdAt: '2024-12-12' },
+  { id: 'pay4', tenantId: 't1', invoiceId: 'inv4', invoiceNumber: 'FAC-2024-004', customerId: 'c1', customerName: 'Superette El Baraka', amount: 30000, method: 'mobile_payment', status: 'pending', reference: 'MOB-2024-004', date: '2024-12-15', createdAt: '2024-12-15' },
+  { id: 'pay5', tenantId: 't1', invoiceId: 'inv5', invoiceNumber: 'FAC-2024-005', customerId: 'c4', customerName: 'Épicerie Fine Alger', amount: 75000, method: 'bank_transfer', status: 'completed', reference: 'VIR-2024-0005', date: '2024-11-28', createdAt: '2024-11-28' },
+  { id: 'pay6', tenantId: 't1', invoiceId: 'inv6', invoiceNumber: 'FAC-2024-006', customerId: 'c5', customerName: 'Dépôt Central Blida', amount: 0, method: 'bank_transfer', status: 'failed', reference: 'VIR-FAIL-006', date: '2024-12-14', createdAt: '2024-12-14' },
+];
+
+export const invoices: Invoice[] = [
+  {
+    id: 'inv1', tenantId: 't1', orderId: 'o1', customerId: 'c1', customerName: 'Superette El Baraka',
+    invoiceNumber: 'FAC-2024-001', status: 'paid', issueDate: '2024-12-05', dueDate: '2025-01-05',
+    subtotal: 84000, tva9: 0, tva19: 15960, totalTva: 15960, total: 99960, paidAmount: 99960, remainingAmount: 0,
+    lineItems: [
+      { productId: 'p1', productName: 'Couscous Fin 1kg', unit: 'Pack (12)', quantity: 40, unitPrice: 1200, tvaRate: 19, total: 57120 },
+      { productId: 'p2', productName: 'Huile de Tournesol 5L', unit: 'Piece', quantity: 60, unitPrice: 450, tvaRate: 19, total: 32130 },
+    ],
+    payments: [invoicePayments[0]], createdAt: '2024-12-05',
+  },
+  {
+    id: 'inv2', tenantId: 't1', orderId: 'o2', customerId: 'c2', customerName: 'Gros Bazar Oran',
+    invoiceNumber: 'FAC-2024-002', status: 'paid', issueDate: '2024-12-03', dueDate: '2025-01-03',
+    subtotal: 336000, tva9: 0, tva19: 63840, totalTva: 63840, total: 399840, paidAmount: 399840, remainingAmount: 0,
+    lineItems: [
+      { productId: 'p1', productName: 'Couscous Fin 1kg', unit: 'Pallet (600)', quantity: 4, unitPrice: 48000, tvaRate: 19, total: 228480 },
+      { productId: 'p3', productName: 'Lait UHT 1L', unit: 'Pack (24)', quantity: 100, unitPrice: 1440, tvaRate: 9, total: 156960 },
+    ],
+    payments: [invoicePayments[1]], createdAt: '2024-12-03',
+  },
+  {
+    id: 'inv3', tenantId: 't1', orderId: 'o3', customerId: 'c3', customerName: 'Mini Market Saïd',
+    invoiceNumber: 'FAC-2024-003', status: 'partial', issueDate: '2024-12-08', dueDate: '2025-01-08',
+    subtotal: 36000, tva9: 0, tva19: 6840, totalTva: 6840, total: 42840, paidAmount: 15000, remainingAmount: 27840,
+    lineItems: [
+      { productId: 'p2', productName: 'Huile de Tournesol 5L', unit: 'Piece', quantity: 80, unitPrice: 450, tvaRate: 19, total: 42840 },
+    ],
+    payments: [invoicePayments[2]], createdAt: '2024-12-08',
+  },
+  {
+    id: 'inv4', tenantId: 't1', orderId: 'o4', customerId: 'c1', customerName: 'Superette El Baraka',
+    invoiceNumber: 'FAC-2024-004', status: 'overdue', issueDate: '2024-11-01', dueDate: '2024-12-01',
+    subtotal: 120000, tva9: 0, tva19: 22800, totalTva: 22800, total: 142800, paidAmount: 30000, remainingAmount: 112800,
+    lineItems: [
+      { productId: 'p1', productName: 'Couscous Fin 1kg', unit: 'Pack (12)', quantity: 100, unitPrice: 1200, tvaRate: 19, total: 142800 },
+    ],
+    payments: [invoicePayments[3]], createdAt: '2024-11-01',
+  },
+  {
+    id: 'inv5', tenantId: 't1', orderId: 'o5', customerId: 'c4', customerName: 'Épicerie Fine Alger',
+    invoiceNumber: 'FAC-2024-005', status: 'paid', issueDate: '2024-11-20', dueDate: '2024-12-20',
+    subtotal: 150000, tva9: 0, tva19: 28500, totalTva: 28500, total: 178500, paidAmount: 178500, remainingAmount: 0,
+    lineItems: [
+      { productId: 'p1', productName: 'Couscous Fin 1kg', unit: 'Pallet (600)', quantity: 2, unitPrice: 55000, tvaRate: 19, total: 130900 },
+      { productId: 'p2', productName: 'Huile de Tournesol 5L', unit: 'Piece', quantity: 40, unitPrice: 450, tvaRate: 19, total: 21420 },
+    ],
+    payments: [invoicePayments[4]], createdAt: '2024-11-20',
+  },
+  {
+    id: 'inv6', tenantId: 't1', orderId: 'o6', customerId: 'c5', customerName: 'Dépôt Central Blida',
+    invoiceNumber: 'FAC-2024-006', status: 'sent', issueDate: '2024-12-14', dueDate: '2025-01-14',
+    subtotal: 250000, tva9: 0, tva19: 47500, totalTva: 47500, total: 297500, paidAmount: 0, remainingAmount: 297500,
+    lineItems: [
+      { productId: 'p1', productName: 'Couscous Fin 1kg', unit: 'Pallet (600)', quantity: 3, unitPrice: 48000, tvaRate: 19, total: 171360 },
+      { productId: 'p3', productName: 'Lait UHT 1L', unit: 'Pack (24)', quantity: 50, unitPrice: 1440, tvaRate: 9, total: 78480 },
+    ],
+    payments: [], createdAt: '2024-12-14',
+  },
+  {
+    id: 'inv7', tenantId: 't1', orderId: 'o7', customerId: 'c6', customerName: 'Marché de Nuit Sétif',
+    invoiceNumber: 'FAC-2024-007', status: 'draft', issueDate: '2024-12-16', dueDate: '2025-01-16',
+    subtotal: 48000, tva9: 4320, tva19: 0, totalTva: 4320, total: 52320, paidAmount: 0, remainingAmount: 52320,
+    lineItems: [
+      { productId: 'p3', productName: 'Lait UHT 1L', unit: 'Pack (24)', quantity: 30, unitPrice: 1600, tvaRate: 9, total: 52320 },
+    ],
+    payments: [], createdAt: '2024-12-16',
+  },
+];
+
+export const payments: Payment[] = invoicePayments;
+
+export const accountingStats: AccountingStats = {
+  totalRevenue: 1213760,
+  totalExpenses: 845000,
+  netProfit: 368760,
+  dso: 34,
+  tvaCollected: 189760,
+  tvaDue: 142500,
+  outstandingReceivables: 490460,
+};
+
+export const agingBuckets: AgingBucket[] = [
+  { range: '0-30', amount: 325340, count: 3 },
+  { range: '31-60', amount: 112800, count: 1 },
+  { range: '61-90', amount: 52320, count: 1 },
+  { range: '90+', amount: 0, count: 0 },
+];
+
+export const topDebtors: TopDebtor[] = [
+  { customerId: 'c5', customerName: 'Dépôt Central Blida', outstanding: 297500, daysOverdue: 0 },
+  { customerId: 'c1', customerName: 'Superette El Baraka', outstanding: 112800, daysOverdue: 45 },
+  { customerId: 'c3', customerName: 'Mini Market Saïd', outstanding: 27840, daysOverdue: 5 },
+  { customerId: 'c6', customerName: 'Marché de Nuit Sétif', outstanding: 52320, daysOverdue: 0 },
+];
+
+export const salesReportData: SalesReportData = {
+  revenueByMonth: [
+    { month: '2024-07', revenue: 180000 }, { month: '2024-08', revenue: 210000 },
+    { month: '2024-09', revenue: 195000 }, { month: '2024-10', revenue: 230000 },
+    { month: '2024-11', revenue: 265000 }, { month: '2024-12', revenue: 310000 },
+  ],
+  revenueBySegment: [
+    { segment: 'superette', revenue: 520000 }, { segment: 'wholesale', revenue: 680000 }, { segment: 'shadow', revenue: 13760 },
+  ],
+  topProducts: [
+    { name: 'Couscous Fin 1kg', revenue: 650000, quantity: 12400 },
+    { name: 'Huile de Tournesol 5L', revenue: 320000, quantity: 5200 },
+    { name: 'Lait UHT 1L', revenue: 243760, quantity: 8500 },
+  ],
+  topCustomers: [
+    { name: 'Gros Bazar Oran', spent: 399840, orders: 12 },
+    { name: 'Dépôt Central Blida', spent: 297500, orders: 8 },
+    { name: 'Épicerie Fine Alger', spent: 178500, orders: 6 },
+    { name: 'Superette El Baraka', spent: 242760, orders: 15 },
+    { name: 'Mini Market Saïd', spent: 42840, orders: 4 },
+  ],
+  salesRepPerformance: [
+    { name: 'Ahmed Bensalem', orders: 45, revenue: 520000, avgOrderValue: 11555 },
+    { name: 'Fatima Zahra', orders: 38, revenue: 430000, avgOrderValue: 11315 },
+    { name: 'Karim Medjdoub', orders: 22, revenue: 263760, avgOrderValue: 11989 },
+  ],
+};
+
+export const taxReportData: TaxReportData = {
+  period: '2024-Q4',
+  rows: [
+    { taxRate: 9, taxableBase: 235440, tvaCollected: 21190 },
+    { taxRate: 19, taxableBase: 940000, tvaCollected: 178600 },
+  ],
+  totalTaxableBase: 1175440,
+  totalTva: 199790,
+};

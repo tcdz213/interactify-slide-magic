@@ -123,3 +123,194 @@ export interface BusinessStats {
   activeDrivers: number;
   deliveryRate: number;
 }
+
+export interface Category {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string;
+  productsCount: number;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt: string;
+}
+
+export type StockStatus = 'normal' | 'low' | 'out';
+
+export interface InventoryItem {
+  id: string;
+  tenantId: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  warehouseId: string;
+  warehouseName: string;
+  category: string;
+  baseUnit: string;
+  quantity: number;
+  reorderPoint: number;
+  stockStatus: StockStatus;
+  inventoryValue: number;
+  lastUpdated: string;
+}
+
+export type AdjustmentStatus = 'pending' | 'approved' | 'rejected';
+export type AdjustmentReason = 'damage' | 'expiry' | 'count_correction' | 'return' | 'transfer' | 'other';
+
+export interface StockAdjustment {
+  id: string;
+  tenantId: string;
+  productId: string;
+  productName: string;
+  warehouseId: string;
+  warehouseName: string;
+  quantityChange: number;
+  reason: AdjustmentReason;
+  notes: string;
+  status: AdjustmentStatus;
+  createdBy: string;
+  approvedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type DeliveryStatus = 'pending' | 'in_transit' | 'delivered' | 'failed';
+
+export interface Delivery {
+  id: string;
+  tenantId: string;
+  orderId: string;
+  customerName: string;
+  customerAddress: string;
+  driverId: string;
+  driverName: string;
+  status: DeliveryStatus;
+  estimatedArrival: string;
+  actualArrival?: string;
+  createdAt: string;
+}
+
+export type DriverStatus = 'available' | 'on_route' | 'offline';
+
+export interface Driver {
+  id: string;
+  tenantId: string;
+  name: string;
+  phone: string;
+  vehicle: string;
+  status: DriverStatus;
+  deliveriesToday: number;
+  completedToday: number;
+  onTimeRate: number;
+  avatar?: string;
+}
+
+export interface RouteStop {
+  orderId: string;
+  customerName: string;
+  address: string;
+  estimatedTime: string;
+  status: 'pending' | 'completed';
+}
+
+export interface DeliveryRoute {
+  id: string;
+  tenantId: string;
+  driverId: string;
+  driverName: string;
+  date: string;
+  stops: RouteStop[];
+  totalDistance: number;
+  estimatedDuration: string;
+  status: 'planned' | 'in_progress' | 'completed';
+}
+
+// ─── Phase 6: Finance & Reports ───
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'cheque' | 'mobile_payment';
+export type PaymentStatus = 'completed' | 'pending' | 'failed' | 'refunded';
+
+export interface InvoiceLineItem {
+  productId: string;
+  productName: string;
+  unit: string;
+  quantity: number;
+  unitPrice: number;
+  tvaRate: number;
+  total: number;
+}
+
+export interface Invoice {
+  id: string;
+  tenantId: string;
+  orderId: string;
+  customerId: string;
+  customerName: string;
+  invoiceNumber: string;
+  status: InvoiceStatus;
+  issueDate: string;
+  dueDate: string;
+  subtotal: number;
+  tva9: number;
+  tva19: number;
+  totalTva: number;
+  total: number;
+  paidAmount: number;
+  remainingAmount: number;
+  lineItems: InvoiceLineItem[];
+  payments: Payment[];
+  createdAt: string;
+}
+
+export interface Payment {
+  id: string;
+  tenantId: string;
+  invoiceId: string;
+  invoiceNumber: string;
+  customerId: string;
+  customerName: string;
+  amount: number;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  reference: string;
+  date: string;
+  createdAt: string;
+}
+
+export interface AccountingStats {
+  totalRevenue: number;
+  totalExpenses: number;
+  netProfit: number;
+  dso: number;
+  tvaCollected: number;
+  tvaDue: number;
+  outstandingReceivables: number;
+}
+
+export interface AgingBucket {
+  range: string;
+  amount: number;
+  count: number;
+}
+
+export interface TopDebtor {
+  customerId: string;
+  customerName: string;
+  outstanding: number;
+  daysOverdue: number;
+}
+
+export interface SalesReportData {
+  revenueByMonth: { month: string; revenue: number }[];
+  revenueBySegment: { segment: string; revenue: number }[];
+  topProducts: { name: string; revenue: number; quantity: number }[];
+  topCustomers: { name: string; spent: number; orders: number }[];
+  salesRepPerformance: { name: string; orders: number; revenue: number; avgOrderValue: number }[];
+}
+
+export interface TaxReportData {
+  period: string;
+  rows: { taxRate: number; taxableBase: number; tvaCollected: number }[];
+  totalTaxableBase: number;
+  totalTva: number;
+}

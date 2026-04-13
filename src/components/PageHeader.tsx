@@ -13,15 +13,16 @@ interface BreadcrumbItem {
   href?: string;
 }
 
-interface PageHeaderProps {
+export interface PageHeaderProps {
   title: string;
   description?: string;
   breadcrumbs?: BreadcrumbItem[];
   actions?: ReactNode;
+  children?: ReactNode;
   tabs?: ReactNode;
 }
 
-export function PageHeader({ title, description, breadcrumbs, actions, tabs }: PageHeaderProps) {
+export function PageHeader({ title, description, breadcrumbs, actions, children, tabs }: PageHeaderProps) {
   return (
     <div className="space-y-2 mb-6">
       {breadcrumbs && breadcrumbs.length > 0 && (
@@ -47,7 +48,7 @@ export function PageHeader({ title, description, breadcrumbs, actions, tabs }: P
           <h1 className="text-2xl font-bold text-foreground">{title}</h1>
           {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
         </div>
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
+        {(actions || children) && <div className="flex items-center gap-2">{actions || children}</div>}
       </div>
       {tabs}
     </div>

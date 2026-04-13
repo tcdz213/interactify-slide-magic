@@ -1,7 +1,8 @@
 import { cn } from '@/lib/utils';
 
 type StatusVariant = 'draft' | 'active' | 'inactive' | 'suspended' | 'cancelled' | 'trial' | 'onboarding'
-  | 'confirmed' | 'picking' | 'dispatched' | 'delivered' | 'settled' | 'pending' | 'paid' | 'overdue';
+  | 'confirmed' | 'picking' | 'dispatched' | 'delivered' | 'settled' | 'pending' | 'paid' | 'overdue'
+  | 'sent' | 'partial' | 'completed' | 'failed' | 'refunded';
 
 const variantStyles: Record<StatusVariant, string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -19,6 +20,11 @@ const variantStyles: Record<StatusVariant, string> = {
   pending: 'bg-warning/10 text-warning',
   paid: 'bg-success/10 text-success',
   overdue: 'bg-destructive/10 text-destructive',
+  sent: 'bg-info/10 text-info',
+  partial: 'bg-warning/10 text-warning',
+  completed: 'bg-success/10 text-success',
+  failed: 'bg-destructive/10 text-destructive',
+  refunded: 'bg-muted text-muted-foreground',
 };
 
 interface StatusBadgeProps {
