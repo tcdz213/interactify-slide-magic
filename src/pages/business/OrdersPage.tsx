@@ -253,14 +253,21 @@ export default function OrdersPage() {
                   />
                 </TableHead>
                 <TableHead>{t('orders.orderId')}</TableHead>
-                <TableHead>{t('orders.customer')}</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer')}>
+                  <span className="flex items-center gap-1">{t('orders.customer')} <ArrowUpDown className="h-3 w-3" /></span>
+                </TableHead>
                 <TableHead>{t('common.status')}</TableHead>
                 <TableHead>Priorité</TableHead>
                 <TableHead>{t('orders.items')}</TableHead>
-                <TableHead>{t('common.total')}</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('amount')}>
+                  <span className="flex items-center gap-1">{t('common.total')} <ArrowUpDown className="h-3 w-3" /></span>
+                </TableHead>
                 <TableHead>{t('orders.salesRep')}</TableHead>
                 <TableHead>{t('orders.driver')}</TableHead>
-                <TableHead>{t('common.date')}</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('date')}>
+                  <span className="flex items-center gap-1">{t('common.date')} <ArrowUpDown className="h-3 w-3" /></span>
+                </TableHead>
+                <TableHead>{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
