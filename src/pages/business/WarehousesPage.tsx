@@ -5,6 +5,7 @@ import type { Warehouse } from '@/lib/fake-api/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { KPIWidget } from '@/components/KPIWidget';
-import { Plus, Warehouse as WarehouseIcon, MapPin, User, Package, ArrowRight, Pencil, Trash2, ArrowLeftRight, BarChart3 } from 'lucide-react';
+import { Plus, Warehouse as WarehouseIcon, MapPin, User, Package, ArrowRight, Pencil, Trash2, ArrowLeftRight, BarChart3, Clock, LayoutGrid } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
