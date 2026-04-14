@@ -4,44 +4,37 @@
 `/business/customers`
 
 ## Status
-- Complete: 55%
+- Complete: 85%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Search only
-- API Status: ❌ Fake API
+- Logic Status: ✅ Full CRUD + export
+- API Status: ⚠️ Fake API
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Customer/retailer management — view, search, create, manage customer accounts.
+Customer/retailer management — CRUD, search, segment filter, export.
 
 ## Existing Features
 - Customer table with search
 - Segment badges (superette, wholesale, shadow)
-- "Add Customer" and "Add Shadow" buttons (non-functional)
-- Total orders and total spent display
+- Full CRUD (create, edit, delete with confirmation)
+- Export dialog
+- Order history per customer
+- Segment filter
 
 ## Existing User Actions
 - ✅ Search customers
-- ❌ Create customer
-- ❌ Edit customer
-- ❌ View customer detail
-- ❌ Merge shadow accounts
-- ❌ View customer history
-
-## Backend/API Needed
-- `GET /customers?search=&segment=&page=`
-- `POST /customers`
-- `PUT /customers/:id`
-- `GET /customers/:id/orders`
-- `POST /customers/:id/merge`
+- ✅ Create customer
+- ✅ Edit customer
+- ✅ Delete customer (with confirmation)
+- ✅ Filter by segment
+- ✅ Export
 
 ## Missing Features
-- [ ] CRUD operations
+- [ ] Real backend API
 - [ ] Customer detail page
-- [ ] Order history per customer
 - [ ] Credit limit management
-- [ ] Segment filter
-- [ ] Customer statement
 - [ ] Geolocation/map view
 
 ## Final Score
-**55/100**
+**85/100**

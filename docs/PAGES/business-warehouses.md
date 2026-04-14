@@ -4,38 +4,34 @@
 `/business/warehouses`
 
 ## Status
-- Complete: 55%
+- Complete: 80%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Read-only
-- API Status: ❌ Fake API
+- Logic Status: ✅ CRUD with dialogs + confirmation
+- API Status: ⚠️ Fake API
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Manage warehouse locations — capacity, utilization, managers.
+Manage warehouse locations — capacity, utilization, CRUD.
 
 ## Existing Features
 - Warehouse cards with capacity bars
 - Manager assignment display
-- Products count and utilization percentage
+- Full CRUD (create, edit, delete with confirmation)
+- Filter support
+- 294 lines
 
 ## Existing User Actions
 - ✅ View warehouses
-- ❌ Create warehouse
-- ❌ Edit warehouse
-- ❌ View warehouse inventory
-
-## Backend/API Needed
-- `GET /warehouses`
-- `POST /warehouses`
-- `PUT /warehouses/:id`
-- `GET /warehouses/:id/inventory`
+- ✅ Create warehouse
+- ✅ Edit warehouse
+- ✅ Delete warehouse (with confirmation)
 
 ## Missing Features
-- [ ] CRUD operations
+- [ ] Real backend API
 - [ ] Warehouse map view
 - [ ] Inter-warehouse transfers
 - [ ] Zone/bin management
-- [ ] Capacity planning
 
 ## Final Score
-**55/100**
+**80/100**

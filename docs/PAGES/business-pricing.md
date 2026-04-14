@@ -4,41 +4,35 @@
 `/business/pricing`
 
 ## Status
-- Complete: 50%
+- Complete: 85%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Display only
-- API Status: ❌ Fake API
+- Logic Status: ✅ Full CRUD + filters + confirmation
+- API Status: ⚠️ Fake API
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Manage segment-based pricing rules — set prices per customer segment, product unit, and date range.
+Manage segment-based pricing rules — per customer segment, product, date range.
 
 ## Existing Features
-- Pricing rules display per product
-- Segment badges (superette, wholesale, shadow)
+- Pricing rules table with search and filters
+- Segment badges
+- Full CRUD (create, edit, delete with confirmation)
 - Effective date ranges
+- 475 lines — feature-rich
 
 ## Existing User Actions
 - ✅ View pricing rules
-- ❌ Create pricing rule
-- ❌ Edit pricing rule
-- ❌ Delete pricing rule
-- ❌ Bulk price update
-
-## Backend/API Needed
-- `GET /pricing-rules`
-- `POST /pricing-rules`
-- `PUT /pricing-rules/:id`
-- `DELETE /pricing-rules/:id`
-- `POST /pricing-rules/bulk-update`
+- ✅ Create pricing rule
+- ✅ Edit pricing rule
+- ✅ Delete pricing rule (with confirmation)
+- ✅ Search and filter
 
 ## Missing Features
-- [ ] CRUD operations
-- [ ] Price effective date management
-- [ ] Bulk update interface
+- [ ] Real backend API
+- [ ] Bulk price update
 - [ ] Price comparison view
 - [ ] Margin calculation
-- [ ] Discount management
 
 ## Final Score
-**50/100**
+**85/100**

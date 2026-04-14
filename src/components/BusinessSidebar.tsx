@@ -2,6 +2,7 @@ import { LayoutDashboard, Package, ShoppingCart, Users, Warehouse, UserCog, File
 import { NavLink } from '@/components/NavLink';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { notificationUnreadCount } from '@/pages/business/NotificationsPage';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
@@ -26,7 +27,7 @@ const navKeys = [
   { key: 'nav.accounting', url: '/business/accounting', icon: Receipt },
   { key: 'nav.reports', url: '/business/reports', icon: BarChart3 },
   { key: 'business.activityLog', url: '/business/activity', icon: Activity },
-  { key: 'nav.notifications', url: '/business/notifications', icon: Bell },
+  { key: 'nav.notifications', url: '/business/notifications', icon: Bell, badge: true },
   { key: 'nav.help', url: '/business/help', icon: HelpCircle },
   { key: 'saas.automation', url: '/business/automation', icon: Bot },
   { key: 'saas.insights', url: '/business/insights', icon: Brain },
@@ -65,6 +66,7 @@ export function BusinessSidebar() {
             <SidebarMenu>
               {navKeys.map((item) => {
                 const title = t(item.key);
+                const showBadge = (item as any).badge && notificationUnreadCount > 0;
                 return (
                   <SidebarMenuItem key={item.key}>
                     <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={title}>
@@ -75,7 +77,16 @@ export function BusinessSidebar() {
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{title}</span>}
+                        {!collapsed && (
+                          <span className="flex items-center gap-2">
+                            {title}
+                            {showBadge && (
+                              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                                {notificationUnreadCount > 99 ? '99+' : notificationUnreadCount}
+                              </span>
+                            )}
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

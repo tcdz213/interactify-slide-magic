@@ -1,12 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getDrivers } from '@/lib/fake-api';
-import type { Driver } from '@/lib/fake-api/types';
+import type { Driver, DriverStatus } from '@/lib/fake-api/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { KPIWidget } from '@/components/KPIWidget';
-import { Users, Truck, CheckCircle, Clock } from 'lucide-react';
+import { Users, Truck, CheckCircle, Clock, Plus, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const statusColors: Record<string, string> = {
   available: 'bg-success/10 text-success',
@@ -17,8 +24,52 @@ const statusColors: Record<string, string> = {
 export default function DriversPage() {
   const { t } = useTranslation();
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Driver | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Driver | null>(null);
+
+  // Form state
+  const [formName, setFormName] = useState('');
+  const [formPhone, setFormPhone] = useState('');
+  const [formVehicle, setFormVehicle] = useState('');
+  const [formStatus, setFormStatus] = useState<DriverStatus>('available');
 
   useEffect(() => { getDrivers().then(setDrivers); }, []);
+
+  const resetForm = () => {
+    setFormName(''); setFormPhone(''); setFormVehicle(''); setFormStatus('available'); setEditing(null);
+  };
+
+  const openCreate = () => { resetForm(); setDialogOpen(true); };
+
+  const openEdit = (driver: Driver) => {
+    setEditing(driver);
+    setFormName(driver.name); setFormPhone(driver.phone); setFormVehicle(driver.vehicle); setFormStatus(driver.status);
+    setDialogOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!formName || !formPhone) { toast.error(t('common.error')); return; }
+    if (editing) {
+      setDrivers(prev => prev.map(d => d.id === editing.id ? { ...d, name: formName, phone: formPhone, vehicle: formVehicle, status: formStatus } : d));
+      toast.success(t('drivers.updated'));
+    } else {
+      const newDriver: Driver = {
+        id: `drv${Date.now()}`, tenantId: 't1', name: formName, phone: formPhone, vehicle: formVehicle,
+        status: formStatus, deliveriesToday: 0, completedToday: 0, onTimeRate: 100,
+      };
+      setDrivers(prev => [...prev, newDriver]);
+      toast.success(t('drivers.created'));
+    }
+    setDialogOpen(false); resetForm();
+  };
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    setDrivers(prev => prev.filter(d => d.id !== deleteTarget.id));
+    toast.success(t('drivers.deleted'));
+    setDeleteTarget(null);
+  };
 
   const totalDrivers = drivers.length;
   const available = drivers.filter(d => d.status === 'available').length;
@@ -27,9 +78,14 @@ export default function DriversPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('drivers.title')}</h1>
-        <p className="text-sm text-muted-foreground">{t('drivers.description')}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t('drivers.title')}</h1>
+          <p className="text-sm text-muted-foreground">{t('drivers.description')}</p>
+        </div>
+        <Button className="gap-2" onClick={openCreate}>
+          <Plus className="h-4 w-4" />{t('drivers.addDriver')}
+        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -41,15 +97,19 @@ export default function DriversPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {drivers.map(driver => (
-          <Card key={driver.id}>
+          <Card key={driver.id} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex-row items-start justify-between pb-3">
               <div>
                 <CardTitle className="text-base">{driver.name}</CardTitle>
                 <p className="text-xs text-muted-foreground mt-1">{driver.vehicle}</p>
               </div>
-              <Badge variant="secondary" className={statusColors[driver.status]}>
-                {t(`drivers.${driver.status}`)}
-              </Badge>
+              <div className="flex items-center gap-1">
+                <Badge variant="secondary" className={statusColors[driver.status]}>
+                  {t(`drivers.${driver.status}`)}
+                </Badge>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(driver)}><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setDeleteTarget(driver)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="text-sm space-y-1">
@@ -70,6 +130,32 @@ export default function DriversPage() {
           </Card>
         ))}
       </div>
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={v => { if (!v) resetForm(); setDialogOpen(v); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{editing ? t('drivers.editDriver') : t('drivers.addDriver')}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2"><Label>{t('common.name')}</Label><Input value={formName} onChange={e => setFormName(e.target.value)} placeholder={t('drivers.namePlaceholder')} /></div>
+            <div className="space-y-2"><Label>{t('common.phone')}</Label><Input value={formPhone} onChange={e => setFormPhone(e.target.value)} placeholder="+213 555 0000" /></div>
+            <div className="space-y-2"><Label>{t('drivers.vehicle')}</Label><Input value={formVehicle} onChange={e => setFormVehicle(e.target.value)} placeholder={t('drivers.vehiclePlaceholder')} /></div>
+            <div className="space-y-2">
+              <Label>{t('common.status')}</Label>
+              <Select value={formStatus} onValueChange={v => setFormStatus(v as DriverStatus)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="available">{t('drivers.available')}</SelectItem>
+                  <SelectItem value="on_route">{t('drivers.on_route')}</SelectItem>
+                  <SelectItem value="offline">{t('drivers.offline')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="w-full" onClick={handleSave}>{t('common.save')}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog open={!!deleteTarget} onOpenChange={v => { if (!v) setDeleteTarget(null); }} title={t('common.areYouSure')} description={t('common.cannotUndo')} onConfirm={handleDelete} />
     </div>
   );
 }

@@ -4,37 +4,38 @@
 `/business/deliveries`
 
 ## Status
-- Complete: 55%
+- Complete: 85%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Read + filter
-- API Status: ❌ Fake API
+- Logic Status: ✅ Filters, search, sort, pagination, reassign, status update
+- API Status: ⚠️ Fake API
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Monitor delivery operations — today's deliveries, status tracking, on-time rate.
+Monitor delivery operations — status tracking, reassignment, on-time rate.
 
 ## Existing Features
 - 4 KPIs (Today's Deliveries, In Transit, Completed, On-Time Rate)
-- Deliveries table with status filter
-- Status color coding (pending/in_transit/delivered/failed)
+- Deliveries table with status filter, search, pagination
+- Column sorting
+- Date filter
+- Reassign driver dialog
+- Status update actions (Delivered/Failed)
+- Proof-of-delivery indicators
 
 ## Existing User Actions
 - ✅ Filter by status
-- ❌ View delivery detail
-- ❌ Assign/reassign driver
-- ❌ Mark delivery status
-
-## Backend/API Needed
-- `GET /deliveries?status=&date=`
-- `PUT /deliveries/:id/status`
+- ✅ Search deliveries
+- ✅ Sort by columns
+- ✅ Date filter
+- ✅ Reassign driver
+- ✅ Mark as delivered/failed
+- ✅ Pagination
 
 ## Missing Features
-- [ ] Delivery detail view
+- [ ] Real backend API
 - [ ] GPS tracking map
-- [ ] Proof of delivery
-- [ ] Date range filter
-- [ ] Driver reassignment
-- [ ] Failed delivery handling
+- [ ] Proof of delivery upload
 
 ## Final Score
-**55/100**
+**85/100**

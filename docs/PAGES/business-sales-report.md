@@ -4,28 +4,31 @@
 `/business/reports/sales`
 
 ## Status
-- Complete: 55%
+- Complete: 60%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Read-only mock data
-- API Status: ❌ Fake API
+- Logic Status: ⚠️ Read-only, DataTable
+- API Status: ⚠️ Fake API
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Sales analytics — revenue trends, segment breakdown, top products, top customers, sales rep performance.
+Sales analytics — revenue trends, top products, top customers.
 
 ## Existing Features
 - Revenue by month chart
 - Revenue by segment breakdown
-- Top products table
-- Top customers table
+- Top products DataTable
+- Top customers DataTable
 - Sales rep performance table
 
+## Existing User Actions
+- ✅ View sales data
+
 ## Missing Features
+- [ ] Real backend API
 - [ ] Date range picker
 - [ ] Export to PDF/Excel
-- [ ] Comparison mode (vs previous period)
-- [ ] Drill-down on data points
-- [ ] Real data backend
+- [ ] Comparison mode
 
 ## Final Score
-**55/100**
+**60/100**

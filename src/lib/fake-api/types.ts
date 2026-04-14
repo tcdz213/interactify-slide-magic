@@ -2,9 +2,10 @@ export type SubscriptionPlan = 'starter' | 'professional' | 'enterprise';
 export type SubscriptionStatus = 'active' | 'trial' | 'suspended' | 'cancelled';
 export type TenantStatus = 'active' | 'inactive' | 'onboarding';
 export type OrderStatus = 'draft' | 'confirmed' | 'picking' | 'dispatched' | 'delivered' | 'settled' | 'cancelled';
-export type CustomerSegment = 'superette' | 'wholesale' | 'shadow';
+export type CustomerSegment = 'depot' | 'wholesale' | 'retail' | 'small_trader' | 'special_client' | 'superette' | 'shadow';
 export type UserRole = 'super_admin' | 'manager' | 'driver' | 'sales_rep' | 'retailer' | 'accountant';
 
+// ─── Tenant ───
 export interface Tenant {
   id: string;
   name: string;
@@ -32,19 +33,25 @@ export interface TenantUser {
   lastLogin: string;
 }
 
+// ─── Product ───
 export interface Product {
   id: string;
   tenantId: string;
   name: string;
+  description: string;
   sku: string;
   category: string;
   baseUnit: string;
   units: ProductUnit[];
   pricingRules: PricingRule[];
+  customerPrices: CustomerSpecificPrice[];
   stockBase: number;
   imageUrl?: string;
   isActive: boolean;
+  isDeleted: boolean;
+  deletedAt?: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProductUnit {
@@ -59,10 +66,50 @@ export interface PricingRule {
   unitId: string;
   unitName: string;
   price: number;
+  costPrice?: number;
+  effectiveFrom: string;
+  effectiveTo?: string;
+  isPromo?: boolean;
+  promoLabel?: string;
+}
+
+export interface CustomerSpecificPrice {
+  id: string;
+  customerId: string;
+  customerName: string;
+  unitId: string;
+  unitName: string;
+  price: number;
   effectiveFrom: string;
   effectiveTo?: string;
 }
 
+export interface PriceHistoryEntry {
+  id: string;
+  productId: string;
+  productName: string;
+  segment?: CustomerSegment;
+  customerId?: string;
+  customerName?: string;
+  unitId: string;
+  unitName: string;
+  oldPrice: number;
+  newPrice: number;
+  changedBy: string;
+  reason: string;
+  timestamp: string;
+}
+
+// ─── Price Groups / Regeneration ───
+export interface PriceGroupRule {
+  id: string;
+  tenantId: string;
+  segment: CustomerSegment;
+  marginPercent: number;
+  description: string;
+}
+
+// ─── Order ───
 export interface Order {
   id: string;
   tenantId: string;
@@ -77,6 +124,7 @@ export interface Order {
   assignedSalesRep?: string;
 }
 
+// ─── Customer ───
 export interface Customer {
   id: string;
   tenantId: string;
@@ -90,6 +138,7 @@ export interface Customer {
   totalSpent: number;
 }
 
+// ─── Warehouse ───
 export interface Warehouse {
   id: string;
   tenantId: string;
@@ -102,6 +151,7 @@ export interface Warehouse {
   utilization: number;
 }
 
+// ─── Stats ───
 export interface PlatformStats {
   totalTenants: number;
   activeTenants: number;
@@ -124,6 +174,7 @@ export interface BusinessStats {
   deliveryRate: number;
 }
 
+// ─── Category ───
 export interface Category {
   id: string;
   tenantId: string;
@@ -135,6 +186,7 @@ export interface Category {
   createdAt: string;
 }
 
+// ─── Inventory ───
 export type StockStatus = 'normal' | 'low' | 'out';
 
 export interface InventoryItem {
@@ -174,6 +226,7 @@ export interface StockAdjustment {
   updatedAt: string;
 }
 
+// ─── Delivery ───
 export type DeliveryStatus = 'pending' | 'in_transit' | 'delivered' | 'failed';
 
 export interface Delivery {
@@ -225,7 +278,7 @@ export interface DeliveryRoute {
   status: 'planned' | 'in_progress' | 'completed';
 }
 
-// ─── Phase 6: Finance & Reports ───
+// ─── Finance & Reports ───
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'partial' | 'overdue' | 'cancelled';
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'cheque' | 'mobile_payment';
 export type PaymentStatus = 'completed' | 'pending' | 'failed' | 'refunded';

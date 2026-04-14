@@ -4,26 +4,35 @@
 `/business/settings`
 
 ## Status
-- Complete: 50%
+- Complete: 85%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Forms don't persist
-- API Status: ❌ None
+- Logic Status: ✅ Full CRUD on warehouses/integrations, editable forms
+- API Status: ⚠️ State only (no persistence)
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Tenant-level settings — company info, preferences, branding.
+Tenant-level settings — company profile, warehouses, tax config, notifications, integrations.
 
 ## Existing Features
-- Company information form
-- General preferences
+- 5-tab interface (Company, Warehouses, Tax, Notifications, Integrations)
+- Company profile form with NIF/NIS/RC fields + logo upload zone
+- Warehouse CRUD (add, edit, delete) with dialog
+- Tax configuration (TVA rates, timezone, invoice prefix, currency)
+- Notification preferences matrix (email/push/SMS per event type)
+- Integration management with add dialog and toggle on/off
+
+## Existing User Actions
+- ✅ Edit company profile
+- ✅ Add/edit/delete warehouses
+- ✅ Configure TVA rates and timezone
+- ✅ Toggle notification channels per event
+- ✅ Add/toggle integrations
 
 ## Missing Features
-- [ ] Settings persistence
-- [ ] Logo upload
-- [ ] Currency/timezone settings
+- [ ] Real backend persistence
+- [ ] Logo file upload
 - [ ] Invoice template customization
-- [ ] Notification preferences
-- [ ] Integration settings
 
 ## Final Score
-**50/100**
+**85/100**

@@ -4,35 +4,33 @@
 `/business/automation`
 
 ## Status
-- Complete: 50%
+- Complete: 65%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Toggle/delete work in state, no persistence
+- Logic Status: ⚠️ Toggle/delete in state, create dialog
 - API Status: ❌ None
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Rule-based automation — trigger/condition/action rules for business processes.
+Rule-based automation — trigger/condition/action rules.
 
 ## Existing Features
-- Automation rules list (4 mock rules)
-- KPI widgets (Active Rules, Total Runs, Avg/Day, Success Rate)
+- Automation rules list (mock)
+- KPI widgets (Active Rules, Total Runs, etc.)
 - Toggle enable/disable
-- Delete rule
-- Create rule dialog (trigger, condition, action selects)
-- Last run and run count display
+- Create rule dialog
+- Filter support
 
 ## Existing User Actions
-- ✅ Toggle rule on/off (state only)
-- ✅ Delete rule (state only)
-- ⚠️ Create rule (dialog form, toast only)
+- ✅ Toggle rule on/off (state)
+- ✅ Create rule (dialog, toast)
+- ⚠️ Delete rule (state only)
 
 ## Missing Features
-- [ ] Real automation engine backend
+- [ ] Real automation engine
 - [ ] Rule execution logs
 - [ ] Complex condition builder
 - [ ] Webhook triggers
-- [ ] Email action templates
-- [ ] Rule testing/dry-run
 
 ## Final Score
-**50/100**
+**65/100**

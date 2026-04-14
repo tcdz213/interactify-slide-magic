@@ -31,9 +31,23 @@ const orderStatusStyles: Record<OrderStatus, string> = {
 };
 
 const segmentStyles: Record<CustomerSegment, string> = {
-  superette: 'bg-info/10 text-info border-info/20',
+  depot: 'bg-chart-1/10 text-chart-1 border-chart-1/20',
   wholesale: 'bg-accent/10 text-accent border-accent/20',
+  retail: 'bg-primary/10 text-primary border-primary/20',
+  small_trader: 'bg-warning/10 text-warning border-warning/20',
+  special_client: 'bg-chart-5/10 text-chart-5 border-chart-5/20',
+  superette: 'bg-info/10 text-info border-info/20',
   shadow: 'bg-muted text-muted-foreground border-border',
+};
+
+const segmentLabels: Record<CustomerSegment, string> = {
+  depot: 'Dépôt',
+  wholesale: 'Grossiste',
+  retail: 'Détaillant',
+  small_trader: 'Petit commerce',
+  special_client: 'Client spécial',
+  superette: 'Supérette',
+  shadow: 'Shadow',
 };
 
 export function PlanBadge({ plan }: { plan: SubscriptionPlan }) {
@@ -53,5 +67,5 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
 }
 
 export function SegmentBadge({ segment }: { segment: CustomerSegment }) {
-  return <Badge variant="outline" className={`text-xs font-medium capitalize ${segmentStyles[segment]}`}>{segment}</Badge>;
+  return <Badge variant="outline" className={`text-xs font-medium ${segmentStyles[segment] || 'bg-muted text-muted-foreground border-border'}`}>{segmentLabels[segment] || segment}</Badge>;
 }

@@ -4,41 +4,34 @@
 `/business/routes`
 
 ## Status
-- Complete: 45%
+- Complete: 65%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Read-only
-- API Status: ❌ Fake API
+- Logic Status: ⚠️ Create dialog, limited filters
+- API Status: ⚠️ Fake API
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Plan and optimize delivery routes — assign stops, optimize sequence, track progress.
+Plan and optimize delivery routes — assign stops, optimize sequence.
 
 ## Existing Features
 - Route list with status
 - Stop sequence display
 - Distance and duration estimates
-- Driver assignment
+- Create route dialog
+- Filter support
 
 ## Existing User Actions
 - ✅ View routes
-- ❌ Create route
-- ❌ Optimize route
-- ❌ Assign driver
-- ❌ Reorder stops
-
-## Backend/API Needed
-- `GET /routes`
-- `POST /routes`
-- `POST /routes/optimize`
-- `PUT /routes/:id`
+- ✅ Create route (dialog)
+- ✅ Filter routes
 
 ## Missing Features
+- [ ] Real backend API
 - [ ] Map visualization
 - [ ] Drag-and-drop stop reordering
 - [ ] Route optimization algorithm
-- [ ] Google Maps integration
 - [ ] Vehicle capacity constraints
-- [ ] Time window management
 
 ## Final Score
-**45/100**
+**65/100**

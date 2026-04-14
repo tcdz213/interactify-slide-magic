@@ -39,6 +39,7 @@ const OrdersPage = lazy(() => import("./pages/business/OrdersPage"));
 const CreateOrderPage = lazy(() => import("./pages/business/CreateOrderPage"));
 const OrderDetailPage = lazy(() => import("./pages/business/OrderDetailPage"));
 const DeliveriesPage = lazy(() => import("./pages/business/DeliveriesPage"));
+const DeliveryDetailPage = lazy(() => import("./pages/business/DeliveryDetailPage"));
 const DriversPage = lazy(() => import("./pages/business/DriversPage"));
 const RoutePlanningPage = lazy(() => import("./pages/business/RoutePlanningPage"));
 const InvoicesPage = lazy(() => import("./pages/business/InvoicesPage"));
@@ -48,6 +49,9 @@ const AccountingPage = lazy(() => import("./pages/business/AccountingPage"));
 const ReportsPage = lazy(() => import("./pages/business/ReportsPage"));
 const SalesReportPage = lazy(() => import("./pages/business/SalesReportPage"));
 const TaxReportPage = lazy(() => import("./pages/business/TaxReportPage"));
+const InventoryReportPage = lazy(() => import("./pages/business/InventoryReportPage"));
+const CustomerReportPage = lazy(() => import("./pages/business/CustomerReportPage"));
+const DeliveryReportPage = lazy(() => import("./pages/business/DeliveryReportPage"));
 const CustomersPage = lazy(() => import("./pages/business/CustomersPage"));
 const UsersPage = lazy(() => import("./pages/business/UsersPage"));
 const BusinessSettingsPage = lazy(() => import("./pages/business/BusinessSettingsPage"));
@@ -111,6 +115,7 @@ const App = () => (
                 <Route path="orders/create" element={<CreateOrderPage />} />
                 <Route path="orders/:id" element={<OrderDetailPage />} />
                 <Route path="deliveries" element={<DeliveriesPage />} />
+                <Route path="deliveries/:id" element={<DeliveryDetailPage />} />
                 <Route path="drivers" element={<DriversPage />} />
                 <Route path="routes" element={<RoutePlanningPage />} />
                 <Route path="invoices" element={<InvoicesPage />} />
@@ -120,6 +125,9 @@ const App = () => (
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="reports/sales" element={<SalesReportPage />} />
                 <Route path="reports/tax" element={<TaxReportPage />} />
+                <Route path="reports/inventory" element={<InventoryReportPage />} />
+                <Route path="reports/customers" element={<CustomerReportPage />} />
+                <Route path="reports/delivery" element={<DeliveryReportPage />} />
                 <Route path="customers" element={<CustomersPage />} />
                 <Route path="users" element={<UsersPage />} />
                 <Route path="settings" element={<BusinessSettingsPage />} />

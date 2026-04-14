@@ -4,32 +4,36 @@
 `/business/help`
 
 ## Status
-- Complete: 50%
+- Complete: 85%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ FAQ accordion + support form (no backend)
-- API Status: ❌ None
+- Logic Status: ✅ Tabs, search, ticket CRUD, doc filters
+- API Status: ⚠️ Mock (state only)
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Self-service help — FAQ, documentation links, support ticket submission.
+Self-service help — FAQ, documentation, ticket management.
 
 ## Existing Features
-- FAQ accordion (6 items)
-- Documentation links (4 items)
-- Support ticket form (name, email, subject, priority, message)
-- Toast on submit
+- Tabbed interface (FAQ, Documentation, Tickets, New Ticket)
+- FAQ with search filter
+- Documentation links with category filter
+- Ticket list with status filter and badges
+- Create new ticket form (persists in state)
+- Ticket status tracking (open/in_progress/resolved)
+- Priority badges
 
 ## Existing User Actions
-- ✅ Browse FAQ
-- ✅ View doc links
-- ⚠️ Submit ticket (toast only, no real submission)
+- ✅ Search FAQ
+- ✅ Filter docs by category
+- ✅ View ticket history with status filter
+- ✅ Create new support ticket
+- ✅ Browse documentation
 
 ## Missing Features
-- [ ] Real ticket submission
+- [ ] Real ticket backend
 - [ ] Live chat widget
-- [ ] Searchable knowledge base
-- [ ] Ticket history
 - [ ] Video tutorials
 
 ## Final Score
-**50/100**
+**85/100**

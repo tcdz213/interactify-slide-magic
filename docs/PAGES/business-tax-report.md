@@ -4,27 +4,41 @@
 `/business/reports/tax`
 
 ## Status
-- Complete: 55%
+- Complete: 85%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Read-only mock data
-- API Status: ❌ Fake API
+- Logic Status: ✅ Tabs, period selector, KPIs, G50, chart, export
+- API Status: ⚠️ Fake API + mock data
+- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Algerian TVA reporting — taxable base, TVA collected (9%/19%), G50 declaration preparation.
+Algerian TVA reporting — taxable base, TVA collected/deductible/net, G50 preview, exemptions.
 
 ## Existing Features
+- 4 KPIs (Base imposable, TVA collectée, TVA déductible, TVA nette)
+- 4 tabs (Overview, G50, Monthly Trend, Exemptions)
+- Period selector (6 quarters)
 - Tax breakdown table by rate
-- Total taxable base and TVA amounts
-- Period display
+- G50 declaration preview with field codes
+- Monthly TVA trend bar chart (9% vs 19%)
+- TVA 0% exemptions table
+- Net TVA calculation (collected - deductible)
+- CSV export
+- Print function
+- Deadline warning
+
+## Existing User Actions
+- ✅ Select period
+- ✅ Switch tabs
+- ✅ Export CSV
+- ✅ Print report
+- ✅ View G50 preview
+- ✅ View exemptions
 
 ## Missing Features
-- [ ] Period selector (monthly/quarterly)
-- [ ] G50 form auto-fill
-- [ ] Export for tax authority
-- [ ] TVA 0% exemptions
+- [ ] Real backend API
+- [ ] G50 PDF generation
 - [ ] Credit notes impact
-- [ ] Historical comparison
 
 ## Final Score
-**55/100**
+**85/100**

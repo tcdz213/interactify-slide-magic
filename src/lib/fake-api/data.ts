@@ -1,4 +1,4 @@
-import { Tenant, Product, Order, Customer, Warehouse, TenantUser, PlatformStats, BusinessStats, Category, InventoryItem, StockAdjustment, Delivery, Driver, DeliveryRoute, Invoice, Payment, AccountingStats, AgingBucket, TopDebtor, SalesReportData, TaxReportData } from './types';
+import { Tenant, Product, Order, Customer, Warehouse, TenantUser, PlatformStats, BusinessStats, Category, InventoryItem, StockAdjustment, Delivery, Driver, DeliveryRoute, Invoice, Payment, AccountingStats, AgingBucket, TopDebtor, SalesReportData, TaxReportData, PriceHistoryEntry, PriceGroupRule } from './types';
 
 export const platformStats: PlatformStats = {
   totalTenants: 47,
@@ -33,88 +33,122 @@ export const businessStats: BusinessStats = {
   deliveryRate: 94.5,
 };
 
+export const priceHistory: import('./types').PriceHistoryEntry[] = [
+  { id: 'ph1', productId: 'p1', productName: 'Couscous Fin 1kg', segment: 'superette', unitId: 'u2', unitName: 'Pack (12)', oldPrice: 1100, newPrice: 1200, changedBy: 'Admin', reason: 'Augmentation fournisseur', timestamp: '2024-06-15T10:00:00' },
+  { id: 'ph2', productId: 'p1', productName: 'Couscous Fin 1kg', segment: 'wholesale', unitId: 'u2', unitName: 'Pack (12)', oldPrice: 1000, newPrice: 1050, changedBy: 'Admin', reason: 'Augmentation fournisseur', timestamp: '2024-06-15T10:00:00' },
+  { id: 'ph3', productId: 'p2', productName: "Huile d'Olive 1L", segment: 'retail', unitId: 'u5', unitName: 'Carton (6)', oldPrice: 5000, newPrice: 4800, changedBy: 'Manager', reason: 'Promo été', timestamp: '2024-07-01T08:00:00' },
+  { id: 'ph4', productId: 'p4', productName: 'Tomate Concentrée 400g', segment: 'depot', unitId: 'u10', unitName: 'Tray (24)', oldPrice: 2200, newPrice: 2400, changedBy: 'Admin', reason: 'Nouveau tarif', timestamp: '2024-08-20T14:00:00' },
+];
+
+export const priceGroupRules: import('./types').PriceGroupRule[] = [
+  { id: 'pgr1', tenantId: 't1', segment: 'depot', marginPercent: 10, description: 'Prix dépôt = coût + 10%' },
+  { id: 'pgr2', tenantId: 't1', segment: 'wholesale', marginPercent: 15, description: 'Prix grossiste = coût + 15%' },
+  { id: 'pgr3', tenantId: 't1', segment: 'retail', marginPercent: 25, description: 'Prix détail = coût + 25%' },
+  { id: 'pgr4', tenantId: 't1', segment: 'small_trader', marginPercent: 20, description: 'Petit commerce = coût + 20%' },
+  { id: 'pgr5', tenantId: 't1', segment: 'special_client', marginPercent: 8, description: 'Client spécial = coût + 8%' },
+];
+
 export const products: Product[] = [
   {
-    id: 'p1', tenantId: 't1', name: 'Couscous Fin 1kg', sku: 'CSC-001', category: 'Grains',
-    baseUnit: 'piece', stockBase: 14400,
+    id: 'p1', tenantId: 't1', name: 'Couscous Fin 1kg', description: 'Couscous de blé dur extra fin, qualité premium algérienne', sku: 'CSC-001', category: 'Grains',
+    baseUnit: 'piece', stockBase: 14400, isDeleted: false, updatedAt: '2024-06-15',
     units: [
       { id: 'u1', name: 'Piece', conversionToBase: 1 },
       { id: 'u2', name: 'Pack (12)', conversionToBase: 12 },
       { id: 'u3', name: 'Pallet (600)', conversionToBase: 600 },
     ],
     pricingRules: [
-      { id: 'pr1', segment: 'superette', unitId: 'u2', unitName: 'Pack (12)', price: 1200, effectiveFrom: '2024-01-01' },
-      { id: 'pr2', segment: 'wholesale', unitId: 'u2', unitName: 'Pack (12)', price: 1050, effectiveFrom: '2024-01-01' },
-      { id: 'pr3', segment: 'superette', unitId: 'u3', unitName: 'Pallet (600)', price: 55000, effectiveFrom: '2024-01-01' },
-      { id: 'pr4', segment: 'wholesale', unitId: 'u3', unitName: 'Pallet (600)', price: 48000, effectiveFrom: '2024-01-01' },
+      { id: 'pr1', segment: 'depot', unitId: 'u2', unitName: 'Pack (12)', price: 1000, costPrice: 900, effectiveFrom: '2024-01-01' },
+      { id: 'pr2', segment: 'wholesale', unitId: 'u2', unitName: 'Pack (12)', price: 1050, costPrice: 900, effectiveFrom: '2024-01-01' },
+      { id: 'pr3', segment: 'retail', unitId: 'u2', unitName: 'Pack (12)', price: 1200, costPrice: 900, effectiveFrom: '2024-01-01' },
+      { id: 'pr4', segment: 'small_trader', unitId: 'u2', unitName: 'Pack (12)', price: 1100, costPrice: 900, effectiveFrom: '2024-01-01' },
+      { id: 'pr5', segment: 'wholesale', unitId: 'u3', unitName: 'Pallet (600)', price: 48000, costPrice: 42000, effectiveFrom: '2024-01-01' },
+      { id: 'pr6', segment: 'retail', unitId: 'u1', unitName: 'Piece', price: 110, costPrice: 80, effectiveFrom: '2024-01-01' },
+    ],
+    customerPrices: [
+      { id: 'cp1', customerId: 'c1', customerName: 'Superette El Baraka', unitId: 'u2', unitName: 'Pack (12)', price: 1150, effectiveFrom: '2024-03-01' },
+      { id: 'cp2', customerId: 'c5', customerName: 'Wholesale Center Blida', unitId: 'u3', unitName: 'Pallet (600)', price: 46000, effectiveFrom: '2024-01-01' },
     ],
     isActive: true, createdAt: '2024-01-20',
   },
   {
-    id: 'p2', tenantId: 't1', name: 'Huile d\'Olive 1L', sku: 'OIL-001', category: 'Oils',
-    baseUnit: 'bottle', stockBase: 3600,
+    id: 'p2', tenantId: 't1', name: "Huile d'Olive 1L", description: "Huile d'olive vierge extra, première pression à froid", sku: 'OIL-001', category: 'Oils',
+    baseUnit: 'bottle', stockBase: 3600, isDeleted: false, updatedAt: '2024-07-01',
     units: [
       { id: 'u4', name: 'Bottle', conversionToBase: 1 },
       { id: 'u5', name: 'Carton (6)', conversionToBase: 6 },
       { id: 'u6', name: 'Pallet (180)', conversionToBase: 180 },
     ],
     pricingRules: [
-      { id: 'pr5', segment: 'superette', unitId: 'u5', unitName: 'Carton (6)', price: 4800, effectiveFrom: '2024-01-01' },
-      { id: 'pr6', segment: 'wholesale', unitId: 'u5', unitName: 'Carton (6)', price: 4200, effectiveFrom: '2024-01-01' },
+      { id: 'pr7', segment: 'depot', unitId: 'u5', unitName: 'Carton (6)', price: 4200, costPrice: 3800, effectiveFrom: '2024-01-01' },
+      { id: 'pr8', segment: 'wholesale', unitId: 'u5', unitName: 'Carton (6)', price: 4500, costPrice: 3800, effectiveFrom: '2024-01-01' },
+      { id: 'pr9', segment: 'retail', unitId: 'u5', unitName: 'Carton (6)', price: 4800, costPrice: 3800, effectiveFrom: '2024-01-01' },
+      { id: 'pr10', segment: 'retail', unitId: 'u4', unitName: 'Bottle', price: 850, costPrice: 650, effectiveFrom: '2024-07-01', effectiveTo: '2024-08-31', isPromo: true, promoLabel: 'Promo été' },
     ],
+    customerPrices: [],
     isActive: true, createdAt: '2024-02-05',
   },
   {
-    id: 'p3', tenantId: 't1', name: 'Semoule Extra 5kg', sku: 'SEM-001', category: 'Grains',
-    baseUnit: 'bag', stockBase: 2400,
+    id: 'p3', tenantId: 't1', name: 'Semoule Extra 5kg', description: 'Semoule de blé dur extra pour couscous et pâtisserie', sku: 'SEM-001', category: 'Grains',
+    baseUnit: 'bag', stockBase: 2400, isDeleted: false, updatedAt: '2024-02-10',
     units: [
       { id: 'u7', name: 'Bag', conversionToBase: 1 },
       { id: 'u8', name: 'Pack (10)', conversionToBase: 10 },
     ],
     pricingRules: [
-      { id: 'pr7', segment: 'superette', unitId: 'u8', unitName: 'Pack (10)', price: 3500, effectiveFrom: '2024-01-01' },
-      { id: 'pr8', segment: 'wholesale', unitId: 'u8', unitName: 'Pack (10)', price: 3100, effectiveFrom: '2024-01-01' },
+      { id: 'pr11', segment: 'depot', unitId: 'u8', unitName: 'Pack (10)', price: 3000, costPrice: 2700, effectiveFrom: '2024-01-01' },
+      { id: 'pr12', segment: 'wholesale', unitId: 'u8', unitName: 'Pack (10)', price: 3100, costPrice: 2700, effectiveFrom: '2024-01-01' },
+      { id: 'pr13', segment: 'retail', unitId: 'u8', unitName: 'Pack (10)', price: 3500, costPrice: 2700, effectiveFrom: '2024-01-01' },
     ],
+    customerPrices: [],
     isActive: true, createdAt: '2024-02-10',
   },
   {
-    id: 'p4', tenantId: 't1', name: 'Tomate Concentrée 400g', sku: 'TOM-001', category: 'Canned Goods',
-    baseUnit: 'can', stockBase: 7200,
+    id: 'p4', tenantId: 't1', name: 'Tomate Concentrée 400g', description: 'Double concentré de tomate, conditionnement boîte métal', sku: 'TOM-001', category: 'Canned Goods',
+    baseUnit: 'can', stockBase: 7200, isDeleted: false, updatedAt: '2024-08-20',
     units: [
       { id: 'u9', name: 'Can', conversionToBase: 1 },
       { id: 'u10', name: 'Tray (24)', conversionToBase: 24 },
     ],
     pricingRules: [
-      { id: 'pr9', segment: 'superette', unitId: 'u10', unitName: 'Tray (24)', price: 2400, effectiveFrom: '2024-01-01' },
-      { id: 'pr10', segment: 'wholesale', unitId: 'u10', unitName: 'Tray (24)', price: 2100, effectiveFrom: '2024-01-01' },
+      { id: 'pr14', segment: 'depot', unitId: 'u10', unitName: 'Tray (24)', price: 2100, costPrice: 1900, effectiveFrom: '2024-01-01' },
+      { id: 'pr15', segment: 'wholesale', unitId: 'u10', unitName: 'Tray (24)', price: 2200, costPrice: 1900, effectiveFrom: '2024-01-01' },
+      { id: 'pr16', segment: 'retail', unitId: 'u10', unitName: 'Tray (24)', price: 2400, costPrice: 1900, effectiveFrom: '2024-01-01' },
+    ],
+    customerPrices: [
+      { id: 'cp3', customerId: 'c2', customerName: 'Gros Bazar Oran', unitId: 'u10', unitName: 'Tray (24)', price: 2050, effectiveFrom: '2024-06-01' },
     ],
     isActive: true, createdAt: '2024-03-01',
   },
   {
-    id: 'p5', tenantId: 't1', name: 'Lait UHT 1L', sku: 'MLK-001', category: 'Dairy',
-    baseUnit: 'brick', stockBase: 9600,
+    id: 'p5', tenantId: 't1', name: 'Lait UHT 1L', description: 'Lait entier UHT longue conservation', sku: 'MLK-001', category: 'Dairy',
+    baseUnit: 'brick', stockBase: 9600, isDeleted: false, updatedAt: '2024-03-15',
     units: [
       { id: 'u11', name: 'Brick', conversionToBase: 1 },
       { id: 'u12', name: 'Pack (12)', conversionToBase: 12 },
       { id: 'u13', name: 'Pallet (480)', conversionToBase: 480 },
     ],
     pricingRules: [
-      { id: 'pr11', segment: 'superette', unitId: 'u12', unitName: 'Pack (12)', price: 600, effectiveFrom: '2024-01-01' },
-      { id: 'pr12', segment: 'wholesale', unitId: 'u12', unitName: 'Pack (12)', price: 520, effectiveFrom: '2024-01-01' },
+      { id: 'pr17', segment: 'depot', unitId: 'u12', unitName: 'Pack (12)', price: 500, costPrice: 450, effectiveFrom: '2024-01-01' },
+      { id: 'pr18', segment: 'wholesale', unitId: 'u12', unitName: 'Pack (12)', price: 520, costPrice: 450, effectiveFrom: '2024-01-01' },
+      { id: 'pr19', segment: 'retail', unitId: 'u12', unitName: 'Pack (12)', price: 600, costPrice: 450, effectiveFrom: '2024-01-01' },
     ],
+    customerPrices: [],
     isActive: true, createdAt: '2024-03-15',
   },
   {
-    id: 'p6', tenantId: 't1', name: 'Sucre Blanc 1kg', sku: 'SUG-001', category: 'Basics',
-    baseUnit: 'piece', stockBase: 6000,
+    id: 'p6', tenantId: 't1', name: 'Sucre Blanc 1kg', description: 'Sucre blanc cristallisé, sachet 1kg', sku: 'SUG-001', category: 'Basics',
+    baseUnit: 'piece', stockBase: 0, isDeleted: false, updatedAt: '2024-04-01',
     units: [
       { id: 'u14', name: 'Piece', conversionToBase: 1 },
       { id: 'u15', name: 'Pack (10)', conversionToBase: 10 },
     ],
     pricingRules: [
-      { id: 'pr13', segment: 'superette', unitId: 'u15', unitName: 'Pack (10)', price: 1100, effectiveFrom: '2024-01-01' },
-      { id: 'pr14', segment: 'wholesale', unitId: 'u15', unitName: 'Pack (10)', price: 950, effectiveFrom: '2024-01-01' },
+      { id: 'pr20', segment: 'depot', unitId: 'u15', unitName: 'Pack (10)', price: 900, costPrice: 800, effectiveFrom: '2024-01-01' },
+      { id: 'pr21', segment: 'wholesale', unitId: 'u15', unitName: 'Pack (10)', price: 950, costPrice: 800, effectiveFrom: '2024-01-01' },
+      { id: 'pr22', segment: 'retail', unitId: 'u15', unitName: 'Pack (10)', price: 1100, costPrice: 800, effectiveFrom: '2024-01-01' },
     ],
+    customerPrices: [],
     isActive: false, createdAt: '2024-04-01',
   },
 ];

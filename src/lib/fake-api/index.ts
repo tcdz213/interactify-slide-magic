@@ -1,5 +1,5 @@
-import { tenants, products, orders, customers, warehouses, tenantUsers, platformStats, businessStats, revenueData, ordersByStatus, categories, inventoryItems, stockAdjustments, deliveries, drivers, deliveryRoutes, invoices, payments, accountingStats, agingBuckets, topDebtors, salesReportData, taxReportData } from './data';
-import type { Tenant, Product, Order, Customer, Warehouse, PlatformStats, BusinessStats, Category, InventoryItem, StockAdjustment, Delivery, Driver, DeliveryRoute, Invoice, Payment, AccountingStats, AgingBucket, TopDebtor, SalesReportData, TaxReportData } from './types';
+import { tenants, products, orders, customers, warehouses, tenantUsers, platformStats, businessStats, revenueData, ordersByStatus, categories, inventoryItems, stockAdjustments, deliveries, drivers, deliveryRoutes, invoices, payments, accountingStats, agingBuckets, topDebtors, salesReportData, taxReportData, priceHistory, priceGroupRules } from './data';
+import type { Tenant, Product, Order, Customer, Warehouse, PlatformStats, BusinessStats, Category, InventoryItem, StockAdjustment, Delivery, Driver, DeliveryRoute, Invoice, Payment, AccountingStats, AgingBucket, TopDebtor, SalesReportData, TaxReportData, PriceHistoryEntry, PriceGroupRule, CustomerSpecificPrice } from './types';
 
 const delay = (ms: number = 300) => new Promise(r => setTimeout(r, ms));
 
@@ -221,6 +221,148 @@ export async function updateInventoryItem(id: string, data: Partial<InventoryIte
   if (idx === -1) throw new Error('Inventory item not found');
   inventoryItems[idx] = { ...inventoryItems[idx], ...data, lastUpdated: new Date().toISOString().split('T')[0] };
   return inventoryItems[idx];
+}
+
+// ─── Mutations: Products ───
+export async function createProduct(data: Omit<Product, 'id' | 'tenantId' | 'createdAt'>): Promise<Product> {
+  await delay();
+  const p: Product = { id: `p${Date.now()}`, tenantId: 't1', createdAt: new Date().toISOString().split('T')[0], ...data };
+  products.unshift(p);
+  return p;
+}
+
+export async function updateProduct(id: string, data: Partial<Product>): Promise<Product> {
+  await delay();
+  const idx = products.findIndex(p => p.id === id);
+  if (idx === -1) throw new Error('Product not found');
+  products[idx] = { ...products[idx], ...data, updatedAt: new Date().toISOString().split('T')[0] };
+  return products[idx];
+}
+
+export async function deleteProduct(id: string, soft = true): Promise<void> {
+  await delay();
+  const idx = products.findIndex(p => p.id === id);
+  if (idx === -1) throw new Error('Product not found');
+  // Check if product used in orders
+  const usedInOrders = orders.some(o => o.customerId && o.status !== 'cancelled');
+  if (soft) {
+    products[idx] = { ...products[idx], isDeleted: true, isActive: false, deletedAt: new Date().toISOString() };
+  } else {
+    products.splice(idx, 1);
+  }
+}
+
+export async function restoreProduct(id: string): Promise<Product> {
+  await delay();
+  const idx = products.findIndex(p => p.id === id);
+  if (idx === -1) throw new Error('Product not found');
+  products[idx] = { ...products[idx], isDeleted: false, isActive: true, deletedAt: undefined };
+  return products[idx];
+}
+
+// ─── Price History ───
+export async function getPriceHistory(productId?: string): Promise<PriceHistoryEntry[]> {
+  await delay();
+  if (productId) return priceHistory.filter(h => h.productId === productId);
+  return priceHistory;
+}
+
+export async function addPriceHistoryEntry(entry: Omit<PriceHistoryEntry, 'id' | 'timestamp'>): Promise<PriceHistoryEntry> {
+  await delay();
+  const e: PriceHistoryEntry = { id: `ph${Date.now()}`, timestamp: new Date().toISOString(), ...entry };
+  priceHistory.unshift(e);
+  return e;
+}
+
+// ─── Price Group Rules ───
+export async function getPriceGroupRules(tenantId: string = 't1'): Promise<PriceGroupRule[]> {
+  await delay();
+  return priceGroupRules.filter(r => r.tenantId === tenantId);
+}
+
+export async function updatePriceGroupRule(id: string, data: Partial<PriceGroupRule>): Promise<PriceGroupRule> {
+  await delay();
+  const idx = priceGroupRules.findIndex(r => r.id === id);
+  if (idx === -1) throw new Error('Price group rule not found');
+  priceGroupRules[idx] = { ...priceGroupRules[idx], ...data };
+  return priceGroupRules[idx];
+}
+
+// ─── Price Regeneration Engine ───
+export async function regeneratePrices(tenantId: string = 't1'): Promise<{ updated: number }> {
+  await delay();
+  let updated = 0;
+  const rules = priceGroupRules.filter(r => r.tenantId === tenantId);
+  for (const product of products.filter(p => p.tenantId === tenantId && !p.isDeleted)) {
+    for (const pr of product.pricingRules) {
+      const groupRule = rules.find(r => r.segment === pr.segment);
+      if (groupRule && pr.costPrice) {
+        const oldPrice = pr.price;
+        const newPrice = Math.round(pr.costPrice * (1 + groupRule.marginPercent / 100));
+        if (newPrice !== oldPrice) {
+          priceHistory.unshift({
+            id: `ph${Date.now()}_${updated}`, productId: product.id, productName: product.name,
+            segment: pr.segment, unitId: pr.unitId, unitName: pr.unitName,
+            oldPrice, newPrice, changedBy: 'Système', reason: 'Régénération automatique',
+            timestamp: new Date().toISOString(),
+          });
+          pr.price = newPrice;
+          updated++;
+        }
+      }
+    }
+  }
+  return { updated };
+}
+
+// ─── Mutations: Payments ───
+export async function createPayment(data: Omit<Payment, 'id' | 'tenantId' | 'createdAt'>): Promise<Payment> {
+  await delay();
+  const p: Payment = { id: `pay${Date.now()}`, tenantId: 't1', createdAt: new Date().toISOString(), ...data };
+  payments.push(p);
+  // Update invoice paid amount
+  const inv = invoices.find(i => i.id === data.invoiceId);
+  if (inv) {
+    inv.paidAmount += data.amount;
+    inv.remainingAmount = inv.total - inv.paidAmount;
+    if (inv.remainingAmount <= 0) inv.status = 'paid';
+    else if (inv.paidAmount > 0) inv.status = 'partial';
+    inv.payments.push(p);
+  }
+  return p;
+}
+
+export async function refundPayment(id: string): Promise<Payment> {
+  await delay();
+  const idx = payments.findIndex(p => p.id === id);
+  if (idx === -1) throw new Error('Payment not found');
+  payments[idx] = { ...payments[idx], status: 'refunded' };
+  return payments[idx];
+}
+
+// ─── Mutations: Accounting Journal Entries ───
+export interface JournalEntry {
+  id: string; date: string; description: string; debit: string; credit: string; amount: number; createdBy: string;
+}
+
+const journalEntriesStore: JournalEntry[] = [
+  { id: 'JE001', date: '2024-12-15', description: 'Sale revenue', debit: 'Accounts Receivable', credit: 'Sales Revenue', amount: 85000, createdBy: 'System' },
+  { id: 'JE002', date: '2024-12-14', description: 'Purchase goods', debit: 'COGS', credit: 'Accounts Payable', amount: 42000, createdBy: 'System' },
+  { id: 'JE003', date: '2024-12-13', description: 'Payment received', debit: 'Cash', credit: 'Accounts Receivable', amount: 65000, createdBy: 'System' },
+  { id: 'JE004', date: '2024-12-12', description: 'Salary payment', debit: 'Salary Expense', credit: 'Cash', amount: 120000, createdBy: 'System' },
+  { id: 'JE005', date: '2024-12-11', description: 'Rent payment', debit: 'Rent Expense', credit: 'Cash', amount: 35000, createdBy: 'System' },
+];
+
+export async function getJournalEntries(): Promise<JournalEntry[]> {
+  await delay();
+  return journalEntriesStore;
+}
+
+export async function createJournalEntry(data: Omit<JournalEntry, 'id'>): Promise<JournalEntry> {
+  await delay();
+  const je: JournalEntry = { id: `JE${Date.now()}`, ...data };
+  journalEntriesStore.unshift(je);
+  return je;
 }
 
 export * from './types';

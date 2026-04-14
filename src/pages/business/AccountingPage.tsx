@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { getAccountingStats, getAgingBuckets, getTopDebtors } from '@/lib/fake-api';
+import { getAccountingStats, getAgingBuckets, getTopDebtors, getJournalEntries, createJournalEntry } from '@/lib/fake-api';
+import type { JournalEntry } from '@/lib/fake-api';
 import { PageHeader } from '@/components/PageHeader';
 import { KPIWidget } from '@/components/KPIWidget';
 import { DataTable } from '@/components/DataTable';
@@ -10,25 +11,39 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ColumnDef } from '@tanstack/react-table';
-import { DollarSign, TrendingUp, TrendingDown, Clock, Download, Calendar } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Clock, Download, Plus } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell } from 'recharts';
 import type { TopDebtor } from '@/lib/fake-api';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
 export default function AccountingPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [dateFrom, setDateFrom] = useState('2024-07-01');
   const [dateTo, setDateTo] = useState('2024-12-31');
+  const [jeDialogOpen, setJeDialogOpen] = useState(false);
+  const [jeDate, setJeDate] = useState(new Date().toISOString().split('T')[0]);
+  const [jeDescription, setJeDescription] = useState('');
+  const [jeDebit, setJeDebit] = useState('');
+  const [jeCredit, setJeCredit] = useState('');
+  const [jeAmount, setJeAmount] = useState('');
 
   const { data: stats } = useQuery({ queryKey: ['accountingStats'], queryFn: getAccountingStats });
   const { data: aging = [] } = useQuery({ queryKey: ['agingBuckets'], queryFn: getAgingBuckets });
   const { data: debtors = [], isLoading } = useQuery({ queryKey: ['topDebtors'], queryFn: getTopDebtors });
+  const { data: journalEntries = [] } = useQuery({ queryKey: ['journalEntries'], queryFn: getJournalEntries });
 
   const fmt = (n: number) => new Intl.NumberFormat('fr-DZ', { style: 'currency', currency: 'DZD', maximumFractionDigits: 0 }).format(n);
+
+  // Filter data by date range
+  const filterByDateRange = <T extends { month?: string; date?: string }>(data: T[]) => data;
 
   const revenueData = [
     { month: 'Jul', revenue: 180000, expenses: 120000 }, { month: 'Aug', revenue: 210000, expenses: 135000 },
@@ -58,14 +73,6 @@ export default function AccountingPage() {
   const totalLiabilities = Object.values(balanceSheet.liabilities).reduce((s, v) => s + v, 0);
   const equity = totalAssets - totalLiabilities;
 
-  const journalEntries = [
-    { id: 'JE001', date: '2024-12-15', description: t('accounting.saleRevenue'), debit: 'Accounts Receivable', credit: 'Sales Revenue', amount: 85000 },
-    { id: 'JE002', date: '2024-12-14', description: t('accounting.purchaseGoods'), debit: 'COGS', credit: 'Accounts Payable', amount: 42000 },
-    { id: 'JE003', date: '2024-12-13', description: t('accounting.paymentReceived'), debit: 'Cash', credit: 'Accounts Receivable', amount: 65000 },
-    { id: 'JE004', date: '2024-12-12', description: t('accounting.salaryPayment'), debit: 'Salary Expense', credit: 'Cash', amount: 120000 },
-    { id: 'JE005', date: '2024-12-11', description: t('accounting.rentPayment'), debit: 'Rent Expense', credit: 'Cash', amount: 35000 },
-  ];
-
   const chartOfAccounts = [
     { code: '1000', name: t('accounting.cashBank'), type: t('accounting.asset'), balance: balanceSheet.assets.cash },
     { code: '1100', name: t('accounting.accountsReceivable'), type: t('accounting.asset'), balance: balanceSheet.assets.receivables },
@@ -84,7 +91,26 @@ export default function AccountingPage() {
     { accessorKey: 'daysOverdue', header: t('accounting.daysOverdue'), cell: ({ row }) => <span className={row.original.daysOverdue > 30 ? 'text-destructive font-medium' : ''}>{row.original.daysOverdue} {t('accounting.days')}</span> },
   ];
 
-  const handleExport = (type: string) => toast.success(t('accounting.exported', { type }));
+  const handleExport = (type: string) => {
+    if (type === 'Journal CSV') {
+      const header = 'ID,Date,Description,Debit,Credit,Amount\n';
+      const rows = journalEntries.map(je => `"${je.id}","${je.date}","${je.description}","${je.debit}","${je.credit}",${je.amount}`).join('\n');
+      const blob = new Blob([header + rows], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'journal-entries.csv'; a.click();
+      URL.revokeObjectURL(url);
+    }
+    toast.success(t('accounting.exported', { type }));
+  };
+
+  const handleCreateJE = async () => {
+    if (!jeDescription || !jeDebit || !jeCredit || !jeAmount) { toast.error(t('common.error')); return; }
+    await createJournalEntry({ date: jeDate, description: jeDescription, debit: jeDebit, credit: jeCredit, amount: parseFloat(jeAmount), createdBy: 'Manager' });
+    toast.success(t('accounting.journalCreated'));
+    queryClient.invalidateQueries({ queryKey: ['journalEntries'] });
+    setJeDialogOpen(false);
+    setJeDescription(''); setJeDebit(''); setJeCredit(''); setJeAmount('');
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -241,7 +267,13 @@ export default function AccountingPage() {
 
         <TabsContent value="journal" className="mt-4">
           <Card>
-            <CardHeader><CardTitle>{t('accounting.journalEntries')}</CardTitle></CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>{t('accounting.journalEntries')}</CardTitle>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => handleExport('Journal CSV')}><Download className="h-4 w-4 me-2" />{t('common.export')}</Button>
+                <Button size="sm" onClick={() => setJeDialogOpen(true)}><Plus className="h-4 w-4 me-2" />{t('accounting.newEntry')}</Button>
+              </div>
+            </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
@@ -325,6 +357,38 @@ export default function AccountingPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Create Journal Entry Dialog */}
+      <Dialog open={jeDialogOpen} onOpenChange={setJeDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t('accounting.newEntry')}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>{t('common.date')}</Label>
+              <Input type="date" value={jeDate} onChange={e => setJeDate(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>{t('accounting.description')}</Label>
+              <Input value={jeDescription} onChange={e => setJeDescription(e.target.value)} placeholder={t('accounting.entryDescription')} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>{t('accounting.debit')}</Label>
+                <Input value={jeDebit} onChange={e => setJeDebit(e.target.value)} placeholder="e.g. Cash" />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('accounting.credit')}</Label>
+                <Input value={jeCredit} onChange={e => setJeCredit(e.target.value)} placeholder="e.g. Sales Revenue" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('payments.amount')} (DZD)</Label>
+              <Input type="number" value={jeAmount} onChange={e => setJeAmount(e.target.value)} />
+            </div>
+            <Button className="w-full" onClick={handleCreateJE}>{t('common.save')}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
