@@ -270,6 +270,94 @@ export default function WarehousesPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Zones Tab */}
+        <TabsContent value="zones" className="mt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{t('warehouses.zones')}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                <Input value={newZoneName} onChange={e => setNewZoneName(e.target.value)} placeholder={t('warehouses.zoneName')} className="flex-1 min-w-[150px]" />
+                <Select value={newZoneType} onValueChange={setNewZoneType}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['storage', 'picking', 'receiving', 'shipping', 'cold'].map(zt => (
+                      <SelectItem key={zt} value={zt}>{t(`warehouses.zoneTypes.${zt}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={newZoneWh} onValueChange={setNewZoneWh}>
+                  <SelectTrigger className="w-40"><SelectValue placeholder={t('warehouses.selectWarehouse')} /></SelectTrigger>
+                  <SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button onClick={() => {
+                  if (!newZoneName.trim() || !newZoneWh) return;
+                  setZones(prev => [...prev, { id: `z${Date.now()}`, name: newZoneName.trim(), type: newZoneType, warehouseId: newZoneWh }]);
+                  setNewZoneName('');
+                  toast.success(t('warehouses.zoneAdded'));
+                }} className="gap-1"><Plus className="h-4 w-4" />{t('warehouses.addZone')}</Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('warehouses.zoneName')}</TableHead>
+                    <TableHead>{t('warehouses.zoneType')}</TableHead>
+                    <TableHead>{t('common.name')} ({t('nav.warehouses')})</TableHead>
+                    <TableHead>{t('common.actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {zones.map(z => (
+                    <TableRow key={z.id}>
+                      <TableCell className="font-medium">{z.name}</TableCell>
+                      <TableCell><Badge variant="outline">{t(`warehouses.zoneTypes.${z.type}`)}</Badge></TableCell>
+                      <TableCell>{warehouses.find(w => w.id === z.warehouseId)?.name || z.warehouseId}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => {
+                          setZones(prev => prev.filter(zz => zz.id !== z.id));
+                          toast.success(t('warehouses.zoneDeleted'));
+                        }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Activity Log Tab */}
+        <TabsContent value="activity" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Clock className="h-4 w-4" />{t('warehouses.activityLog')}</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('common.date')}</TableHead>
+                    <TableHead>{t('nav.warehouses')}</TableHead>
+                    <TableHead>{t('common.actions')}</TableHead>
+                    <TableHead>{t('admin.user')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activityLog.map(a => (
+                    <TableRow key={a.id}>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{a.timestamp}</TableCell>
+                      <TableCell className="font-medium">{warehouses.find(w => w.id === a.warehouseId)?.name || a.warehouseId}</TableCell>
+                      <TableCell>{a.action}</TableCell>
+                      <TableCell className="text-sm">{a.user}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Create/Edit Dialog */}
