@@ -291,6 +291,11 @@ export default function OrdersPage() {
                     <TableCell className="text-sm" onClick={() => navigate(`/business/orders/${o.id}`)}>{o.assignedSalesRep || '—'}</TableCell>
                     <TableCell className="text-sm" onClick={() => navigate(`/business/orders/${o.id}`)}>{o.assignedDriver || '—'}</TableCell>
                     <TableCell className="text-muted-foreground text-xs" onClick={() => navigate(`/business/orders/${o.id}`)}>{new Date(o.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleDuplicateOrder(o); }} title={t('business.duplicateOrder')}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 );
               })}
