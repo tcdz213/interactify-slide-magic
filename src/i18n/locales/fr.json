@@ -324,7 +324,21 @@
     "reason": "Raison",
     "noPriceHistory": "Aucun historique de prix",
     "unitConversionNote": "Les conversions d'unités sont automatiques lors des ventes, achats et mouvements de stock.",
-    "stockConversionNote": "Le stock est toujours stocké en unité de base. Les conversions sont calculées automatiquement."
+    "stockConversionNote": "Le stock est toujours stocké en unité de base. Les conversions sont calculées automatiquement.",
+    "variants": "Variantes",
+    "variantName": "Nom de la variante",
+    "variantValue": "Valeur",
+    "addVariant": "Ajouter une variante",
+    "removeVariant": "Supprimer",
+    "variantHint": "Ajoutez des variantes comme Taille, Couleur, etc.",
+    "bulkArchive": "Archiver en masse",
+    "bulkArchiveConfirm": "Archiver {{count}} produits sélectionnés ?",
+    "bulkArchived": "{{count}} produits archivés",
+    "selectProducts": "Sélectionner des produits",
+    "selected": "{{count}} sélectionné(s)",
+    "imageUploaded": "Image téléchargée",
+    "imageRemoved": "Image supprimée",
+    "changeImage": "Changer l'image"
   },
   "export": {
     "title": "Exporter les données",

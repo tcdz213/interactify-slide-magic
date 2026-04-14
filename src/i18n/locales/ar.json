@@ -324,7 +324,21 @@
     "reason": "السبب",
     "noPriceHistory": "لا يوجد سجل أسعار",
     "unitConversionNote": "تحويلات الوحدات تتم تلقائياً أثناء المبيعات والمشتريات وحركات المخزون.",
-    "stockConversionNote": "يتم تخزين المخزون دائماً بوحدات الأساس. يتم حساب التحويلات تلقائياً."
+    "stockConversionNote": "يتم تخزين المخزون دائماً بوحدات الأساس. يتم حساب التحويلات تلقائياً.",
+    "variants": "المتغيرات",
+    "variantName": "اسم المتغير",
+    "variantValue": "القيمة",
+    "addVariant": "إضافة متغير",
+    "removeVariant": "حذف",
+    "variantHint": "أضف متغيرات مثل الحجم، اللون، إلخ.",
+    "bulkArchive": "أرشفة جماعية",
+    "bulkArchiveConfirm": "أرشفة {{count}} منتجات مختارة؟",
+    "bulkArchived": "تم أرشفة {{count}} منتجات",
+    "selectProducts": "اختر المنتجات",
+    "selected": "{{count}} مختار",
+    "imageUploaded": "تم تحميل الصورة",
+    "imageRemoved": "تم حذف الصورة",
+    "changeImage": "تغيير الصورة"
   },
   "export": {
     "title": "تصدير البيانات",
