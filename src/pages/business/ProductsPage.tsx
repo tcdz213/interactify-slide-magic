@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Package, Eye, LayoutGrid, List, Copy, Upload, Download, Barcode, Edit, Trash2, ChevronLeft, ChevronRight, History, X, RotateCcw, DollarSign, Users, ArrowUpDown, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Package, Eye, LayoutGrid, List, Copy, Upload, Download, Barcode, Edit, Trash2, ChevronLeft, ChevronRight, History, X, RotateCcw, DollarSign, Users, ArrowUpDown, AlertTriangle, ImageIcon, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
