@@ -693,10 +693,68 @@ export default function ProductsPage() {
               <Label>{t('common.active')}</Label>
             </div>
 
-            <div className="rounded-lg border-2 border-dashed border-muted-foreground/20 p-8 text-center cursor-pointer hover:border-primary/40 transition-colors">
-              <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-              <p className="text-sm text-muted-foreground">{t('products.uploadImage')}</p>
-              <p className="text-xs text-muted-foreground mt-1">JPG, PNG — max 2 Mo</p>
+            {formImageUrl ? (
+              <div className="relative rounded-lg border overflow-hidden">
+                <img src={formImageUrl} alt="Product" className="w-full h-32 object-cover" />
+                <div className="absolute top-2 end-2 flex gap-1">
+                  <label className="cursor-pointer">
+                    <Button variant="secondary" size="icon" className="h-7 w-7" asChild><span><ImageIcon className="h-3.5 w-3.5" /></span></Button>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </label>
+                  <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => { setFormImageUrl(''); toast.success(t('products.imageRemoved')); }}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <label className="rounded-lg border-2 border-dashed border-muted-foreground/20 p-8 text-center cursor-pointer hover:border-primary/40 transition-colors block">
+                <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">{t('products.uploadImage')}</p>
+                <p className="text-xs text-muted-foreground mt-1">JPG, PNG — max 2 Mo</p>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </label>
+            )}
+
+            {/* Variant Management */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-1"><Tag className="h-3.5 w-3.5" />{t('products.variants')}</Label>
+              {formVariants.map((v, vi) => (
+                <div key={vi} className="rounded-md border p-2 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{v.name}</span>
+                    <Button variant="ghost" size="sm" className="h-6 text-destructive text-xs" onClick={() => setFormVariants(prev => prev.filter((_, i) => i !== vi))}>
+                      {t('products.removeVariant')}
+                    </Button>
+                  </div>
+                  <div className="flex gap-1 flex-wrap">
+                    {v.values.map((val, vali) => (
+                      <Badge key={vali} variant="secondary" className="gap-1">
+                        {val}
+                        <button onClick={() => setFormVariants(prev => prev.map((fv, i) => i === vi ? { ...fv, values: fv.values.filter((_, j) => j !== vali) } : fv))} className="hover:text-destructive">
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <Input value={newVariantName} onChange={e => setNewVariantName(e.target.value)} placeholder={t('products.variantName')} className="flex-1" />
+                <Input value={newVariantValue} onChange={e => setNewVariantValue(e.target.value)} placeholder={t('products.variantValue')} className="flex-1" />
+                <Button variant="outline" size="icon" onClick={() => {
+                  if (!newVariantName.trim() || !newVariantValue.trim()) return;
+                  const existing = formVariants.find(v => v.name === newVariantName.trim());
+                  if (existing) {
+                    setFormVariants(prev => prev.map(v => v.name === newVariantName.trim() ? { ...v, values: [...v.values, newVariantValue.trim()] } : v));
+                  } else {
+                    setFormVariants(prev => [...prev, { name: newVariantName.trim(), values: [newVariantValue.trim()] }]);
+                  }
+                  setNewVariantValue('');
+                }} disabled={!newVariantName.trim() || !newVariantValue.trim()}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">{t('products.variantHint')}</p>
             </div>
 
             <Button className="w-full" onClick={handleSave} disabled={saving}>
