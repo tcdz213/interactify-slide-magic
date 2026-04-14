@@ -923,6 +923,15 @@ export default function ProductsPage() {
         description={t('products.softDeleteHint')}
         onConfirm={handleDelete}
       />
+
+      {/* Bulk Archive Confirm */}
+      <ConfirmDialog
+        open={showBulkArchiveConfirm}
+        onOpenChange={(v) => { if (!v) setShowBulkArchiveConfirm(false); }}
+        title={t('products.bulkArchive')}
+        description={t('products.bulkArchiveConfirm', { count: selectedIds.size })}
+        onConfirm={handleBulkArchive}
+      />
     </div>
   );
 }
