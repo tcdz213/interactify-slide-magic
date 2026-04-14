@@ -129,6 +129,27 @@ export default function OrdersPage() {
     toast.success('CSV exporté');
   };
 
+  const handleDuplicateOrder = (o: Order) => {
+    const newOrder: Order = {
+      ...o,
+      id: `ord-dup-${Date.now().toString(36)}`,
+      status: 'draft' as OrderStatus,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    toast.success(t('business.orderDuplicated'));
+  };
+
+  const toggleSort = (field: 'date' | 'amount' | 'customer') => {
+    if (sortField === field) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('desc');
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-3">
