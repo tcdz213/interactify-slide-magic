@@ -5,6 +5,7 @@ import type { Warehouse } from '@/lib/fake-api/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { KPIWidget } from '@/components/KPIWidget';
-import { Plus, Warehouse as WarehouseIcon, MapPin, User, Package, ArrowRight, Pencil, Trash2, ArrowLeftRight, BarChart3 } from 'lucide-react';
+import { Plus, Warehouse as WarehouseIcon, MapPin, User, Package, ArrowRight, Pencil, Trash2, ArrowLeftRight, BarChart3, Clock, LayoutGrid } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
@@ -26,6 +27,28 @@ export default function WarehousesPage() {
   const [editing, setEditing] = useState<Warehouse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Warehouse | null>(null);
   const [transferOpen, setTransferOpen] = useState(false);
+
+  // Zones state
+  type Zone = { id: string; name: string; type: string; warehouseId: string };
+  const [zones, setZones] = useState<Zone[]>([
+    { id: 'z1', name: 'Zone A - Stockage', type: 'storage', warehouseId: 'wh1' },
+    { id: 'z2', name: 'Zone B - Préparation', type: 'picking', warehouseId: 'wh1' },
+    { id: 'z3', name: 'Zone C - Réception', type: 'receiving', warehouseId: 'wh2' },
+    { id: 'z4', name: 'Chambre froide', type: 'cold', warehouseId: 'wh2' },
+  ]);
+  const [newZoneName, setNewZoneName] = useState('');
+  const [newZoneType, setNewZoneType] = useState('storage');
+  const [newZoneWh, setNewZoneWh] = useState('');
+
+  // Activity log mock
+  type ActivityEntry = { id: string; warehouseId: string; action: string; user: string; timestamp: string };
+  const activityLog: ActivityEntry[] = [
+    { id: 'a1', warehouseId: 'wh1', action: 'Réception de 500 unités — Couscous Fin', user: 'Karim B.', timestamp: '2025-01-15 09:30' },
+    { id: 'a2', warehouseId: 'wh1', action: 'Transfert sortant → Dépôt Ouest — 200 Huile', user: 'Amina M.', timestamp: '2025-01-15 11:00' },
+    { id: 'a3', warehouseId: 'wh2', action: 'Ajustement de stock — Sucre (-50)', user: 'Omar D.', timestamp: '2025-01-14 16:45' },
+    { id: 'a4', warehouseId: 'wh1', action: 'Préparation commande #ORD-0042', user: 'Yacine K.', timestamp: '2025-01-14 14:20' },
+    { id: 'a5', warehouseId: 'wh2', action: 'Inventaire cyclique terminé', user: 'Amina M.', timestamp: '2025-01-13 17:00' },
+  ];
 
   // Form
   const [formName, setFormName] = useState('');
@@ -131,6 +154,8 @@ export default function WarehousesPage() {
           <TabsTrigger value="cards">{t('warehouses.cardView')}</TabsTrigger>
           <TabsTrigger value="table">{t('warehouses.tableView')}</TabsTrigger>
           <TabsTrigger value="capacity">{t('warehouses.capacityPlanning')}</TabsTrigger>
+          <TabsTrigger value="zones">{t('warehouses.zones')}</TabsTrigger>
+          <TabsTrigger value="activity">{t('warehouses.activityLog')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cards" className="mt-4">
@@ -242,6 +267,94 @@ export default function WarehousesPage() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Zones Tab */}
+        <TabsContent value="zones" className="mt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>{t('warehouses.zones')}</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2 flex-wrap">
+                <Input value={newZoneName} onChange={e => setNewZoneName(e.target.value)} placeholder={t('warehouses.zoneName')} className="flex-1 min-w-[150px]" />
+                <Select value={newZoneType} onValueChange={setNewZoneType}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['storage', 'picking', 'receiving', 'shipping', 'cold'].map(zt => (
+                      <SelectItem key={zt} value={zt}>{t(`warehouses.zoneTypes.${zt}`)}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={newZoneWh} onValueChange={setNewZoneWh}>
+                  <SelectTrigger className="w-40"><SelectValue placeholder={t('warehouses.selectWarehouse')} /></SelectTrigger>
+                  <SelectContent>{warehouses.map(w => <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>)}</SelectContent>
+                </Select>
+                <Button onClick={() => {
+                  if (!newZoneName.trim() || !newZoneWh) return;
+                  setZones(prev => [...prev, { id: `z${Date.now()}`, name: newZoneName.trim(), type: newZoneType, warehouseId: newZoneWh }]);
+                  setNewZoneName('');
+                  toast.success(t('warehouses.zoneAdded'));
+                }} className="gap-1"><Plus className="h-4 w-4" />{t('warehouses.addZone')}</Button>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('warehouses.zoneName')}</TableHead>
+                    <TableHead>{t('warehouses.zoneType')}</TableHead>
+                    <TableHead>{t('common.name')} ({t('nav.warehouses')})</TableHead>
+                    <TableHead>{t('common.actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {zones.map(z => (
+                    <TableRow key={z.id}>
+                      <TableCell className="font-medium">{z.name}</TableCell>
+                      <TableCell><Badge variant="outline">{t(`warehouses.zoneTypes.${z.type}`)}</Badge></TableCell>
+                      <TableCell>{warehouses.find(w => w.id === z.warehouseId)?.name || z.warehouseId}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => {
+                          setZones(prev => prev.filter(zz => zz.id !== z.id));
+                          toast.success(t('warehouses.zoneDeleted'));
+                        }}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Activity Log Tab */}
+        <TabsContent value="activity" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Clock className="h-4 w-4" />{t('warehouses.activityLog')}</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('common.date')}</TableHead>
+                    <TableHead>{t('nav.warehouses')}</TableHead>
+                    <TableHead>{t('common.actions')}</TableHead>
+                    <TableHead>{t('admin.user')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {activityLog.map(a => (
+                    <TableRow key={a.id}>
+                      <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{a.timestamp}</TableCell>
+                      <TableCell className="font-medium">{warehouses.find(w => w.id === a.warehouseId)?.name || a.warehouseId}</TableCell>
+                      <TableCell>{a.action}</TableCell>
+                      <TableCell className="text-sm">{a.user}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>

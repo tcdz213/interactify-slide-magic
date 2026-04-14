@@ -11,13 +11,14 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Package, Eye, LayoutGrid, List, Copy, Upload, Download, Barcode, Edit, Trash2, ChevronLeft, ChevronRight, History, X, RotateCcw, DollarSign, Users, ArrowUpDown, AlertTriangle } from 'lucide-react';
+import { Plus, Search, Package, Eye, LayoutGrid, List, Copy, Upload, Download, Barcode, Edit, Trash2, ChevronLeft, ChevronRight, History, X, RotateCcw, DollarSign, Users, ArrowUpDown, AlertTriangle, ImageIcon, Tag } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SegmentBadge } from '@/components/StatusBadges';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ExportDialog, ExportColumn } from '@/components/ExportDialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 8;
@@ -86,6 +87,8 @@ export default function ProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -97,6 +100,10 @@ export default function ProductsPage() {
   const [formUnits, setFormUnits] = useState<UnitFormEntry[]>([]);
   const [newUnitName, setNewUnitName] = useState('');
   const [newUnitConversion, setNewUnitConversion] = useState('');
+  const [formVariants, setFormVariants] = useState<{ name: string; values: string[] }[]>([]);
+  const [newVariantName, setNewVariantName] = useState('');
+  const [newVariantValue, setNewVariantValue] = useState('');
+  const [formImageUrl, setFormImageUrl] = useState('');
 
   // Customer-specific pricing form state
   const [showCustomerPriceDialog, setShowCustomerPriceDialog] = useState(false);
@@ -139,15 +146,18 @@ export default function ProductsPage() {
   const resetForm = () => {
     setFormName(''); setFormDescription(''); setFormSku(''); setFormCategory(''); setFormBaseUnit('piece');
     setFormActive(true); setEditProduct(null); setFormUnits([]);
-    setNewUnitName(''); setNewUnitConversion('');
+    setNewUnitName(''); setNewUnitConversion(''); setFormVariants([]); setNewVariantName(''); setNewVariantValue('');
+    setFormImageUrl('');
   };
 
   const openEditForm = (p: Product) => {
     setFormName(p.name); setFormDescription(p.description || ''); setFormSku(p.sku); setFormCategory(p.category);
     setFormBaseUnit(p.baseUnit); setFormActive(p.isActive);
+    setFormImageUrl(p.imageUrl || '');
     setFormUnits(p.units.filter(u => u.conversionToBase > 1).map(u => ({
       tempId: u.id, name: u.name, conversionToBase: u.conversionToBase,
     })));
+    setFormVariants([]);
     setEditProduct(p);
     setShowAddSheet(true);
   };
@@ -215,6 +225,40 @@ export default function ProductsPage() {
     await restoreProduct(p.id);
     toast.success(t('products.productRestored'));
     await load();
+  };
+
+  const handleBulkArchive = async () => {
+    for (const id of selectedIds) {
+      await deleteProduct(id, true);
+    }
+    toast.success(t('products.bulkArchived', { count: selectedIds.size }));
+    setSelectedIds(new Set());
+    setShowBulkArchiveConfirm(false);
+    await load();
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setFormImageUrl(url);
+    toast.success(t('products.imageUploaded'));
+  };
+
+  const toggleProductSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllProducts = () => {
+    if (selectedIds.size === paginated.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginated.filter(p => !p.isDeleted).map(p => p.id)));
+    }
   };
 
   const handleDuplicate = async (p: Product) => {
@@ -401,12 +445,25 @@ export default function ProductsPage() {
             </div>
             <Badge variant="outline" className="text-muted-foreground">{filtered.length} {t('nav.products').toLowerCase()}</Badge>
           </div>
+          {/* Bulk actions bar */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <Badge variant="secondary">{t('products.selected', { count: selectedIds.size })}</Badge>
+              <Button size="sm" variant="destructive" onClick={() => setShowBulkArchiveConfirm(true)} className="gap-1">
+                <Trash2 className="h-3.5 w-3.5" />{t('products.bulkArchive')}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>{t('common.cancel')}</Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {viewMode === 'table' ? (
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox checked={paginated.filter(p => !p.isDeleted).length > 0 && selectedIds.size === paginated.filter(p => !p.isDeleted).length} onCheckedChange={toggleAllProducts} />
+                  </TableHead>
                   <TableHead>{t('products.productName')}</TableHead>
                   <TableHead>{t('products.sku')}</TableHead>
                   <TableHead>{t('products.category')}</TableHead>
@@ -419,6 +476,9 @@ export default function ProductsPage() {
               <TableBody>
                 {paginated.map(p => (
                   <TableRow key={p.id} className={p.isDeleted ? 'opacity-50 bg-muted/30' : ''}>
+                    <TableCell onClick={e => e.stopPropagation()}>
+                      {!p.isDeleted && <Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleProductSelect(p.id)} />}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center">
@@ -633,10 +693,68 @@ export default function ProductsPage() {
               <Label>{t('common.active')}</Label>
             </div>
 
-            <div className="rounded-lg border-2 border-dashed border-muted-foreground/20 p-8 text-center cursor-pointer hover:border-primary/40 transition-colors">
-              <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-              <p className="text-sm text-muted-foreground">{t('products.uploadImage')}</p>
-              <p className="text-xs text-muted-foreground mt-1">JPG, PNG — max 2 Mo</p>
+            {formImageUrl ? (
+              <div className="relative rounded-lg border overflow-hidden">
+                <img src={formImageUrl} alt="Product" className="w-full h-32 object-cover" />
+                <div className="absolute top-2 end-2 flex gap-1">
+                  <label className="cursor-pointer">
+                    <Button variant="secondary" size="icon" className="h-7 w-7" asChild><span><ImageIcon className="h-3.5 w-3.5" /></span></Button>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </label>
+                  <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => { setFormImageUrl(''); toast.success(t('products.imageRemoved')); }}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <label className="rounded-lg border-2 border-dashed border-muted-foreground/20 p-8 text-center cursor-pointer hover:border-primary/40 transition-colors block">
+                <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+                <p className="text-sm text-muted-foreground">{t('products.uploadImage')}</p>
+                <p className="text-xs text-muted-foreground mt-1">JPG, PNG — max 2 Mo</p>
+                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </label>
+            )}
+
+            {/* Variant Management */}
+            <div className="space-y-3">
+              <Label className="flex items-center gap-1"><Tag className="h-3.5 w-3.5" />{t('products.variants')}</Label>
+              {formVariants.map((v, vi) => (
+                <div key={vi} className="rounded-md border p-2 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">{v.name}</span>
+                    <Button variant="ghost" size="sm" className="h-6 text-destructive text-xs" onClick={() => setFormVariants(prev => prev.filter((_, i) => i !== vi))}>
+                      {t('products.removeVariant')}
+                    </Button>
+                  </div>
+                  <div className="flex gap-1 flex-wrap">
+                    {v.values.map((val, vali) => (
+                      <Badge key={vali} variant="secondary" className="gap-1">
+                        {val}
+                        <button onClick={() => setFormVariants(prev => prev.map((fv, i) => i === vi ? { ...fv, values: fv.values.filter((_, j) => j !== vali) } : fv))} className="hover:text-destructive">
+                          <X className="h-2.5 w-2.5" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <div className="flex gap-2">
+                <Input value={newVariantName} onChange={e => setNewVariantName(e.target.value)} placeholder={t('products.variantName')} className="flex-1" />
+                <Input value={newVariantValue} onChange={e => setNewVariantValue(e.target.value)} placeholder={t('products.variantValue')} className="flex-1" />
+                <Button variant="outline" size="icon" onClick={() => {
+                  if (!newVariantName.trim() || !newVariantValue.trim()) return;
+                  const existing = formVariants.find(v => v.name === newVariantName.trim());
+                  if (existing) {
+                    setFormVariants(prev => prev.map(v => v.name === newVariantName.trim() ? { ...v, values: [...v.values, newVariantValue.trim()] } : v));
+                  } else {
+                    setFormVariants(prev => [...prev, { name: newVariantName.trim(), values: [newVariantValue.trim()] }]);
+                  }
+                  setNewVariantValue('');
+                }} disabled={!newVariantName.trim() || !newVariantValue.trim()}>
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">{t('products.variantHint')}</p>
             </div>
 
             <Button className="w-full" onClick={handleSave} disabled={saving}>
@@ -804,6 +922,15 @@ export default function ProductsPage() {
         title={t('common.areYouSure')}
         description={t('products.softDeleteHint')}
         onConfirm={handleDelete}
+      />
+
+      {/* Bulk Archive Confirm */}
+      <ConfirmDialog
+        open={showBulkArchiveConfirm}
+        onOpenChange={(v) => { if (!v) setShowBulkArchiveConfirm(false); }}
+        title={t('products.bulkArchive')}
+        description={t('products.bulkArchiveConfirm', { count: selectedIds.size })}
+        onConfirm={handleBulkArchive}
       />
     </div>
   );

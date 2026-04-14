@@ -370,6 +370,8 @@
     "unread": "Unread",
     "critical": "Critical",
     "noNotifications": "No notifications",
+    "soundEnabled": "Sound Notifications",
+    "soundEnabledDesc": "Play a sound when new notifications arrive",
     "helpTitle": "Help & Support",
     "helpDesc": "Find answers, contact support, or browse documentation",
     "faq": "Frequently Asked Questions",
@@ -398,7 +400,33 @@
     "messagePlaceholder": "Describe your issue in detail...",
     "submitTicket": "Submit Ticket",
     "ticketSubmitted": "Support ticket submitted successfully",
-    "documentation": "Documentation"
+    "documentation": "Documentation",
+    "editUser": "Edit User",
+    "userUpdated": "User updated",
+    "userDeactivated": "User deactivated",
+    "userActivated": "User activated",
+    "resetPassword": "Reset Password",
+    "passwordReset": "Password reset link sent",
+    "permissions": "Permissions",
+    "permissionMatrix": "Permission Matrix",
+    "userActivity": "User Activity",
+    "noUserActivity": "No activity recorded",
+    "canManageOrders": "Manage Orders",
+    "canManageProducts": "Manage Products",
+    "canManageCustomers": "Manage Customers",
+    "canManageInventory": "Manage Inventory",
+    "canViewReports": "View Reports",
+    "canManageDrivers": "Manage Drivers",
+    "canManageInvoices": "Manage Invoices",
+    "canManageSettings": "Manage Settings",
+    "duplicateOrder": "Duplicate Order",
+    "orderDuplicated": "Order duplicated",
+    "sortBy": "Sort by",
+    "sortDate": "Date",
+    "sortAmount": "Amount",
+    "sortCustomer": "Customer",
+    "sortAsc": "Ascending",
+    "sortDesc": "Descending"
   },
   "categories": {
     "title": "Categories",
@@ -456,7 +484,9 @@
     "wholesalePrice": "Wholesale Price",
     "retailPrice": "Retail Price",
     "smallTraderPrice": "Small Trader Price",
-    "specialClientPrice": "Special Client Price"
+    "specialClientPrice": "Special Client Price",
+    "compare": "Compare Prices",
+    "compareDesc": "Compare pricing across segments and products"
   },
   "inventory": {
     "title": "Inventory Dashboard",
@@ -550,7 +580,22 @@
     "cardView": "Cards",
     "tableView": "Table",
     "capacityPlanning": "Capacity Planning",
-    "available": "Available"
+    "available": "Available",
+    "activityLog": "Activity Log",
+    "noActivity": "No activity recorded",
+    "zones": "Zones",
+    "zoneName": "Zone Name",
+    "zoneType": "Zone Type",
+    "addZone": "Add Zone",
+    "zoneAdded": "Zone added",
+    "zoneDeleted": "Zone deleted",
+    "zoneTypes": {
+      "storage": "Storage",
+      "picking": "Picking",
+      "receiving": "Receiving",
+      "shipping": "Shipping",
+      "cold": "Cold Storage"
+    }
   },
   "products": {
     "title": "Products",
@@ -634,7 +679,21 @@
     "reason": "Reason",
     "noPriceHistory": "No price history",
     "unitConversionNote": "Unit conversions are automatic during sales, purchases, and stock movements.",
-    "stockConversionNote": "Stock is always stored in base units. Conversions are calculated automatically."
+    "stockConversionNote": "Stock is always stored in base units. Conversions are calculated automatically.",
+    "variants": "Variants",
+    "variantName": "Variant Name",
+    "variantValue": "Value",
+    "addVariant": "Add Variant",
+    "removeVariant": "Remove",
+    "variantHint": "Add product variants like Size, Color, etc.",
+    "bulkArchive": "Bulk Archive",
+    "bulkArchiveConfirm": "Archive {{count}} selected products?",
+    "bulkArchived": "{{count}} products archived",
+    "selectProducts": "Select products",
+    "selected": "{{count}} selected",
+    "imageUploaded": "Image uploaded",
+    "imageRemoved": "Image removed",
+    "changeImage": "Change Image"
   },
   "export": {
     "title": "Export Data",
@@ -852,7 +911,13 @@
     "processRefund": "Process Refund",
     "refundProcessed": "Refund of {{amount}} processed",
     "receipt": "Receipt",
-    "receiptGenerated": "Receipt generated for {{ref}}"
+    "receiptGenerated": "Receipt generated for {{ref}}",
+    "reconciliation": "Reconciliation",
+    "reconciliationDesc": "Match payments with bank transactions",
+    "bankImport": "Import Bank Statement",
+    "matched": "Matched",
+    "unmatched": "Unmatched",
+    "autoMatch": "Auto Match"
   },
   "accounting": {
     "title": "Financial Dashboard",
@@ -915,7 +980,9 @@
     "inflow": "Cash Inflow",
     "outflow": "Cash Outflow",
     "taxItem": "Tax Item",
-    "totalTvaCollected": "Total VAT Collected"
+    "totalTvaCollected": "Total VAT Collected",
+    "newEntry": "New Entry",
+    "newEntryDesc": "Create a new journal entry"
   },
   "reports": {
     "title": "Reports",

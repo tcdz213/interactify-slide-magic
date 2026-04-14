@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Plus, ShoppingCart, Clock, Truck, CheckCircle, Download, ChevronLeft, ChevronRight, AlertTriangle, CalendarDays } from 'lucide-react';
+import { Search, Filter, Plus, ShoppingCart, Clock, Truck, CheckCircle, Download, ChevronLeft, ChevronRight, AlertTriangle, CalendarDays, Copy, ArrowUpDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KPIWidget } from '@/components/KPIWidget';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -46,17 +46,29 @@ export default function OrdersPage() {
   const [showBulkConfirm, setShowBulkConfirm] = useState(false);
   const [showBulkCancel, setShowBulkCancel] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [sortField, setSortField] = useState<'date' | 'amount' | 'customer'>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => { getOrders().then(setOrders); }, []);
 
-  const filtered = useMemo(() => orders.filter(o => {
-    const matchSearch = o.customerName.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || o.status === statusFilter;
-    const orderDate = new Date(o.createdAt);
-    const matchFrom = !dateFrom || orderDate >= new Date(dateFrom);
-    const matchTo = !dateTo || orderDate <= new Date(dateTo + 'T23:59:59');
-    return matchSearch && matchStatus && matchFrom && matchTo;
-  }), [orders, search, statusFilter, dateFrom, dateTo]);
+  const filtered = useMemo(() => {
+    const base = orders.filter(o => {
+      const matchSearch = o.customerName.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === 'all' || o.status === statusFilter;
+      const orderDate = new Date(o.createdAt);
+      const matchFrom = !dateFrom || orderDate >= new Date(dateFrom);
+      const matchTo = !dateTo || orderDate <= new Date(dateTo + 'T23:59:59');
+      return matchSearch && matchStatus && matchFrom && matchTo;
+    });
+    base.sort((a, b) => {
+      let cmp = 0;
+      if (sortField === 'date') cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      else if (sortField === 'amount') cmp = a.totalAmount - b.totalAmount;
+      else cmp = a.customerName.localeCompare(b.customerName);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return base;
+  }, [orders, search, statusFilter, dateFrom, dateTo, sortField, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -115,6 +127,27 @@ export default function OrdersPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'orders.csv'; a.click();
     toast.success('CSV exporté');
+  };
+
+  const handleDuplicateOrder = (o: Order) => {
+    const newOrder: Order = {
+      ...o,
+      id: `ord-dup-${Date.now().toString(36)}`,
+      status: 'draft' as OrderStatus,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setOrders(prev => [newOrder, ...prev]);
+    toast.success(t('business.orderDuplicated'));
+  };
+
+  const toggleSort = (field: 'date' | 'amount' | 'customer') => {
+    if (sortField === field) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('desc');
+    }
   };
 
   return (
@@ -220,14 +253,21 @@ export default function OrdersPage() {
                   />
                 </TableHead>
                 <TableHead>{t('orders.orderId')}</TableHead>
-                <TableHead>{t('orders.customer')}</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer')}>
+                  <span className="flex items-center gap-1">{t('orders.customer')} <ArrowUpDown className="h-3 w-3" /></span>
+                </TableHead>
                 <TableHead>{t('common.status')}</TableHead>
                 <TableHead>Priorité</TableHead>
                 <TableHead>{t('orders.items')}</TableHead>
-                <TableHead>{t('common.total')}</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('amount')}>
+                  <span className="flex items-center gap-1">{t('common.total')} <ArrowUpDown className="h-3 w-3" /></span>
+                </TableHead>
                 <TableHead>{t('orders.salesRep')}</TableHead>
                 <TableHead>{t('orders.driver')}</TableHead>
-                <TableHead>{t('common.date')}</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('date')}>
+                  <span className="flex items-center gap-1">{t('common.date')} <ArrowUpDown className="h-3 w-3" /></span>
+                </TableHead>
+                <TableHead>{t('common.actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -251,6 +291,11 @@ export default function OrdersPage() {
                     <TableCell className="text-sm" onClick={() => navigate(`/business/orders/${o.id}`)}>{o.assignedSalesRep || '—'}</TableCell>
                     <TableCell className="text-sm" onClick={() => navigate(`/business/orders/${o.id}`)}>{o.assignedDriver || '—'}</TableCell>
                     <TableCell className="text-muted-foreground text-xs" onClick={() => navigate(`/business/orders/${o.id}`)}>{new Date(o.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); handleDuplicateOrder(o); }} title={t('business.duplicateOrder')}>
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 );
               })}

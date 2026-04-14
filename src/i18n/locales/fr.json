@@ -324,7 +324,21 @@
     "reason": "Raison",
     "noPriceHistory": "Aucun historique de prix",
     "unitConversionNote": "Les conversions d'unités sont automatiques lors des ventes, achats et mouvements de stock.",
-    "stockConversionNote": "Le stock est toujours stocké en unité de base. Les conversions sont calculées automatiquement."
+    "stockConversionNote": "Le stock est toujours stocké en unité de base. Les conversions sont calculées automatiquement.",
+    "variants": "Variantes",
+    "variantName": "Nom de la variante",
+    "variantValue": "Valeur",
+    "addVariant": "Ajouter une variante",
+    "removeVariant": "Supprimer",
+    "variantHint": "Ajoutez des variantes comme Taille, Couleur, etc.",
+    "bulkArchive": "Archiver en masse",
+    "bulkArchiveConfirm": "Archiver {{count}} produits sélectionnés ?",
+    "bulkArchived": "{{count}} produits archivés",
+    "selectProducts": "Sélectionner des produits",
+    "selected": "{{count}} sélectionné(s)",
+    "imageUploaded": "Image téléchargée",
+    "imageRemoved": "Image supprimée",
+    "changeImage": "Changer l'image"
   },
   "export": {
     "title": "Exporter les données",
@@ -461,6 +475,8 @@
     "unread": "Non lues",
     "critical": "Critiques",
     "noNotifications": "Aucune notification",
+    "soundEnabled": "Notifications sonores",
+    "soundEnabledDesc": "Jouer un son à l'arrivée de nouvelles notifications",
     "helpTitle": "Aide & Support",
     "helpDesc": "Trouvez des réponses, contactez le support ou consultez la documentation",
     "faq": "Questions fréquentes",
@@ -489,7 +505,33 @@
     "messagePlaceholder": "Décrivez votre problème en détail...",
     "submitTicket": "Envoyer le ticket",
     "ticketSubmitted": "Ticket de support envoyé avec succès",
-    "documentation": "Documentation"
+    "documentation": "Documentation",
+    "editUser": "Modifier l'utilisateur",
+    "userUpdated": "Utilisateur mis à jour",
+    "userDeactivated": "Utilisateur désactivé",
+    "userActivated": "Utilisateur activé",
+    "resetPassword": "Réinitialiser le mot de passe",
+    "passwordReset": "Lien de réinitialisation envoyé",
+    "permissions": "Permissions",
+    "permissionMatrix": "Matrice des permissions",
+    "userActivity": "Activité utilisateur",
+    "noUserActivity": "Aucune activité enregistrée",
+    "canManageOrders": "Gérer les commandes",
+    "canManageProducts": "Gérer les produits",
+    "canManageCustomers": "Gérer les clients",
+    "canManageInventory": "Gérer l'inventaire",
+    "canViewReports": "Voir les rapports",
+    "canManageDrivers": "Gérer les chauffeurs",
+    "canManageInvoices": "Gérer les factures",
+    "canManageSettings": "Gérer les paramètres",
+    "duplicateOrder": "Dupliquer la commande",
+    "orderDuplicated": "Commande dupliquée",
+    "sortBy": "Trier par",
+    "sortDate": "Date",
+    "sortAmount": "Montant",
+    "sortCustomer": "Client",
+    "sortAsc": "Croissant",
+    "sortDesc": "Décroissant"
   },
   "categories": {
     "title": "Catégories",
@@ -547,7 +589,9 @@
     "wholesalePrice": "Prix Grossiste",
     "retailPrice": "Prix Détail",
     "smallTraderPrice": "Prix Petit commerce",
-    "specialClientPrice": "Prix Client spécial"
+    "specialClientPrice": "Prix Client spécial",
+    "compare": "Comparer les prix",
+    "compareDesc": "Comparer les tarifs entre segments et produits"
   },
   "inventory": {
     "title": "Tableau de bord inventaire",
@@ -641,7 +685,22 @@
     "cardView": "Cartes",
     "tableView": "Tableau",
     "capacityPlanning": "Planification de capacité",
-    "available": "Disponible"
+    "available": "Disponible",
+    "activityLog": "Journal d'activité",
+    "noActivity": "Aucune activité enregistrée",
+    "zones": "Zones",
+    "zoneName": "Nom de la zone",
+    "zoneType": "Type de zone",
+    "addZone": "Ajouter une zone",
+    "zoneAdded": "Zone ajoutée",
+    "zoneDeleted": "Zone supprimée",
+    "zoneTypes": {
+      "storage": "Stockage",
+      "picking": "Préparation",
+      "receiving": "Réception",
+      "shipping": "Expédition",
+      "cold": "Chambre froide"
+    }
   },
   "createOrder": {
     "title": "Créer une commande",
@@ -849,7 +908,13 @@
     "processRefund": "Traiter le remboursement",
     "refundProcessed": "Remboursement de {{amount}} traité",
     "receipt": "Reçu",
-    "receiptGenerated": "Reçu généré pour {{ref}}"
+    "receiptGenerated": "Reçu généré pour {{ref}}",
+    "reconciliation": "Rapprochement",
+    "reconciliationDesc": "Rapprocher les paiements avec les transactions bancaires",
+    "bankImport": "Importer relevé bancaire",
+    "matched": "Rapproché",
+    "unmatched": "Non rapproché",
+    "autoMatch": "Rapprochement auto"
   },
   "accounting": {
     "title": "Tableau de bord financier",
@@ -912,7 +977,9 @@
     "inflow": "Entrées de trésorerie",
     "outflow": "Sorties de trésorerie",
     "taxItem": "Poste fiscal",
-    "totalTvaCollected": "Total TVA collectée"
+    "totalTvaCollected": "Total TVA collectée",
+    "newEntry": "Nouvelle écriture",
+    "newEntryDesc": "Créer une nouvelle écriture comptable"
   },
   "reports": {
     "title": "Rapports",
