@@ -146,7 +146,8 @@ export default function ProductsPage() {
   const resetForm = () => {
     setFormName(''); setFormDescription(''); setFormSku(''); setFormCategory(''); setFormBaseUnit('piece');
     setFormActive(true); setEditProduct(null); setFormUnits([]);
-    setNewUnitName(''); setNewUnitConversion('');
+    setNewUnitName(''); setNewUnitConversion(''); setFormVariants([]); setNewVariantName(''); setNewVariantValue('');
+    setFormImageUrl('');
   };
 
   const openEditForm = (p: Product) => {
