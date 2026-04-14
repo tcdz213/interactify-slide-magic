@@ -554,7 +554,22 @@
     "cardView": "Cards",
     "tableView": "Table",
     "capacityPlanning": "Capacity Planning",
-    "available": "Available"
+    "available": "Available",
+    "activityLog": "Activity Log",
+    "noActivity": "No activity recorded",
+    "zones": "Zones",
+    "zoneName": "Zone Name",
+    "zoneType": "Zone Type",
+    "addZone": "Add Zone",
+    "zoneAdded": "Zone added",
+    "zoneDeleted": "Zone deleted",
+    "zoneTypes": {
+      "storage": "Storage",
+      "picking": "Picking",
+      "receiving": "Receiving",
+      "shipping": "Shipping",
+      "cold": "Cold Storage"
+    }
   },
   "products": {
     "title": "Products",
@@ -638,7 +653,21 @@
     "reason": "Reason",
     "noPriceHistory": "No price history",
     "unitConversionNote": "Unit conversions are automatic during sales, purchases, and stock movements.",
-    "stockConversionNote": "Stock is always stored in base units. Conversions are calculated automatically."
+    "stockConversionNote": "Stock is always stored in base units. Conversions are calculated automatically.",
+    "variants": "Variants",
+    "variantName": "Variant Name",
+    "variantValue": "Value",
+    "addVariant": "Add Variant",
+    "removeVariant": "Remove",
+    "variantHint": "Add product variants like Size, Color, etc.",
+    "bulkArchive": "Bulk Archive",
+    "bulkArchiveConfirm": "Archive {{count}} selected products?",
+    "bulkArchived": "{{count}} products archived",
+    "selectProducts": "Select products",
+    "selected": "{{count}} selected",
+    "imageUploaded": "Image uploaded",
+    "imageRemoved": "Image removed",
+    "changeImage": "Change Image"
   },
   "export": {
     "title": "Export Data",
