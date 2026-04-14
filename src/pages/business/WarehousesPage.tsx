@@ -154,6 +154,8 @@ export default function WarehousesPage() {
           <TabsTrigger value="cards">{t('warehouses.cardView')}</TabsTrigger>
           <TabsTrigger value="table">{t('warehouses.tableView')}</TabsTrigger>
           <TabsTrigger value="capacity">{t('warehouses.capacityPlanning')}</TabsTrigger>
+          <TabsTrigger value="zones">{t('warehouses.zones')}</TabsTrigger>
+          <TabsTrigger value="activity">{t('warehouses.activityLog')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="cards" className="mt-4">
