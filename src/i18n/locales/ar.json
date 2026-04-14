@@ -853,7 +853,13 @@
     "processRefund": "معالجة الاسترجاع",
     "refundProcessed": "تم استرجاع {{amount}}",
     "receipt": "إيصال",
-    "receiptGenerated": "تم إنشاء إيصال لـ {{ref}}"
+    "receiptGenerated": "تم إنشاء إيصال لـ {{ref}}",
+    "reconciliation": "المطابقة",
+    "reconciliationDesc": "مطابقة المدفوعات مع المعاملات البنكية",
+    "bankImport": "استيراد كشف حساب بنكي",
+    "matched": "مطابق",
+    "unmatched": "غير مطابق",
+    "autoMatch": "مطابقة تلقائية"
   },
   "accounting": {
     "title": "لوحة المالية",
@@ -916,7 +922,9 @@
     "inflow": "تدفقات واردة",
     "outflow": "تدفقات صادرة",
     "taxItem": "بند ضريبي",
-    "totalTvaCollected": "إجمالي الضريبة المحصلة"
+    "totalTvaCollected": "إجمالي الضريبة المحصلة",
+    "newEntry": "قيد جديد",
+    "newEntryDesc": "إنشاء قيد محاسبي جديد"
   },
   "reports": {
     "title": "التقارير",

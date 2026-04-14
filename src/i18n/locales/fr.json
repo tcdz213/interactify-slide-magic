@@ -853,7 +853,13 @@
     "processRefund": "Traiter le remboursement",
     "refundProcessed": "Remboursement de {{amount}} traité",
     "receipt": "Reçu",
-    "receiptGenerated": "Reçu généré pour {{ref}}"
+    "receiptGenerated": "Reçu généré pour {{ref}}",
+    "reconciliation": "Rapprochement",
+    "reconciliationDesc": "Rapprocher les paiements avec les transactions bancaires",
+    "bankImport": "Importer relevé bancaire",
+    "matched": "Rapproché",
+    "unmatched": "Non rapproché",
+    "autoMatch": "Rapprochement auto"
   },
   "accounting": {
     "title": "Tableau de bord financier",
@@ -916,7 +922,9 @@
     "inflow": "Entrées de trésorerie",
     "outflow": "Sorties de trésorerie",
     "taxItem": "Poste fiscal",
-    "totalTvaCollected": "Total TVA collectée"
+    "totalTvaCollected": "Total TVA collectée",
+    "newEntry": "Nouvelle écriture",
+    "newEntryDesc": "Créer une nouvelle écriture comptable"
   },
   "reports": {
     "title": "Rapports",
