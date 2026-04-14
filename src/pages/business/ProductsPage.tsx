@@ -461,6 +461,9 @@ export default function ProductsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox checked={paginated.filter(p => !p.isDeleted).length > 0 && selectedIds.size === paginated.filter(p => !p.isDeleted).length} onCheckedChange={toggleAllProducts} />
+                  </TableHead>
                   <TableHead>{t('products.productName')}</TableHead>
                   <TableHead>{t('products.sku')}</TableHead>
                   <TableHead>{t('products.category')}</TableHead>
