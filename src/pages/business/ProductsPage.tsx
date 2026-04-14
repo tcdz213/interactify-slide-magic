@@ -87,6 +87,8 @@ export default function ProductsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState('');
