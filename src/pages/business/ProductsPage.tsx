@@ -153,9 +153,11 @@ export default function ProductsPage() {
   const openEditForm = (p: Product) => {
     setFormName(p.name); setFormDescription(p.description || ''); setFormSku(p.sku); setFormCategory(p.category);
     setFormBaseUnit(p.baseUnit); setFormActive(p.isActive);
+    setFormImageUrl(p.imageUrl || '');
     setFormUnits(p.units.filter(u => u.conversionToBase > 1).map(u => ({
       tempId: u.id, name: u.name, conversionToBase: u.conversionToBase,
     })));
+    setFormVariants([]);
     setEditProduct(p);
     setShowAddSheet(true);
   };
