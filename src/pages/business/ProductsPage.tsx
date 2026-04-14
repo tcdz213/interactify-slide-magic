@@ -18,6 +18,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SegmentBadge } from '@/components/StatusBadges';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ExportDialog, ExportColumn } from '@/components/ExportDialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 8;
