@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Plus, ShoppingCart, Clock, Truck, CheckCircle, Download, ChevronLeft, ChevronRight, AlertTriangle, CalendarDays } from 'lucide-react';
+import { Search, Filter, Plus, ShoppingCart, Clock, Truck, CheckCircle, Download, ChevronLeft, ChevronRight, AlertTriangle, CalendarDays, Copy, ArrowUpDown } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KPIWidget } from '@/components/KPIWidget';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -46,17 +46,29 @@ export default function OrdersPage() {
   const [showBulkConfirm, setShowBulkConfirm] = useState(false);
   const [showBulkCancel, setShowBulkCancel] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [sortField, setSortField] = useState<'date' | 'amount' | 'customer'>('date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   useEffect(() => { getOrders().then(setOrders); }, []);
 
-  const filtered = useMemo(() => orders.filter(o => {
-    const matchSearch = o.customerName.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = statusFilter === 'all' || o.status === statusFilter;
-    const orderDate = new Date(o.createdAt);
-    const matchFrom = !dateFrom || orderDate >= new Date(dateFrom);
-    const matchTo = !dateTo || orderDate <= new Date(dateTo + 'T23:59:59');
-    return matchSearch && matchStatus && matchFrom && matchTo;
-  }), [orders, search, statusFilter, dateFrom, dateTo]);
+  const filtered = useMemo(() => {
+    const base = orders.filter(o => {
+      const matchSearch = o.customerName.toLowerCase().includes(search.toLowerCase()) || o.id.toLowerCase().includes(search.toLowerCase());
+      const matchStatus = statusFilter === 'all' || o.status === statusFilter;
+      const orderDate = new Date(o.createdAt);
+      const matchFrom = !dateFrom || orderDate >= new Date(dateFrom);
+      const matchTo = !dateTo || orderDate <= new Date(dateTo + 'T23:59:59');
+      return matchSearch && matchStatus && matchFrom && matchTo;
+    });
+    base.sort((a, b) => {
+      let cmp = 0;
+      if (sortField === 'date') cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      else if (sortField === 'amount') cmp = a.totalAmount - b.totalAmount;
+      else cmp = a.customerName.localeCompare(b.customerName);
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+    return base;
+  }, [orders, search, statusFilter, dateFrom, dateTo, sortField, sortDir]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
