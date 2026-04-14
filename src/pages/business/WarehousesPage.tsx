@@ -28,6 +28,28 @@ export default function WarehousesPage() {
   const [deleteTarget, setDeleteTarget] = useState<Warehouse | null>(null);
   const [transferOpen, setTransferOpen] = useState(false);
 
+  // Zones state
+  type Zone = { id: string; name: string; type: string; warehouseId: string };
+  const [zones, setZones] = useState<Zone[]>([
+    { id: 'z1', name: 'Zone A - Stockage', type: 'storage', warehouseId: 'wh1' },
+    { id: 'z2', name: 'Zone B - Préparation', type: 'picking', warehouseId: 'wh1' },
+    { id: 'z3', name: 'Zone C - Réception', type: 'receiving', warehouseId: 'wh2' },
+    { id: 'z4', name: 'Chambre froide', type: 'cold', warehouseId: 'wh2' },
+  ]);
+  const [newZoneName, setNewZoneName] = useState('');
+  const [newZoneType, setNewZoneType] = useState('storage');
+  const [newZoneWh, setNewZoneWh] = useState('');
+
+  // Activity log mock
+  type ActivityEntry = { id: string; warehouseId: string; action: string; user: string; timestamp: string };
+  const activityLog: ActivityEntry[] = [
+    { id: 'a1', warehouseId: 'wh1', action: 'Réception de 500 unités — Couscous Fin', user: 'Karim B.', timestamp: '2025-01-15 09:30' },
+    { id: 'a2', warehouseId: 'wh1', action: 'Transfert sortant → Dépôt Ouest — 200 Huile', user: 'Amina M.', timestamp: '2025-01-15 11:00' },
+    { id: 'a3', warehouseId: 'wh2', action: 'Ajustement de stock — Sucre (-50)', user: 'Omar D.', timestamp: '2025-01-14 16:45' },
+    { id: 'a4', warehouseId: 'wh1', action: 'Préparation commande #ORD-0042', user: 'Yacine K.', timestamp: '2025-01-14 14:20' },
+    { id: 'a5', warehouseId: 'wh2', action: 'Inventaire cyclique terminé', user: 'Amina M.', timestamp: '2025-01-13 17:00' },
+  ];
+
   // Form
   const [formName, setFormName] = useState('');
   const [formAddress, setFormAddress] = useState('');
