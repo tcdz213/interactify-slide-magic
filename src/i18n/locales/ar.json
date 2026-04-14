@@ -461,6 +461,8 @@
     "unread": "غير مقروءة",
     "critical": "حرجة",
     "noNotifications": "لا توجد إشعارات",
+    "soundEnabled": "إشعارات صوتية",
+    "soundEnabledDesc": "تشغيل صوت عند وصول إشعارات جديدة",
     "helpTitle": "المساعدة والدعم",
     "helpDesc": "ابحث عن إجابات أو تواصل مع الدعم أو تصفح الوثائق",
     "faq": "الأسئلة الشائعة",
@@ -547,7 +549,9 @@
     "wholesalePrice": "سعر الجملة",
     "retailPrice": "سعر التجزئة",
     "smallTraderPrice": "سعر التاجر الصغير",
-    "specialClientPrice": "سعر العميل الخاص"
+    "specialClientPrice": "سعر العميل الخاص",
+    "compare": "مقارنة الأسعار",
+    "compareDesc": "مقارنة الأسعار عبر الشرائح والمنتجات"
   },
   "inventory": {
     "title": "لوحة المخزون",

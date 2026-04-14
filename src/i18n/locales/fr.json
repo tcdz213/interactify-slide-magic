@@ -461,6 +461,8 @@
     "unread": "Non lues",
     "critical": "Critiques",
     "noNotifications": "Aucune notification",
+    "soundEnabled": "Notifications sonores",
+    "soundEnabledDesc": "Jouer un son à l'arrivée de nouvelles notifications",
     "helpTitle": "Aide & Support",
     "helpDesc": "Trouvez des réponses, contactez le support ou consultez la documentation",
     "faq": "Questions fréquentes",
@@ -547,7 +549,9 @@
     "wholesalePrice": "Prix Grossiste",
     "retailPrice": "Prix Détail",
     "smallTraderPrice": "Prix Petit commerce",
-    "specialClientPrice": "Prix Client spécial"
+    "specialClientPrice": "Prix Client spécial",
+    "compare": "Comparer les prix",
+    "compareDesc": "Comparer les tarifs entre segments et produits"
   },
   "inventory": {
     "title": "Tableau de bord inventaire",
