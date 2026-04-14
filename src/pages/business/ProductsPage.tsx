@@ -476,6 +476,9 @@ export default function ProductsPage() {
               <TableBody>
                 {paginated.map(p => (
                   <TableRow key={p.id} className={p.isDeleted ? 'opacity-50 bg-muted/30' : ''}>
+                    <TableCell onClick={e => e.stopPropagation()}>
+                      {!p.isDeleted && <Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleProductSelect(p.id)} />}
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center">
