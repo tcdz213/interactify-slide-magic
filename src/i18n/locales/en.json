@@ -370,6 +370,8 @@
     "unread": "Unread",
     "critical": "Critical",
     "noNotifications": "No notifications",
+    "soundEnabled": "Sound Notifications",
+    "soundEnabledDesc": "Play a sound when new notifications arrive",
     "helpTitle": "Help & Support",
     "helpDesc": "Find answers, contact support, or browse documentation",
     "faq": "Frequently Asked Questions",
@@ -456,7 +458,9 @@
     "wholesalePrice": "Wholesale Price",
     "retailPrice": "Retail Price",
     "smallTraderPrice": "Small Trader Price",
-    "specialClientPrice": "Special Client Price"
+    "specialClientPrice": "Special Client Price",
+    "compare": "Compare Prices",
+    "compareDesc": "Compare pricing across segments and products"
   },
   "inventory": {
     "title": "Inventory Dashboard",
@@ -852,7 +856,13 @@
     "processRefund": "Process Refund",
     "refundProcessed": "Refund of {{amount}} processed",
     "receipt": "Receipt",
-    "receiptGenerated": "Receipt generated for {{ref}}"
+    "receiptGenerated": "Receipt generated for {{ref}}",
+    "reconciliation": "Reconciliation",
+    "reconciliationDesc": "Match payments with bank transactions",
+    "bankImport": "Import Bank Statement",
+    "matched": "Matched",
+    "unmatched": "Unmatched",
+    "autoMatch": "Auto Match"
   },
   "accounting": {
     "title": "Financial Dashboard",
@@ -915,7 +925,9 @@
     "inflow": "Cash Inflow",
     "outflow": "Cash Outflow",
     "taxItem": "Tax Item",
-    "totalTvaCollected": "Total VAT Collected"
+    "totalTvaCollected": "Total VAT Collected",
+    "newEntry": "New Entry",
+    "newEntryDesc": "Create a new journal entry"
   },
   "reports": {
     "title": "Reports",
