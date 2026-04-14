@@ -227,6 +227,40 @@ export default function ProductsPage() {
     await load();
   };
 
+  const handleBulkArchive = async () => {
+    for (const id of selectedIds) {
+      await deleteProduct(id, true);
+    }
+    toast.success(t('products.bulkArchived', { count: selectedIds.size }));
+    setSelectedIds(new Set());
+    setShowBulkArchiveConfirm(false);
+    await load();
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setFormImageUrl(url);
+    toast.success(t('products.imageUploaded'));
+  };
+
+  const toggleProductSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllProducts = () => {
+    if (selectedIds.size === paginated.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginated.filter(p => !p.isDeleted).map(p => p.id)));
+    }
+  };
+
   const handleDuplicate = async (p: Product) => {
     await createProduct({
       name: `${p.name} (${t('common.copy') || 'copie'})`,
