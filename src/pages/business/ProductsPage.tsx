@@ -445,6 +445,16 @@ export default function ProductsPage() {
             </div>
             <Badge variant="outline" className="text-muted-foreground">{filtered.length} {t('nav.products').toLowerCase()}</Badge>
           </div>
+          {/* Bulk actions bar */}
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+              <Badge variant="secondary">{t('products.selected', { count: selectedIds.size })}</Badge>
+              <Button size="sm" variant="destructive" onClick={() => setShowBulkArchiveConfirm(true)} className="gap-1">
+                <Trash2 className="h-3.5 w-3.5" />{t('products.bulkArchive')}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>{t('common.cancel')}</Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {viewMode === 'table' ? (
