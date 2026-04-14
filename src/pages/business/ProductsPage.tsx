@@ -100,6 +100,10 @@ export default function ProductsPage() {
   const [formUnits, setFormUnits] = useState<UnitFormEntry[]>([]);
   const [newUnitName, setNewUnitName] = useState('');
   const [newUnitConversion, setNewUnitConversion] = useState('');
+  const [formVariants, setFormVariants] = useState<{ name: string; values: string[] }[]>([]);
+  const [newVariantName, setNewVariantName] = useState('');
+  const [newVariantValue, setNewVariantValue] = useState('');
+  const [formImageUrl, setFormImageUrl] = useState('');
 
   // Customer-specific pricing form state
   const [showCustomerPriceDialog, setShowCustomerPriceDialog] = useState(false);
