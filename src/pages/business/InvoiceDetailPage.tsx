@@ -237,7 +237,7 @@ export default function InvoiceDetailPage() {
                   <SelectItem value="cash">{t('payments.methods.cash')}</SelectItem>
                   <SelectItem value="bank_transfer">{t('payments.methods.bank_transfer')}</SelectItem>
                   <SelectItem value="cheque">{t('payments.methods.cheque')}</SelectItem>
-                  <SelectItem value="mobile_payment">{t('payments.methods.mobile_payment')}</SelectItem>
+                  <SelectItem value="baridimob">{t('payments.methods.baridimob')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -4,35 +4,42 @@
 `/business/orders/:id`
 
 ## Status
-- Complete: 80%
+- Complete: 55%
 - UI Status: ✅ Complete
-- Logic Status: ✅ Dialogs, edit, add items, status actions
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- Logic Status: ⚠️ Read-only
+- API Status: ❌ Fake API
 - Production Ready: No
 
 ## Purpose
-View order details — status timeline, line items, customer info, actions.
+View order details — status timeline, line items, customer info, delivery status, actions.
 
 ## Existing Features
 - Order status display
 - Customer info
-- Order line items with edit
+- Order line items
 - Status timeline
-- Multiple action dialogs
-- Add item support
 
 ## Existing User Actions
 - ✅ View order details
-- ✅ Edit order items
-- ✅ Add items to order
-- ✅ Status actions via dialogs
+- ❌ Advance order status
+- ❌ Edit order (while draft)
+- ❌ Cancel order
+- ❌ Assign driver
+- ❌ Generate invoice
+
+## Backend/API Needed
+- `GET /orders/:id`
+- `POST /orders/:id/confirm`
+- `POST /orders/:id/cancel`
+- `POST /orders/:id/dispatch`
 
 ## Missing Features
-- [ ] Real backend API
+- [ ] Status transition buttons
+- [ ] Edit order (draft only)
 - [ ] Cancel with reason
+- [ ] Driver assignment
 - [ ] Invoice generation link
-- [ ] Order comments/history
+- [ ] Order history/comments
 
 ## Final Score
-**80/100**
+**55/100**

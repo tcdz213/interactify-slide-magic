@@ -4,36 +4,40 @@
 `/business/inventory`
 
 ## Status
-- Complete: 75%
+- Complete: 60%
 - UI Status: ✅ Complete
-- Logic Status: ✅ Filters, search, edit, export
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- Logic Status: ⚠️ Read-only with filters
+- API Status: ❌ Fake API
 - Production Ready: No
 
 ## Purpose
-Monitor inventory levels — stock status, filters, adjustments, export.
+Monitor inventory levels across warehouses — stock status, values, reorder alerts.
 
 ## Existing Features
-- 4 KPI widgets (Total SKUs, Low Stock, Total Value, Warehouses)
+- 4 KPI widgets (Total SKUs, Low Stock Alerts, Total Value, Warehouses)
 - Inventory table with search, warehouse filter, status filter
-- Stock status badges
-- Edit dialog
-- Export support
-- Create support
+- Stock status badges (normal/low/out)
+- Inventory value display
+
+## Existing UI
+- KPIWidget components, search, 2 select filters, table
 
 ## Existing User Actions
 - ✅ Search by product/SKU
 - ✅ Filter by warehouse
 - ✅ Filter by stock status
-- ✅ Edit inventory item
-- ✅ Export
+
+## Backend/API Needed
+- `GET /inventory?warehouse=&status=&search=&page=`
+- `GET /inventory/summary`
 
 ## Missing Features
-- [ ] Real backend API
+- [ ] Stock adjustment from inventory view
+- [ ] Reorder point editing
 - [ ] Stock movement history per item
-- [ ] Batch/lot tracking
+- [ ] Batch/lot tracking display
+- [ ] Export inventory report
 - [ ] Min/max stock configuration
 
 ## Final Score
-**75/100**
+**60/100**

@@ -1,17 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Brain, TrendingUp, Users, Package, AlertTriangle, ShoppingCart, Filter, Download, RefreshCw, ChevronDown, Search, ArrowUpRight } from 'lucide-react';
+import { Brain, TrendingUp, Users, Package, AlertTriangle, ShoppingCart, Phone, Mail, CheckCircle, Settings } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { KPIWidget } from '@/components/KPIWidget';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import { KPIWidget } from '@/components/KPIWidget';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart } from 'recharts';
 import { toast } from 'sonner';
 
@@ -26,284 +24,207 @@ const FORECAST_DATA = [
 ];
 
 const RECOMMENDATIONS = [
-  { id: 1, product: 'Paracétamol 500mg', coProduct: 'Ibuprofène 400mg', confidence: 87, buyers: 34, status: 'active' as const },
-  { id: 2, product: 'Huile de tournesol 5L', coProduct: 'Concentré de tomate 800g', confidence: 82, buyers: 28, status: 'active' as const },
-  { id: 3, product: 'Ciment CPJ 42.5', coProduct: 'Fer à béton T12', confidence: 79, buyers: 22, status: 'dismissed' as const },
-  { id: 4, product: 'Lait UHT 1L', coProduct: 'Sucre blanc 1kg', confidence: 76, buyers: 45, status: 'active' as const },
-  { id: 5, product: 'Savon liquide 1L', coProduct: 'Éponge ménagère', confidence: 71, buyers: 19, status: 'active' as const },
+  { product: 'Paracétamol 500mg', coProduct: 'Ibuprofène 400mg', confidence: 87, buyers: 34 },
+  { product: 'Huile de tournesol 5L', coProduct: 'Concentré de tomate 800g', confidence: 82, buyers: 28 },
+  { product: 'Ciment CPJ 42.5', coProduct: 'Fer à béton T12', confidence: 79, buyers: 22 },
+  { product: 'Lait UHT 1L', coProduct: 'Sucre blanc 1kg', confidence: 76, buyers: 45 },
 ];
 
 const CHURN_RISK = [
-  { id: 1, customer: 'Superette El Baraka', wilaya: 'Oran', lastOrder: '45 jours', risk: 'high' as const, signal: 'Aucune commande depuis 45j', action: 'Appeler le commercial', contacted: false },
-  { id: 2, customer: 'Pharmacie Centrale', wilaya: 'Alger', lastOrder: '30 jours', risk: 'medium' as const, signal: 'Volume en baisse -40%', action: 'Proposer une remise', contacted: true },
-  { id: 3, customer: 'Grossiste Benamar', wilaya: 'Blida', lastOrder: '25 jours', risk: 'medium' as const, signal: 'Réclamation non résolue', action: 'Suivi réclamation', contacted: false },
-  { id: 4, customer: 'Mini-market Yasmine', wilaya: 'Tizi Ouzou', lastOrder: '60 jours', risk: 'high' as const, signal: 'Client injoignable', action: 'Visite terrain', contacted: false },
-  { id: 5, customer: 'Épicerie Fine Saïd', wilaya: 'Constantine', lastOrder: '35 jours', risk: 'medium' as const, signal: 'Fréquence en baisse', action: 'Offre fidélité', contacted: false },
+  { customer: 'Superette El Baraka', wilaya: 'Oran', lastOrder: '45 jours', risk: 'high' as const, signal: 'Aucune commande depuis 45j', action: 'Appeler le commercial', contacted: false },
+  { customer: 'Pharmacie Centrale', wilaya: 'Alger', lastOrder: '30 jours', risk: 'medium' as const, signal: 'Volume en baisse -40%', action: 'Proposer une remise', contacted: false },
+  { customer: 'Grossiste Benamar', wilaya: 'Blida', lastOrder: '25 jours', risk: 'medium' as const, signal: 'Réclamation non résolue', action: 'Suivi réclamation', contacted: false },
+  { customer: 'Mini-market Yasmine', wilaya: 'Tizi Ouzou', lastOrder: '60 jours', risk: 'high' as const, signal: 'Client injoignable', action: 'Visite terrain', contacted: false },
 ];
 
 const REORDER = [
-  { id: 1, product: 'Paracétamol 500mg', stock: 45, forecast: 120, reorderQty: 200, urgency: 'high' as const, approved: false },
-  { id: 2, product: 'Huile 5L Elio', stock: 80, forecast: 150, reorderQty: 150, urgency: 'medium' as const, approved: false },
-  { id: 3, product: 'Semoule fine 25kg', stock: 200, forecast: 300, reorderQty: 250, urgency: 'medium' as const, approved: true },
-  { id: 4, product: 'Ciment CPJ 50kg', stock: 30, forecast: 100, reorderQty: 200, urgency: 'high' as const, approved: false },
-  { id: 5, product: 'Couches bébé T3', stock: 150, forecast: 180, reorderQty: 100, urgency: 'low' as const, approved: false },
+  { product: 'Paracétamol 500mg', stock: 45, forecast: 120, reorderQty: 200, urgency: 'high', ordered: false },
+  { product: 'Huile 5L Elio', stock: 80, forecast: 150, reorderQty: 150, urgency: 'medium', ordered: false },
+  { product: 'Semoule fine 25kg', stock: 200, forecast: 300, reorderQty: 250, urgency: 'medium', ordered: false },
+  { product: 'Ciment CPJ 50kg', stock: 30, forecast: 100, reorderQty: 200, urgency: 'high', ordered: false },
+  { product: 'Couches bébé T3', stock: 150, forecast: 180, reorderQty: 100, urgency: 'low', ordered: false },
+];
+
+const ACCURACY_DATA = [
+  { month: 'Oct', accuracy: 89 }, { month: 'Nov', accuracy: 91 }, { month: 'Dec', accuracy: 88 },
+  { month: 'Jan', accuracy: 92 }, { month: 'Fév', accuracy: 94 }, { month: 'Mar', accuracy: 93 },
 ];
 
 export default function InsightsPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('forecast');
-  const [riskFilter, setRiskFilter] = useState('all');
-  const [urgencyFilter, setUrgencyFilter] = useState('all');
-  const [recSearch, setRecSearch] = useState('');
-  const [churnSearch, setChurnSearch] = useState('');
-  const [recommendations, setRecommendations] = useState(RECOMMENDATIONS);
-  const [churnRisk, setChurnRisk] = useState(CHURN_RISK);
-  const [reorderItems, setReorderItems] = useState(REORDER);
-  const [actionDialog, setActionDialog] = useState<{ open: boolean; customer?: typeof CHURN_RISK[0] }>({ open: false });
-  const [actionNote, setActionNote] = useState('');
+  const [churnData, setChurnData] = useState(CHURN_RISK);
+  const [reorderData, setReorderData] = useState(REORDER);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [forecastDays, setForecastDays] = useState([90]);
+  const [confidenceThreshold, setConfidenceThreshold] = useState([75]);
 
-  const filteredChurn = useMemo(() => {
-    let items = churnRisk;
-    if (riskFilter !== 'all') items = items.filter(c => c.risk === riskFilter);
-    if (churnSearch) items = items.filter(c => c.customer.toLowerCase().includes(churnSearch.toLowerCase()));
-    return items;
-  }, [churnRisk, riskFilter, churnSearch]);
-
-  const filteredReorder = useMemo(() => {
-    let items = reorderItems;
-    if (urgencyFilter !== 'all') items = items.filter(r => r.urgency === urgencyFilter);
-    return items;
-  }, [reorderItems, urgencyFilter]);
-
-  const filteredRecs = useMemo(() => {
-    let items = recommendations.filter(r => r.status === 'active');
-    if (recSearch) items = items.filter(r => r.product.toLowerCase().includes(recSearch.toLowerCase()) || r.coProduct.toLowerCase().includes(recSearch.toLowerCase()));
-    return items;
-  }, [recommendations, recSearch]);
-
-  const handleDismissRec = (id: number) => {
-    setRecommendations(prev => prev.map(r => r.id === id ? { ...r, status: 'dismissed' as const } : r));
-    toast.success(t('common.success', 'Recommandation ignorée'));
+  const handleContact = (idx: number, method: 'call' | 'email') => {
+    setChurnData(prev => prev.map((c, i) => i === idx ? { ...c, contacted: true } : c));
+    toast.success(method === 'call' ? t('insights.callInitiated', 'Call initiated') : t('insights.emailSent', 'Email sent'));
   };
 
-  const handleApproveReorder = (id: number) => {
-    setReorderItems(prev => prev.map(r => r.id === id ? { ...r, approved: true } : r));
-    toast.success(t('common.success', 'Réapprovisionnement approuvé'));
+  const handleOrder = (idx: number) => {
+    setReorderData(prev => prev.map((r, i) => i === idx ? { ...r, ordered: true } : r));
+    toast.success(t('insights.orderCreated', 'Reorder created'));
   };
-
-  const handleContactCustomer = () => {
-    if (!actionDialog.customer) return;
-    setChurnRisk(prev => prev.map(c => c.id === actionDialog.customer!.id ? { ...c, contacted: true } : c));
-    toast.success(`Action enregistrée pour ${actionDialog.customer.customer}`);
-    setActionDialog({ open: false });
-    setActionNote('');
-  };
-
-  const handleExportCSV = (section: string) => {
-    let csv = '';
-    if (section === 'churn') {
-      csv = 'Client,Wilaya,Dernière Commande,Risque,Signal,Action\n' +
-        filteredChurn.map(c => `"${c.customer}","${c.wilaya}","${c.lastOrder}","${c.risk}","${c.signal}","${c.action}"`).join('\n');
-    } else if (section === 'reorder') {
-      csv = 'Produit,Stock,Prévision,Qté Suggérée,Urgence\n' +
-        filteredReorder.map(r => `"${r.product}",${r.stock},${r.forecast},${r.reorderQty},"${r.urgency}"`).join('\n');
-    } else {
-      csv = 'Produit,Co-Produit,Confiance,Acheteurs\n' +
-        filteredRecs.map(r => `"${r.product}","${r.coProduct}",${r.confidence}%,${r.buyers}`).join('\n');
-    }
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `insights-${section}.csv`; a.click();
-    URL.revokeObjectURL(url);
-    toast.success(t('common.exportSuccess', 'Export CSV téléchargé'));
-  };
-
-  const atRiskCount = churnRisk.filter(c => !c.contacted).length;
-  const pendingReorders = reorderItems.filter(r => !r.approved).length;
 
   return (
-    <div className="space-y-6">
-      <PageHeader title={t('saas.insights', 'AI Insights')} description={t('saas.insightsDesc', 'Recommandations intelligentes basées sur vos données')}>
-        <Button variant="outline" size="sm" onClick={() => toast.info('Modèles actualisés')}><RefreshCw className="h-4 w-4 me-2" />{t('common.refresh', 'Actualiser')}</Button>
+    <div className="space-y-6 animate-fade-in">
+      <PageHeader title={t('saas.insights', 'AI Insights')} description={t('saas.insightsDesc', 'Smart recommendations based on your data')}>
+        <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+          <Settings className="h-4 w-4 me-2" />{t('insights.forecastSettings', 'Settings')}
+        </Button>
       </PageHeader>
 
       <div className="grid gap-4 sm:grid-cols-4">
-        <KPIWidget title={t('insights.forecastOrders', 'Prévision commandes')} value="+15%" icon={<TrendingUp className="h-4 w-4" />} />
-        <KPIWidget title={t('insights.atRiskCustomers', 'Clients à risque')} value={atRiskCount} icon={<AlertTriangle className="h-4 w-4" />} />
-        <KPIWidget title={t('insights.pendingReorders', 'Réappros en attente')} value={pendingReorders} icon={<Package className="h-4 w-4" />} />
-        <KPIWidget title={t('insights.crossSell', 'Cross-sell actifs')} value={filteredRecs.length} icon={<ShoppingCart className="h-4 w-4" />} />
+        <KPIWidget title={t('insights.forecastGrowth', 'Forecast Growth')} value="+15%" icon={<TrendingUp className="h-4 w-4" />} />
+        <KPIWidget title={t('insights.churnRisk', 'Churn Risk')} value={churnData.filter(c => !c.contacted).length} icon={<AlertTriangle className="h-4 w-4" />} />
+        <KPIWidget title={t('insights.reorderSuggestions', 'Reorder Suggestions')} value={reorderData.filter(r => !r.ordered).length} icon={<Package className="h-4 w-4" />} />
+        <KPIWidget title={t('insights.crossSell', 'Cross-sell')} value={RECOMMENDATIONS.length} icon={<ShoppingCart className="h-4 w-4" />} />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="forecast">{t('insights.demandForecast', 'Prévision demande')}</TabsTrigger>
-          <TabsTrigger value="recommendations">{t('insights.recommendations', 'Cross-sell')}</TabsTrigger>
-          <TabsTrigger value="churn">{t('insights.churnRisk', 'Risque perte')}</TabsTrigger>
-          <TabsTrigger value="reorder">{t('insights.reorderSuggestions', 'Réappro')}</TabsTrigger>
-        </TabsList>
+      {/* Demand Forecast */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" />{t('insights.demandForecast', 'Demand Forecast')}</CardTitle></CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={FORECAST_DATA}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+              <XAxis dataKey="month" className="text-xs" />
+              <YAxis className="text-xs" />
+              <Tooltip />
+              <Legend />
+              <Area type="monotone" dataKey="actual" name={t('insights.actual', 'Actual')} stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
+              <Area type="monotone" dataKey="predicted" name={t('insights.predicted', 'Predicted')} stroke="hsl(var(--warning, 38 92% 50%))" fill="hsl(var(--warning, 38 92% 50%))" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 5" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
-        <TabsContent value="forecast" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" />{t('insights.demandForecast', 'Prévision de la demande')}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={320}>
-                <AreaChart data={FORECAST_DATA}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip />
-                  <Legend />
-                  <Area type="monotone" dataKey="actual" name={t('insights.actual', 'Réel')} stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} />
-                  <Area type="monotone" dataKey="predicted" name={t('insights.predicted', 'Prévision')} stroke="hsl(var(--chart-2))" fill="hsl(var(--chart-2))" fillOpacity={0.1} strokeWidth={2} strokeDasharray="5 5" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="recommendations" className="mt-4 space-y-4">
-          <div className="flex gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder={t('common.search', 'Rechercher...')} value={recSearch} onChange={e => setRecSearch(e.target.value)} />
-            </div>
-            <Button variant="outline" size="sm" onClick={() => handleExportCSV('recommendations')}><Download className="h-4 w-4 me-2" />CSV</Button>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {filteredRecs.map(r => (
-              <Card key={r.id}>
-                <CardContent className="pt-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Clients de <span className="text-primary">{r.product}</span></p>
-                      <p className="text-xs text-muted-foreground mt-1">achètent aussi <span className="font-medium">{r.coProduct}</span> ({r.buyers} clients)</p>
-                    </div>
-                    <Badge variant="secondary">{r.confidence}%</Badge>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    <Button size="sm" variant="outline" className="text-xs h-7"><ArrowUpRight className="h-3 w-3 me-1" />{t('insights.createBundle', 'Créer bundle')}</Button>
-                    <Button size="sm" variant="ghost" className="text-xs h-7 text-muted-foreground" onClick={() => handleDismissRec(r.id)}>{t('common.dismiss', 'Ignorer')}</Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {filteredRecs.length === 0 && <p className="text-sm text-muted-foreground col-span-2 text-center py-8">{t('common.noData', 'Aucun résultat')}</p>}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="churn" className="mt-4 space-y-4">
-          <div className="flex flex-wrap gap-3">
-            <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder={t('insights.searchCustomer', 'Rechercher client...')} value={churnSearch} onChange={e => setChurnSearch(e.target.value)} />
-            </div>
-            <Select value={riskFilter} onValueChange={setRiskFilter}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder={t('insights.riskLevel', 'Niveau risque')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('common.all', 'Tous')}</SelectItem>
-                <SelectItem value="high">{t('insights.high', 'Élevé')}</SelectItem>
-                <SelectItem value="medium">{t('insights.medium', 'Moyen')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" onClick={() => handleExportCSV('churn')}><Download className="h-4 w-4 me-2" />CSV</Button>
-          </div>
-          <div className="space-y-3">
-            {filteredChurn.map(c => (
-              <Card key={c.id} className={c.contacted ? 'opacity-60' : ''}>
-                <CardContent className="pt-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-medium flex items-center gap-2">{c.customer} {c.contacted && <Badge variant="outline" className="text-xs">{t('insights.contacted', 'Contacté')}</Badge>}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{c.signal} • {c.wilaya} • {c.lastOrder}</p>
-                      <p className="text-xs text-primary mt-1">→ {c.action}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={c.risk === 'high' ? 'destructive' : 'secondary'}>{c.risk === 'high' ? t('insights.high', 'Élevé') : t('insights.medium', 'Moyen')}</Badge>
-                      {!c.contacted && <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setActionDialog({ open: true, customer: c })}>{t('insights.takeAction', 'Agir')}</Button>}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="reorder" className="mt-4 space-y-4">
-          <div className="flex gap-3">
-            <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder={t('insights.urgency', 'Urgence')} /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('common.all', 'Tous')}</SelectItem>
-                <SelectItem value="high">{t('insights.urgent', 'Urgent')}</SelectItem>
-                <SelectItem value="medium">{t('insights.medium', 'Moyen')}</SelectItem>
-                <SelectItem value="low">{t('insights.low', 'Bas')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" size="sm" onClick={() => handleExportCSV('reorder')}><Download className="h-4 w-4 me-2" />CSV</Button>
-          </div>
-          <Card>
-            <CardContent className="pt-4">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b text-muted-foreground">
-                      <th className="text-start py-2 font-medium">{t('common.product', 'Produit')}</th>
-                      <th className="text-end py-2 font-medium">{t('insights.currentStock', 'Stock actuel')}</th>
-                      <th className="text-end py-2 font-medium">{t('insights.forecastDemand', 'Demande prévue')}</th>
-                      <th className="text-end py-2 font-medium">{t('insights.suggestedQty', 'Qté suggérée')}</th>
-                      <th className="text-center py-2 font-medium">{t('insights.urgency', 'Urgence')}</th>
-                      <th className="text-center py-2 font-medium">{t('common.actions', 'Actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredReorder.map(r => (
-                      <tr key={r.id} className="border-b last:border-0">
-                        <td className="py-2.5 font-medium text-foreground">{r.product}</td>
-                        <td className="text-end text-foreground">{r.stock}</td>
-                        <td className="text-end text-foreground">{r.forecast}</td>
-                        <td className="text-end font-medium text-primary">{r.reorderQty}</td>
-                        <td className="text-center">
-                          <Badge variant={r.urgency === 'high' ? 'destructive' : r.urgency === 'medium' ? 'secondary' : 'outline'}>
-                            {r.urgency === 'high' ? t('insights.urgent', 'Urgent') : r.urgency === 'medium' ? t('insights.medium', 'Moyen') : t('insights.low', 'Bas')}
-                          </Badge>
-                        </td>
-                        <td className="text-center">
-                          {r.approved ? (
-                            <Badge variant="outline" className="text-success border-success">{t('insights.approved', 'Approuvé')}</Badge>
-                          ) : (
-                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => handleApproveReorder(r.id)}>{t('insights.approve', 'Approuver')}</Button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Product Recommendations */}
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Brain className="h-4 w-4 text-primary" />{t('insights.productRecommendations', 'Product Recommendations')}</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {RECOMMENDATIONS.filter(r => r.confidence >= confidenceThreshold[0]).map((r) => (
+              <div key={r.product} className="rounded-lg border p-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-foreground">{t('insights.buyersOf', 'Buyers of')} <span className="text-primary">{r.product}</span></p>
+                  <Badge variant="secondary">{r.confidence}%</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{t('insights.alsoBuy', 'also buy')} <span className="font-medium">{r.coProduct}</span> ({r.buyers} {t('insights.clients', 'clients')})</p>
+                <Button variant="outline" size="sm" className="mt-2 w-full" onClick={() => toast.success(t('insights.campaignCreated', 'Cross-sell campaign created'))}>
+                  <ShoppingCart className="h-3.5 w-3.5 me-1" />{t('insights.createCampaign', 'Create Campaign')}
+                </Button>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            ))}
+          </CardContent>
+        </Card>
 
-      {/* Action Dialog for Churn */}
-      <Dialog open={actionDialog.open} onOpenChange={o => !o && setActionDialog({ open: false })}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('insights.recordAction', 'Enregistrer une action')}</DialogTitle>
-            <DialogDescription>{actionDialog.customer?.customer} — {actionDialog.customer?.action}</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label>{t('insights.actionNote', 'Note de suivi')}</Label>
-              <Textarea value={actionNote} onChange={e => setActionNote(e.target.value)} placeholder={t('insights.actionNotePlaceholder', 'Décrivez l\'action effectuée...')} rows={3} />
-            </div>
+        {/* Churn Risk */}
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4 text-destructive" />{t('insights.churnRiskTitle', 'Customer Churn Risk')}</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            {churnData.map((c, idx) => (
+              <div key={c.customer} className={`rounded-lg border p-3 ${c.contacted ? 'opacity-60' : ''}`}>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-foreground">{c.customer}</p>
+                  <Badge variant={c.risk === 'high' ? 'destructive' : 'secondary'}>
+                    {c.contacted ? <CheckCircle className="h-3 w-3 me-1" /> : null}
+                    {c.risk === 'high' ? t('insights.highRisk', 'High') : t('insights.mediumRisk', 'Medium')}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{c.signal} • {c.wilaya}</p>
+                {!c.contacted && (
+                  <div className="flex gap-2 mt-2">
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleContact(idx, 'call')}>
+                      <Phone className="h-3.5 w-3.5 me-1" />{t('insights.call', 'Call')}
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1" onClick={() => handleContact(idx, 'email')}>
+                      <Mail className="h-3.5 w-3.5 me-1" />{t('insights.sendEmail', 'Email')}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Reorder Suggestions */}
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2 text-base"><Package className="h-4 w-4 text-primary" />{t('insights.reorderTitle', 'Reorder Suggestions')}</CardTitle></CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-muted-foreground">
+                  <th className="text-start py-2 font-medium">{t('products.title', 'Product')}</th>
+                  <th className="text-end py-2 font-medium">{t('insights.currentStock', 'Current Stock')}</th>
+                  <th className="text-end py-2 font-medium">{t('insights.forecastDemand', 'Forecast Demand')}</th>
+                  <th className="text-end py-2 font-medium">{t('insights.suggestedQty', 'Suggested Qty')}</th>
+                  <th className="text-center py-2 font-medium">{t('insights.urgencyLabel', 'Urgency')}</th>
+                  <th className="text-center py-2 font-medium">{t('common.actions')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reorderData.map((r, idx) => (
+                  <tr key={r.product} className={`border-b last:border-0 ${r.ordered ? 'opacity-50' : ''}`}>
+                    <td className="py-2.5 font-medium text-foreground">{r.product}</td>
+                    <td className="text-end text-foreground">{r.stock}</td>
+                    <td className="text-end text-foreground">{r.forecast}</td>
+                    <td className="text-end font-medium text-primary">{r.reorderQty}</td>
+                    <td className="text-center">
+                      <Badge variant={r.urgency === 'high' ? 'destructive' : r.urgency === 'medium' ? 'secondary' : 'outline'}>
+                        {r.urgency === 'high' ? t('insights.urgent', 'Urgent') : r.urgency === 'medium' ? t('insights.medium', 'Medium') : t('insights.low', 'Low')}
+                      </Badge>
+                    </td>
+                    <td className="text-center">
+                      {r.ordered ? (
+                        <Badge variant="outline"><CheckCircle className="h-3 w-3 me-1" />{t('insights.ordered', 'Ordered')}</Badge>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={() => handleOrder(idx)}>{t('insights.createOrder', 'Order')}</Button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setActionDialog({ open: false })}>{t('common.cancel', 'Annuler')}</Button>
-            <Button onClick={handleContactCustomer}>{t('insights.confirmAction', 'Confirmer')}</Button>
-          </DialogFooter>
+        </CardContent>
+      </Card>
+
+      {/* Forecast Accuracy */}
+      <Card>
+        <CardHeader><CardTitle className="text-base">{t('insights.forecastAccuracy', 'Forecast Accuracy History')}</CardTitle></CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={ACCURACY_DATA}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+              <XAxis dataKey="month" className="text-xs" />
+              <YAxis domain={[80, 100]} className="text-xs" />
+              <Tooltip />
+              <Line type="monotone" dataKey="accuracy" name={t('insights.accuracy', 'Accuracy %')} className="stroke-primary" strokeWidth={2} dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{t('insights.forecastSettings', 'Forecast Settings')}</DialogTitle></DialogHeader>
+          <div className="space-y-6 pt-2">
+            <div className="space-y-3">
+              <Label>{t('insights.forecastHorizon', 'Forecast Horizon')}: {forecastDays[0]} {t('insights.days', 'days')}</Label>
+              <Slider value={forecastDays} onValueChange={setForecastDays} min={30} max={180} step={30} />
+            </div>
+            <div className="space-y-3">
+              <Label>{t('insights.confidenceMin', 'Min Confidence')}: {confidenceThreshold[0]}%</Label>
+              <Slider value={confidenceThreshold} onValueChange={setConfidenceThreshold} min={50} max={95} step={5} />
+            </div>
+            <Button className="w-full" onClick={() => { setSettingsOpen(false); toast.success(t('insights.settingsSaved', 'Settings saved')); }}>{t('common.save')}</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

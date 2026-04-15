@@ -4,34 +4,33 @@
 `/business/activity`
 
 ## Status
-- Complete: 65%
+- Complete: 45%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Filter + pagination, hardcoded data
+- Logic Status: 🔴 Hardcoded data
 - API Status: ❌ None
-- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
 Activity feed showing recent actions by team members.
 
 ## Existing Features
-- Activity timeline with icons
+- Activity timeline with icons per action type
 - User names, timestamps, resource references
-- Filter by action type
-- Pagination
-- Create entries
+- Action type badges
+- Filter by type
+- Export button (non-functional)
 
 ## Existing User Actions
 - ✅ View activity feed
 - ✅ Filter by action type
-- ✅ Paginate
+- ❌ Export activity log
 
 ## Missing Features
-- [ ] Real activity backend
+- [ ] Real activity feed from backend
+- [ ] Pagination / infinite scroll
 - [ ] Date range filter
 - [ ] Click-through to resource
 - [ ] Real-time updates
-- [ ] Export
 
 ## Final Score
-**65/100**
+**45/100**

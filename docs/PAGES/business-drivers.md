@@ -4,36 +4,37 @@
 `/business/drivers`
 
 ## Status
-- Complete: 75%
+- Complete: 50%
 - UI Status: ✅ Complete
-- Logic Status: ✅ CRUD with dialogs + confirmation
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- Logic Status: ⚠️ Read-only
+- API Status: ❌ Fake API
 - Production Ready: No
 
 ## Purpose
-Manage delivery drivers — status, performance, CRUD.
+Manage delivery drivers — status, performance, assignments.
 
 ## Existing Features
 - Driver list with status badges
-- Delivery stats per driver
-- Create driver dialog
-- Edit driver dialog
-- Delete driver with confirmation
-- Filter support
+- Delivery stats per driver (today/completed/on-time rate)
+- Vehicle info
 
 ## Existing User Actions
 - ✅ View drivers
-- ✅ Create driver
-- ✅ Edit driver
-- ✅ Delete driver (with confirmation)
-- ✅ Filter drivers
+- ❌ Create/edit driver
+- ❌ Change driver status
+- ❌ View driver history
+
+## Backend/API Needed
+- `GET /drivers`
+- `POST /drivers`
+- `PUT /drivers/:id`
+- `GET /drivers/:id/history`
 
 ## Missing Features
-- [ ] Real backend API
+- [ ] CRUD operations
 - [ ] Driver schedule management
 - [ ] Performance analytics
-- [ ] Route assignment history
+- [ ] Route assignment
 
 ## Final Score
-**75/100**
+**50/100**

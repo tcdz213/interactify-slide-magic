@@ -4,23 +4,28 @@
 `/m/driver/profile`
 
 ## Status
-- Complete: 45%
+- Complete: 40%
 - UI Status: ✅ Complete
 - Logic Status: 🔴 Read-only
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- API Status: ❌ Fake API
 - Production Ready: No
+
+## Purpose
+Driver profile — personal info, vehicle details, performance stats.
 
 ## Existing Features
 - Driver avatar/name
-- Performance stats
+- Performance stats display
 - Vehicle info
 
 ## Missing Features
-- [ ] Real backend API
 - [ ] Edit profile
 - [ ] Change password
+- [ ] Upload avatar
+- [ ] Language preference
+- [ ] Notification settings
+- [ ] Support contact
 - [ ] Logout
 
 ## Final Score
-**45/100**
+**40/100**

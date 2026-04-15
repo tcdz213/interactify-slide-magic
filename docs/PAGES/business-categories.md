@@ -4,32 +4,40 @@
 `/business/categories`
 
 ## Status
-- Complete: 80%
+- Complete: 55%
 - UI Status: ✅ Complete
-- Logic Status: ✅ Full CRUD with confirmation
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- Logic Status: ⚠️ Display only
+- API Status: ❌ Fake API
 - Production Ready: No
 
 ## Purpose
-Manage product categories — create, edit, delete.
+Manage product categories — create, edit, reorder, delete categories.
 
 ## Existing Features
 - Category list/table
 - Product count per category
-- Full CRUD (create, edit, delete with confirmation)
+- Active/inactive status
 
 ## Existing User Actions
 - ✅ View categories
-- ✅ Create category
-- ✅ Edit category
-- ✅ Delete category (with confirmation)
+- ❌ Create category
+- ❌ Edit category
+- ❌ Delete category
+- ❌ Reorder categories
+
+## Backend/API Needed
+- `GET /categories`
+- `POST /categories`
+- `PUT /categories/:id`
+- `DELETE /categories/:id`
+- `PUT /categories/reorder`
 
 ## Missing Features
-- [ ] Real backend API
+- [ ] CRUD operations
 - [ ] Drag-and-drop reorder
 - [ ] Category image/icon
 - [ ] Nested subcategories
+- [ ] Prevent delete if has products
 
 ## Final Score
-**80/100**
+**55/100**

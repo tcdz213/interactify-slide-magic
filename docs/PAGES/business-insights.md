@@ -4,39 +4,35 @@
 `/business/insights`
 
 ## Status
-- Complete: 85%
+- Complete: 45%
 - UI Status: ✅ Complete
-- Logic Status: ✅ Tabs, filters, search, actions, export CSV, dialogs
-- API Status: ⚠️ Mock data
-- i18n: ✅ Wired
+- Logic Status: 🔴 All hardcoded data
+- API Status: ❌ None
 - Production Ready: No
 
 ## Purpose
-AI-powered business insights — demand forecasting, cross-sell, churn risk, reorder suggestions.
+AI-powered business insights — demand forecasting, product recommendations, churn risk.
 
 ## Existing Features
-- 4 KPIs (Forecast, At-Risk, Pending Reorders, Cross-sell)
-- Tabbed interface (Forecast, Cross-sell, Churn Risk, Reorder)
-- Demand forecast area chart (actual vs predicted)
-- Cross-sell recommendations with search, dismiss, create bundle
-- Churn risk list with risk filter, search, action dialog
-- Reorder suggestions table with urgency filter, approve action
-- CSV export per section
-- Action recording dialog with notes
+- 4 KPIs (Accuracy, Recommendations, At-Risk Customers, Predicted Revenue)
+- Demand forecast chart (actual vs predicted)
+- Cross-sell recommendations table (product pairs with confidence %)
+- Churn risk table with risk levels and recommended actions
+- Revenue prediction chart
+
+## Existing UI
+- LineChart, AreaChart (Recharts), tables, badges
 
 ## Existing User Actions
-- ✅ Switch tabs
-- ✅ Search recommendations/customers
-- ✅ Filter by risk level / urgency
-- ✅ Dismiss recommendation
-- ✅ Approve reorder suggestion
-- ✅ Record churn action with note
-- ✅ Export CSV per section
+- ✅ View insights (read-only)
+- ❌ No actions possible
 
 ## Missing Features
-- [ ] Real ML/AI backend
+- [ ] Real ML/AI backend for predictions
 - [ ] Configurable forecast parameters
+- [ ] Action buttons on recommendations
+- [ ] Customer outreach from churn list
 - [ ] Historical accuracy tracking
 
 ## Final Score
-**85/100**
+**45/100**

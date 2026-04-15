@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getProducts, getCustomers, getPriceGroupRules, updatePriceGroupRule, regeneratePrices, addPriceHistoryEntry, updateProduct } from '@/lib/fake-api';
-import type { Product, PricingRule, CustomerSegment, Customer, PriceGroupRule } from '@/lib/fake-api/types';
+import { getProducts } from '@/lib/fake-api';
+import type { Product, PricingRule, CustomerSegment } from '@/lib/fake-api/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -10,57 +10,46 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KPIWidget } from '@/components/KPIWidget';
 import { SegmentBadge } from '@/components/StatusBadges';
-import { Plus, Search, DollarSign, Tags, Calculator, Upload, Pencil, Trash2, TrendingUp, RefreshCw, Settings, BarChart3, Download } from 'lucide-react';
+import { Plus, Search, DollarSign, Tags, Calculator, Upload, Pencil, Trash2, TrendingUp } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-
-const ALL_SEGMENTS: CustomerSegment[] = ['depot', 'wholesale', 'retail', 'small_trader', 'special_client'];
 
 interface FlatRule extends PricingRule {
   productName: string;
   productSku: string;
   productId: string;
+  basePrice?: number;
 }
 
 export default function PricingRulesPage() {
   const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
-  const [priceGroups, setPriceGroups] = useState<PriceGroupRule[]>([]);
   const [search, setSearch] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [loading, setLoading] = useState(true);
 
+  // CRUD state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<FlatRule | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FlatRule | null>(null);
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
-  const [bulkSegment, setBulkSegment] = useState<string>('depot');
+  const [bulkSegment, setBulkSegment] = useState<string>('superette');
   const [bulkAdjustment, setBulkAdjustment] = useState<string>('0');
   const [bulkType, setBulkType] = useState<'percentage' | 'fixed'>('percentage');
-  const [regenerating, setRegenerating] = useState(false);
-  const [compareOpen, setCompareOpen] = useState(false);
-  const [compareProductId, setCompareProductId] = useState('');
 
+  // Form state
   const [formProductId, setFormProductId] = useState('');
-  const [formSegment, setFormSegment] = useState<string>('depot');
+  const [formSegment, setFormSegment] = useState<string>('superette');
   const [formUnitId, setFormUnitId] = useState('');
   const [formPrice, setFormPrice] = useState('');
-  const [formCostPrice, setFormCostPrice] = useState('');
   const [formEffectiveFrom, setFormEffectiveFrom] = useState(new Date().toISOString().split('T')[0]);
   const [formEffectiveTo, setFormEffectiveTo] = useState('');
-  const [formIsPromo, setFormIsPromo] = useState(false);
-  const [formPromoLabel, setFormPromoLabel] = useState('');
 
-  const load = async () => {
-    const [p, pg] = await Promise.all([getProducts(), getPriceGroupRules()]);
-    setProducts(p.filter(pr => !pr.isDeleted));
-    setPriceGroups(pg);
-    setLoading(false);
-  };
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    getProducts().then(data => { setProducts(data); setLoading(false); });
+  }, []);
 
   const allRules: FlatRule[] = products.flatMap(p =>
     p.pricingRules.map(r => ({ ...r, productName: p.name, productSku: p.sku, productId: p.id }))
@@ -74,19 +63,24 @@ export default function PricingRulesPage() {
 
   const uniqueSegments = [...new Set(allRules.map(r => r.segment))];
   const productsWithPricing = new Set(allRules.map(r => r.productName)).size;
-  const promoCount = allRules.filter(r => r.isPromo).length;
-  const avgMargin = allRules.filter(r => r.costPrice).length > 0
-    ? (allRules.filter(r => r.costPrice).reduce((s, r) => s + ((r.price - (r.costPrice || 0)) / (r.costPrice || 1)) * 100, 0) / allRules.filter(r => r.costPrice).length).toFixed(1)
-    : '0';
 
   const fmt = (n: number) => new Intl.NumberFormat('fr-DZ', { style: 'currency', currency: 'DZD', maximumFractionDigits: 2 }).format(n);
 
   const getSelectedProduct = () => products.find(p => p.id === formProductId);
 
+  const calcMargin = (rule: FlatRule) => {
+    const product = products.find(p => p.id === rule.productId);
+    if (!product) return null;
+    const wholesaleRule = product.pricingRules.find(r => r.segment === 'wholesale' && r.unitId === rule.unitId);
+    if (!wholesaleRule || rule.segment === 'wholesale') return null;
+    const margin = ((rule.price - wholesaleRule.price) / wholesaleRule.price * 100).toFixed(1);
+    return `${margin}%`;
+  };
+
   const resetForm = () => {
-    setFormProductId(''); setFormSegment('depot'); setFormUnitId('');
-    setFormPrice(''); setFormCostPrice(''); setFormEffectiveFrom(new Date().toISOString().split('T')[0]);
-    setFormEffectiveTo(''); setEditingRule(null); setFormIsPromo(false); setFormPromoLabel('');
+    setFormProductId(''); setFormSegment('superette'); setFormUnitId('');
+    setFormPrice(''); setFormEffectiveFrom(new Date().toISOString().split('T')[0]);
+    setFormEffectiveTo(''); setEditingRule(null);
   };
 
   const openCreate = () => { resetForm(); setDialogOpen(true); };
@@ -97,155 +91,81 @@ export default function PricingRulesPage() {
     setFormSegment(rule.segment);
     setFormUnitId(rule.unitId);
     setFormPrice((rule.price / 100).toString());
-    setFormCostPrice(rule.costPrice ? (rule.costPrice / 100).toString() : '');
     setFormEffectiveFrom(rule.effectiveFrom);
     setFormEffectiveTo(rule.effectiveTo || '');
-    setFormIsPromo(rule.isPromo || false);
-    setFormPromoLabel(rule.promoLabel || '');
     setDialogOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!formProductId || !formUnitId || !formPrice) {
       toast.error(t('common.error'));
       return;
     }
     const priceInCents = Math.round(parseFloat(formPrice) * 100);
-    const costInCents = formCostPrice ? Math.round(parseFloat(formCostPrice) * 100) : undefined;
     const product = getSelectedProduct()!;
     const unit = product.units.find(u => u.id === formUnitId);
 
-    let rules = [...product.pricingRules];
-    if (editingRule) {
-      const oldRule = rules.find(r => r.id === editingRule.id);
-      if (oldRule && oldRule.price !== priceInCents) {
-        await addPriceHistoryEntry({
-          productId: product.id, productName: product.name, segment: formSegment as CustomerSegment,
-          unitId: formUnitId, unitName: unit?.name || '', oldPrice: oldRule.price, newPrice: priceInCents,
-          changedBy: 'Manager', reason: formIsPromo ? `Promo: ${formPromoLabel}` : 'Modification manuelle',
+    setProducts(prev => prev.map(p => {
+      if (p.id !== formProductId) return p;
+      let rules = [...p.pricingRules];
+      if (editingRule) {
+        rules = rules.map(r => r.id === editingRule.id ? {
+          ...r, segment: formSegment as CustomerSegment, unitId: formUnitId,
+          unitName: unit?.name || '', price: priceInCents,
+          effectiveFrom: formEffectiveFrom, effectiveTo: formEffectiveTo || undefined,
+        } : r);
+      } else {
+        rules.push({
+          id: `pr${Date.now()}`, segment: formSegment as CustomerSegment,
+          unitId: formUnitId, unitName: unit?.name || '', price: priceInCents,
+          effectiveFrom: formEffectiveFrom, effectiveTo: formEffectiveTo || undefined,
         });
       }
-      rules = rules.map(r => r.id === editingRule.id ? {
-        ...r, segment: formSegment as CustomerSegment, unitId: formUnitId,
-        unitName: unit?.name || '', price: priceInCents, costPrice: costInCents,
-        effectiveFrom: formEffectiveFrom, effectiveTo: formEffectiveTo || undefined,
-        isPromo: formIsPromo, promoLabel: formIsPromo ? formPromoLabel : undefined,
-      } : r);
-    } else {
-      rules.push({
-        id: `pr${Date.now()}`, segment: formSegment as CustomerSegment,
-        unitId: formUnitId, unitName: unit?.name || '', price: priceInCents, costPrice: costInCents,
-        effectiveFrom: formEffectiveFrom, effectiveTo: formEffectiveTo || undefined,
-        isPromo: formIsPromo, promoLabel: formIsPromo ? formPromoLabel : undefined,
-      });
-    }
-
-    await updateProduct(product.id, { pricingRules: rules });
+      return { ...p, pricingRules: rules };
+    }));
     toast.success(editingRule ? t('pricing.ruleUpdated') : t('pricing.ruleCreated'));
-    await load();
     setDialogOpen(false);
     resetForm();
   };
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!deleteTarget) return;
-    const product = products.find(p => p.id === deleteTarget.productId);
-    if (!product) return;
-    await updateProduct(product.id, {
-      pricingRules: product.pricingRules.filter(r => r.id !== deleteTarget.id),
-    });
+    setProducts(prev => prev.map(p => {
+      if (p.id !== deleteTarget.productId) return p;
+      return { ...p, pricingRules: p.pricingRules.filter(r => r.id !== deleteTarget.id) };
+    }));
     toast.success(t('pricing.ruleDeleted'));
-    await load();
     setDeleteTarget(null);
   };
 
-  const handleBulkUpdate = async () => {
+  const handleBulkUpdate = () => {
     const adj = parseFloat(bulkAdjustment);
     if (isNaN(adj) || adj === 0) return;
-    let count = 0;
-    for (const product of products) {
-      const updatedRules = product.pricingRules.map(r => {
+    setProducts(prev => prev.map(p => ({
+      ...p,
+      pricingRules: p.pricingRules.map(r => {
         if (r.segment !== bulkSegment) return r;
         const newPrice = bulkType === 'percentage'
           ? Math.round(r.price * (1 + adj / 100))
           : r.price + Math.round(adj * 100);
-        count++;
         return { ...r, price: newPrice, effectiveFrom: new Date().toISOString().split('T')[0] };
-      });
-      if (updatedRules !== product.pricingRules) {
-        await updateProduct(product.id, { pricingRules: updatedRules });
-      }
-    }
-    toast.success(t('pricing.bulkUpdated', { count }));
-    await load();
+      })
+    })));
+    toast.success(t('pricing.bulkUpdated', { count: allRules.filter(r => r.segment === bulkSegment).length }));
     setBulkDialogOpen(false);
     setBulkAdjustment('0');
   };
-
-  const handleRegenerate = async () => {
-    setRegenerating(true);
-    try {
-      const result = await regeneratePrices();
-      toast.success(t('pricing.regenerated', { count: result.updated }));
-      await load();
-    } catch (e: any) {
-      toast.error(e.message);
-    }
-    setRegenerating(false);
-  };
-
-  const handleUpdatePriceGroup = async (id: string, marginPercent: number) => {
-    await updatePriceGroupRule(id, { marginPercent });
-    toast.success(t('common.updated'));
-    await load();
-  };
-
-  const handleExportCSV = () => {
-    const header = 'Product,SKU,Segment,Unit,Cost Price,Sell Price,Margin %,Effective From,Status\n';
-    const rows = filtered.map(r => {
-      const margin = r.costPrice ? (((r.price - r.costPrice) / r.costPrice) * 100).toFixed(1) : 'N/A';
-      const isExpired = r.effectiveTo && new Date(r.effectiveTo) < new Date();
-      return `"${r.productName}","${r.productSku}","${r.segment}","${r.unitName}",${r.costPrice ? (r.costPrice / 100).toFixed(2) : ''},${(r.price / 100).toFixed(2)},${margin},${r.effectiveFrom},${isExpired ? 'Expired' : r.isPromo ? 'Promo' : 'Active'}`;
-    }).join('\n');
-    const blob = new Blob([header + rows], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'pricing-rules.csv'; a.click();
-    URL.revokeObjectURL(url);
-    toast.success(t('common.exported'));
-  };
-
-  // Price comparison data
-  const compareProduct = products.find(p => p.id === compareProductId);
-  const compareData = compareProduct ? ALL_SEGMENTS.map(seg => {
-    const rule = compareProduct.pricingRules.find(r => r.segment === seg);
-    return {
-      segment: seg,
-      price: rule ? rule.price / 100 : 0,
-      costPrice: rule?.costPrice ? rule.costPrice / 100 : 0,
-      margin: rule?.costPrice ? (((rule.price - rule.costPrice) / rule.costPrice) * 100).toFixed(1) : 'N/A',
-      hasRule: !!rule,
-    };
-  }) : [];
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-pulse text-muted-foreground">{t('common.loading')}</div></div>;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('pricing.title')}</h1>
           <p className="text-sm text-muted-foreground">{t('pricing.description')}</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" className="gap-2" onClick={handleExportCSV}>
-            <Download className="h-4 w-4" />{t('common.export')}
-          </Button>
-          <Button variant="outline" className="gap-2" onClick={() => { setCompareProductId(products[0]?.id || ''); setCompareOpen(true); }}>
-            <BarChart3 className="h-4 w-4" />{t('pricing.compare')}
-          </Button>
-          <Button variant="outline" className="gap-2" onClick={handleRegenerate} disabled={regenerating}>
-            <RefreshCw className={`h-4 w-4 ${regenerating ? 'animate-spin' : ''}`} />{t('pricing.regenerate')}
-          </Button>
+        <div className="flex gap-2">
           <Button variant="outline" className="gap-2" onClick={() => setBulkDialogOpen(true)}>
             <Upload className="h-4 w-4" />{t('pricing.bulkUpdate')}
           </Button>
@@ -255,125 +175,77 @@ export default function PricingRulesPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <KPIWidget title={t('pricing.activeRules')} value={allRules.length} icon={<Tags className="h-5 w-5" />} />
         <KPIWidget title={t('pricing.segments')} value={uniqueSegments.length} icon={<DollarSign className="h-5 w-5" />} />
         <KPIWidget title={t('pricing.productsWithPricing')} value={productsWithPricing} icon={<Calculator className="h-5 w-5" />} />
-        <KPIWidget title={t('pricing.avgMargin')} value={`${avgMargin}%`} icon={<TrendingUp className="h-5 w-5" />} trend="up" trendValue={`${avgMargin}%`} />
       </div>
 
-      <Tabs defaultValue="rules" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="rules">{t('pricing.activeRules')}</TabsTrigger>
-          <TabsTrigger value="groups">{t('pricing.priceGroups')}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="rules">
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-3 flex-wrap">
-                <div className="relative flex-1 max-w-sm">
-                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input className="ps-9" placeholder={t('pricing.searchRules')} value={search} onChange={e => setSearch(e.target.value)} />
-                </div>
-                <Select value={segmentFilter} onValueChange={setSegmentFilter}>
-                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('common.all')}</SelectItem>
-                    {ALL_SEGMENTS.map(s => <SelectItem key={s} value={s}><span className="capitalize">{s.replace('_', ' ')}</span></SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('products.productName')}</TableHead>
-                    <TableHead>{t('products.segment')}</TableHead>
-                    <TableHead>{t('products.unit')}</TableHead>
-                    <TableHead>{t('products.costPrice')}</TableHead>
-                    <TableHead>{t('products.price')}</TableHead>
-                    <TableHead>{t('products.margin')}</TableHead>
-                    <TableHead>{t('products.effectiveFrom')}</TableHead>
-                    <TableHead>{t('common.status')}</TableHead>
-                    <TableHead>{t('common.actions')}</TableHead>
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input className="ps-9" placeholder={t('pricing.searchRules')} value={search} onChange={e => setSearch(e.target.value)} />
+            </div>
+            <Select value={segmentFilter} onValueChange={setSegmentFilter}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t('common.all')}</SelectItem>
+                <SelectItem value="superette">Superette</SelectItem>
+                <SelectItem value="wholesale">Wholesale</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>{t('products.productName')}</TableHead>
+                <TableHead>{t('products.segment')}</TableHead>
+                <TableHead>{t('products.unit')}</TableHead>
+                <TableHead>{t('products.price')}</TableHead>
+                <TableHead>{t('pricing.margin')}</TableHead>
+                <TableHead>{t('products.effectiveFrom')}</TableHead>
+                <TableHead>{t('pricing.effectiveTo')}</TableHead>
+                <TableHead>{t('common.status')}</TableHead>
+                <TableHead>{t('common.actions')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filtered.length === 0 ? (
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{t('common.noResults')}</TableCell></TableRow>
+              ) : filtered.map(r => {
+                const margin = calcMargin(r);
+                const isExpired = r.effectiveTo && new Date(r.effectiveTo) < new Date();
+                return (
+                  <TableRow key={`${r.productSku}-${r.id}`} className={isExpired ? 'opacity-50' : ''}>
+                    <TableCell className="font-medium">{r.productName}</TableCell>
+                    <TableCell><SegmentBadge segment={r.segment} /></TableCell>
+                    <TableCell>{r.unitName}</TableCell>
+                    <TableCell className="font-bold">{(r.price / 100).toFixed(2)} DZD</TableCell>
+                    <TableCell>{margin ? <span className="flex items-center gap-1 text-success"><TrendingUp className="h-3 w-3" />{margin}</span> : '—'}</TableCell>
+                    <TableCell className="text-muted-foreground">{r.effectiveFrom}</TableCell>
+                    <TableCell className="text-muted-foreground">{r.effectiveTo || '—'}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={isExpired ? 'bg-muted text-muted-foreground' : 'bg-success/10 text-success border-success/20'}>
+                        {isExpired ? t('pricing.expired') : t('common.active')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(r)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.length === 0 ? (
-                    <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{t('common.noResults')}</TableCell></TableRow>
-                  ) : filtered.map(r => {
-                    const margin = r.costPrice ? (((r.price - r.costPrice) / r.costPrice) * 100).toFixed(1) : null;
-                    const isExpired = r.effectiveTo && new Date(r.effectiveTo) < new Date();
-                    return (
-                      <TableRow key={`${r.productSku}-${r.id}`} className={isExpired ? 'opacity-50' : ''}>
-                        <TableCell className="font-medium">{r.productName}</TableCell>
-                        <TableCell><SegmentBadge segment={r.segment} /></TableCell>
-                        <TableCell>{r.unitName}</TableCell>
-                        <TableCell className="text-muted-foreground">{r.costPrice ? `${(r.costPrice / 100).toFixed(2)} DZD` : '—'}</TableCell>
-                        <TableCell className="font-bold">{(r.price / 100).toFixed(2)} DZD</TableCell>
-                        <TableCell>{margin ? <span className="flex items-center gap-1 text-success"><TrendingUp className="h-3 w-3" />+{margin}%</span> : '—'}</TableCell>
-                        <TableCell className="text-muted-foreground text-xs">{r.effectiveFrom}{r.effectiveTo ? ` → ${r.effectiveTo}` : ''}</TableCell>
-                        <TableCell>
-                          {r.isPromo ? (
-                            <Badge className="bg-chart-4/10 text-chart-4 border-chart-4/20 text-xs">{r.promoLabel || 'Promo'}</Badge>
-                          ) : (
-                            <Badge variant="outline" className={isExpired ? 'bg-muted text-muted-foreground' : 'bg-success/10 text-success border-success/20'}>
-                              {isExpired ? t('pricing.expired') : t('common.active')}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => openEdit(r)}><Pencil className="h-4 w-4" /></Button>
-                            <Button variant="ghost" size="icon" onClick={() => setDeleteTarget(r)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="groups">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Settings className="h-4 w-4 text-primary" />
-                {t('pricing.priceGroups')} — {t('pricing.costPlusMargin')}
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">{t('pricing.regenerateDesc')}</p>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('products.segment')}</TableHead>
-                    <TableHead>{t('pricing.marginPercent')}</TableHead>
-                    <TableHead>{t('products.description')}</TableHead>
-                    <TableHead>{t('common.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {priceGroups.map(pg => (
-                    <PriceGroupRow key={pg.id} pg={pg} onSave={handleUpdatePriceGroup} t={t} />
-                  ))}
-                </TableBody>
-              </Table>
-              <div className="mt-4 flex justify-end">
-                <Button onClick={handleRegenerate} disabled={regenerating} className="gap-2">
-                  <RefreshCw className={`h-4 w-4 ${regenerating ? 'animate-spin' : ''}`} />
-                  {t('pricing.regenerate')}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={v => { if (!v) resetForm(); setDialogOpen(v); }}>
@@ -392,7 +264,8 @@ export default function PricingRulesPage() {
               <Select value={formSegment} onValueChange={setFormSegment}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {ALL_SEGMENTS.map(s => <SelectItem key={s} value={s}><span className="capitalize">{s.replace('_', ' ')}</span></SelectItem>)}
+                  <SelectItem value="superette">Superette</SelectItem>
+                  <SelectItem value="wholesale">Wholesale</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -407,26 +280,10 @@ export default function PricingRulesPage() {
                 </Select>
               </div>
             )}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('products.costPrice')} (DZD)</Label>
-                <Input type="number" step="0.01" placeholder="0.00" value={formCostPrice} onChange={e => setFormCostPrice(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('products.price')} (DZD)</Label>
-                <Input type="number" step="0.01" placeholder="0.00" value={formPrice} onChange={e => setFormPrice(e.target.value)} />
-              </div>
+            <div className="space-y-2">
+              <Label>{t('products.price')} (DZD)</Label>
+              <Input type="number" step="0.01" placeholder="0.00" value={formPrice} onChange={e => setFormPrice(e.target.value)} />
             </div>
-            {formCostPrice && formPrice && (
-              <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                <span className="text-muted-foreground">{t('pricing.calculatedMargin')}: </span>
-                <span className="font-bold text-success">
-                  {((parseFloat(formPrice) - parseFloat(formCostPrice)) / parseFloat(formCostPrice) * 100).toFixed(1)}%
-                </span>
-                <span className="text-muted-foreground ms-3">{t('pricing.profit')}: </span>
-                <span className="font-bold">{(parseFloat(formPrice) - parseFloat(formCostPrice)).toFixed(2)} DZD</span>
-              </div>
-            )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>{t('products.effectiveFrom')}</Label>
@@ -436,13 +293,6 @@ export default function PricingRulesPage() {
                 <Label>{t('pricing.effectiveTo')}</Label>
                 <Input type="date" value={formEffectiveTo} onChange={e => setFormEffectiveTo(e.target.value)} />
               </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <input type="checkbox" checked={formIsPromo} onChange={e => setFormIsPromo(e.target.checked)} className="rounded" />
-              <Label>{t('products.promo')}</Label>
-              {formIsPromo && (
-                <Input value={formPromoLabel} onChange={e => setFormPromoLabel(e.target.value)} placeholder="e.g. Promo été" className="flex-1" />
-              )}
             </div>
             <Button className="w-full" onClick={handleSave}>{t('common.save')}</Button>
           </div>
@@ -459,7 +309,8 @@ export default function PricingRulesPage() {
               <Select value={bulkSegment} onValueChange={setBulkSegment}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {ALL_SEGMENTS.map(s => <SelectItem key={s} value={s}><span className="capitalize">{s.replace('_', ' ')}</span></SelectItem>)}
+                  <SelectItem value="superette">Superette</SelectItem>
+                  <SelectItem value="wholesale">Wholesale</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -482,41 +333,7 @@ export default function PricingRulesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Price Comparison Dialog */}
-      <Dialog open={compareOpen} onOpenChange={setCompareOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{t('pricing.compare')}</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-2">
-            <Select value={compareProductId} onValueChange={setCompareProductId}>
-              <SelectTrigger><SelectValue placeholder={t('pricing.selectProduct')} /></SelectTrigger>
-              <SelectContent>{products.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
-            </Select>
-            {compareProduct && (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('products.segment')}</TableHead>
-                    <TableHead>{t('products.costPrice')}</TableHead>
-                    <TableHead>{t('products.price')}</TableHead>
-                    <TableHead>{t('products.margin')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {compareData.map(d => (
-                    <TableRow key={d.segment} className={!d.hasRule ? 'opacity-40' : ''}>
-                      <TableCell><SegmentBadge segment={d.segment as CustomerSegment} /></TableCell>
-                      <TableCell>{d.costPrice ? `${d.costPrice.toFixed(2)} DZD` : '—'}</TableCell>
-                      <TableCell className="font-bold">{d.hasRule ? `${d.price.toFixed(2)} DZD` : '—'}</TableCell>
-                      <TableCell>{d.margin !== 'N/A' ? <span className="text-success">+{d.margin}%</span> : '—'}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
+      {/* Delete Confirm */}
       <ConfirmDialog
         open={!!deleteTarget}
         onOpenChange={v => { if (!v) setDeleteTarget(null); }}
@@ -525,33 +342,5 @@ export default function PricingRulesPage() {
         onConfirm={handleDelete}
       />
     </div>
-  );
-}
-
-function PriceGroupRow({ pg, onSave, t }: { pg: PriceGroupRule; onSave: (id: string, margin: number) => void; t: (k: string) => string }) {
-  const [editing, setEditing] = useState(false);
-  const [margin, setMargin] = useState(pg.marginPercent.toString());
-
-  return (
-    <TableRow>
-      <TableCell><SegmentBadge segment={pg.segment} /></TableCell>
-      <TableCell>
-        {editing ? (
-          <div className="flex items-center gap-2">
-            <Input type="number" value={margin} onChange={e => setMargin(e.target.value)} className="w-20 h-8" />
-            <span className="text-sm">%</span>
-            <Button size="sm" variant="outline" onClick={() => { onSave(pg.id, parseFloat(margin)); setEditing(false); }}>OK</Button>
-          </div>
-        ) : (
-          <span className="font-bold text-primary">{pg.marginPercent}%</span>
-        )}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">{pg.description}</TableCell>
-      <TableCell>
-        <Button variant="ghost" size="sm" onClick={() => setEditing(!editing)}>
-          <Pencil className="h-3.5 w-3.5" />
-        </Button>
-      </TableCell>
-    </TableRow>
   );
 }

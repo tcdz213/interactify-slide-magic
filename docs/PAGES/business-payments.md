@@ -4,35 +4,40 @@
 `/business/payments`
 
 ## Status
-- Complete: 75%
+- Complete: 55%
 - UI Status: ✅ Complete
-- Logic Status: ✅ Filters, search, DataTable, edit
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- Logic Status: ⚠️ Read-only
+- API Status: ❌ Fake API
 - Production Ready: No
 
 ## Purpose
 Track payment collections — cash, bank transfer, cheque, mobile payments.
 
 ## Existing Features
-- Payment DataTable with search and filters
-- Payment method badges
-- Status tracking
-- Edit support
-- Multiple filter options
+- Payment list with method badges
+- Payment status tracking
+- Reference numbers
+- Amount and date display
 
 ## Existing User Actions
 - ✅ View payments
-- ✅ Search payments
-- ✅ Filter by method/status
-- ✅ Edit payment
+- ❌ Record new payment
+- ❌ Reconcile payments
+- ❌ Issue refund
+- ❌ Export payment history
+
+## Backend/API Needed
+- `GET /payments?method=&status=&page=`
+- `POST /payments`
+- `POST /payments/:id/refund`
 
 ## Missing Features
-- [ ] Real backend API
-- [ ] Record new payment form
+- [ ] Record payment form
 - [ ] Payment reconciliation
 - [ ] Refund processing
-- [ ] Export
+- [ ] Bank statement import
+- [ ] Payment receipt generation
+- [ ] Search and date range filter
 
 ## Final Score
-**75/100**
+**55/100**

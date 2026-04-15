@@ -4,11 +4,10 @@
 `/business/accounting`
 
 ## Status
-- Complete: 75%
+- Complete: 60%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Read-only, multi-tab layout
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- Logic Status: ⚠️ Read-only, uses React Query
+- API Status: ❌ Fake API
 - Production Ready: No
 
 ## Purpose
@@ -19,18 +18,28 @@ Financial overview — revenue, expenses, profit, DSO, aging analysis, top debto
 - Monthly revenue area chart
 - Aging buckets bar chart
 - Top debtors DataTable
-- Multi-tab interface (P&L, Balance Sheet, Cash Flow, etc.)
+
+## Existing UI
+- KPIWidgets, AreaChart, BarChart, DataTable
 
 ## Existing User Actions
 - ✅ View financial data
-- ✅ Switch between accounting tabs
+- ❌ No interactive actions
+
+## Backend/API Needed
+- `GET /accounting/stats`
+- `GET /accounting/aging`
+- `GET /accounting/top-debtors`
+- `GET /accounting/revenue?months=6`
 
 ## Missing Features
-- [ ] Real backend API
 - [ ] Date range selection
+- [ ] P&L statement
+- [ ] Balance sheet
+- [ ] Cash flow statement
 - [ ] Journal entries
 - [ ] Chart of accounts
 - [ ] Tax declaration reports
 
 ## Final Score
-**75/100**
+**60/100**

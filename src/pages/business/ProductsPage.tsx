@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getProducts, getCategories, getCustomers, createProduct, updateProduct, deleteProduct, restoreProduct, getPriceHistory, addPriceHistoryEntry } from '@/lib/fake-api';
-import type { Product, Category, ProductUnit, CustomerSpecificPrice, PriceHistoryEntry, Customer, CustomerSegment } from '@/lib/fake-api/types';
+import { getProducts, getCategories, createProduct, updateProduct, deleteProduct } from '@/lib/fake-api';
+import type { Product, Category, ProductUnit } from '@/lib/fake-api/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -10,15 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Plus, Search, Package, Eye, LayoutGrid, List, Copy, Upload, Download, Barcode, Edit, Trash2, ChevronLeft, ChevronRight, History, X, RotateCcw, DollarSign, Users, ArrowUpDown, AlertTriangle, ImageIcon, Tag } from 'lucide-react';
+import { Plus, Search, Package, Eye, LayoutGrid, List, Copy, Upload, Download, Barcode, Edit, Trash2, ChevronLeft, ChevronRight, History, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { SegmentBadge } from '@/components/StatusBadges';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ExportDialog, ExportColumn } from '@/components/ExportDialog';
-import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 
 const PAGE_SIZE = 8;
@@ -26,7 +24,6 @@ const PAGE_SIZE = 8;
 const PREDEFINED_BASE_UNITS = [
   { value: 'piece', label: { en: 'Piece', fr: 'Pièce', ar: 'قطعة' } },
   { value: 'kg', label: { en: 'Kilogram', fr: 'Kilogramme', ar: 'كيلوغرام' } },
-  { value: 'ton', label: { en: 'Ton', fr: 'Tonne', ar: 'طن' } },
   { value: 'litre', label: { en: 'Litre', fr: 'Litre', ar: 'لتر' } },
   { value: 'bottle', label: { en: 'Bottle', fr: 'Bouteille', ar: 'زجاجة' } },
   { value: 'bag', label: { en: 'Bag', fr: 'Sac', ar: 'كيس' } },
@@ -35,11 +32,7 @@ const PREDEFINED_BASE_UNITS = [
   { value: 'can', label: { en: 'Can', fr: 'Boîte', ar: 'علبة' } },
   { value: 'brick', label: { en: 'Brick', fr: 'Brique', ar: 'طوب' } },
   { value: 'sachet', label: { en: 'Sachet', fr: 'Sachet', ar: 'كيس صغير' } },
-  { value: 'meter', label: { en: 'Meter', fr: 'Mètre', ar: 'متر' } },
-  { value: 'sqm', label: { en: 'Square Meter', fr: 'Mètre carré', ar: 'متر مربع' } },
 ];
-
-const ALL_SEGMENTS: CustomerSegment[] = ['depot', 'wholesale', 'retail', 'small_trader', 'special_client'];
 
 function generateBarcode(sku: string) {
   return `200${sku.replace(/[^0-9]/g, '').padEnd(9, '0').slice(0, 9)}0`;
@@ -55,7 +48,6 @@ const EXPORT_COLUMNS: ExportColumn[] = [
   { key: 'name', label: 'Name', defaultSelected: true },
   { key: 'sku', label: 'SKU', defaultSelected: true },
   { key: 'category', label: 'Category', defaultSelected: true },
-  { key: 'description', label: 'Description', defaultSelected: true },
   { key: 'baseUnit', label: 'Base Unit', defaultSelected: true },
   { key: 'stockBase', label: 'Stock', defaultSelected: true },
   { key: 'isActive', label: 'Active', defaultSelected: true },
@@ -68,12 +60,9 @@ export default function ProductsPage() {
   const lang = (i18n.language || 'en') as 'en' | 'fr' | 'ar';
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [allCustomers, setAllCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [stockFilter, setStockFilter] = useState('all');
-  const [showDeleted, setShowDeleted] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [page, setPage] = useState(1);
@@ -82,17 +71,13 @@ export default function ProductsPage() {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [showBarcodeDialog, setShowBarcodeDialog] = useState<Product | null>(null);
   const [showPriceHistory, setShowPriceHistory] = useState<Product | null>(null);
-  const [priceHistoryData, setPriceHistoryData] = useState<PriceHistoryEntry[]>([]);
   const [showExportDialog, setShowExportDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [showBulkArchiveConfirm, setShowBulkArchiveConfirm] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState('');
-  const [formDescription, setFormDescription] = useState('');
   const [formSku, setFormSku] = useState('');
   const [formCategory, setFormCategory] = useState('');
   const [formBaseUnit, setFormBaseUnit] = useState('piece');
@@ -100,43 +85,24 @@ export default function ProductsPage() {
   const [formUnits, setFormUnits] = useState<UnitFormEntry[]>([]);
   const [newUnitName, setNewUnitName] = useState('');
   const [newUnitConversion, setNewUnitConversion] = useState('');
-  const [formVariants, setFormVariants] = useState<{ name: string; values: string[] }[]>([]);
-  const [newVariantName, setNewVariantName] = useState('');
-  const [newVariantValue, setNewVariantValue] = useState('');
-  const [formImageUrl, setFormImageUrl] = useState('');
-
-  // Customer-specific pricing form state
-  const [showCustomerPriceDialog, setShowCustomerPriceDialog] = useState(false);
-  const [cpProductId, setCpProductId] = useState('');
-  const [cpCustomerId, setCpCustomerId] = useState('');
-  const [cpUnitId, setCpUnitId] = useState('');
-  const [cpPrice, setCpPrice] = useState('');
-  const [cpFrom, setCpFrom] = useState(new Date().toISOString().split('T')[0]);
-  const [cpTo, setCpTo] = useState('');
 
   const load = async () => {
-    const [p, c, cust] = await Promise.all([getProducts(), getCategories(), getCustomers()]);
-    setProducts(p); setCategories(c); setAllCustomers(cust); setLoading(false);
+    const [p, c] = await Promise.all([getProducts(), getCategories()]);
+    setProducts(p); setCategories(c); setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => products.filter(p => {
-    if (!showDeleted && p.isDeleted) return false;
-    if (showDeleted && !p.isDeleted) return false;
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase());
     const matchCategory = categoryFilter === 'all' || p.category === categoryFilter;
     const matchStatus = statusFilter === 'all' || (statusFilter === 'active' ? p.isActive : !p.isActive);
-    const matchStock = stockFilter === 'all' ||
-      (stockFilter === 'in_stock' && p.stockBase > 0) ||
-      (stockFilter === 'out_of_stock' && p.stockBase === 0) ||
-      (stockFilter === 'low_stock' && p.stockBase > 0 && p.stockBase < 100);
-    return matchSearch && matchCategory && matchStatus && matchStock;
-  }), [products, search, categoryFilter, statusFilter, stockFilter, showDeleted]);
+    return matchSearch && matchCategory && matchStatus;
+  }), [products, search, categoryFilter, statusFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  useEffect(() => { setPage(1); }, [search, categoryFilter, statusFilter, stockFilter, showDeleted]);
+  useEffect(() => { setPage(1); }, [search, categoryFilter, statusFilter]);
 
   const getBaseUnitLabel = (value: string) => {
     const found = PREDEFINED_BASE_UNITS.find(u => u.value === value);
@@ -144,20 +110,17 @@ export default function ProductsPage() {
   };
 
   const resetForm = () => {
-    setFormName(''); setFormDescription(''); setFormSku(''); setFormCategory(''); setFormBaseUnit('piece');
+    setFormName(''); setFormSku(''); setFormCategory(''); setFormBaseUnit('piece');
     setFormActive(true); setEditProduct(null); setFormUnits([]);
-    setNewUnitName(''); setNewUnitConversion(''); setFormVariants([]); setNewVariantName(''); setNewVariantValue('');
-    setFormImageUrl('');
+    setNewUnitName(''); setNewUnitConversion('');
   };
 
   const openEditForm = (p: Product) => {
-    setFormName(p.name); setFormDescription(p.description || ''); setFormSku(p.sku); setFormCategory(p.category);
+    setFormName(p.name); setFormSku(p.sku); setFormCategory(p.category);
     setFormBaseUnit(p.baseUnit); setFormActive(p.isActive);
-    setFormImageUrl(p.imageUrl || '');
     setFormUnits(p.units.filter(u => u.conversionToBase > 1).map(u => ({
       tempId: u.id, name: u.name, conversionToBase: u.conversionToBase,
     })));
-    setFormVariants([]);
     setEditProduct(p);
     setShowAddSheet(true);
   };
@@ -191,17 +154,15 @@ export default function ProductsPage() {
       const units = buildUnits();
       if (editProduct) {
         await updateProduct(editProduct.id, {
-          name: formName, description: formDescription, sku: formSku,
-          category: formCategory || editProduct.category,
+          name: formName, sku: formSku, category: formCategory || editProduct.category,
           baseUnit: formBaseUnit, isActive: formActive, units,
         });
         toast.success(t('products.productUpdated'));
       } else {
         await createProduct({
-          name: formName, description: formDescription, sku: formSku,
-          category: formCategory || 'Basics',
-          baseUnit: formBaseUnit, units, pricingRules: [], customerPrices: [],
-          stockBase: 0, isActive: formActive, isDeleted: false, updatedAt: new Date().toISOString().split('T')[0],
+          name: formName, sku: formSku, category: formCategory || 'Basics',
+          baseUnit: formBaseUnit, units, pricingRules: [], stockBase: 0,
+          isActive: formActive,
         });
         toast.success(t('products.productAdded'));
       }
@@ -214,59 +175,19 @@ export default function ProductsPage() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
-      await deleteProduct(deleteTarget.id, true);
-      toast.success(t('products.productArchived'));
+      await deleteProduct(deleteTarget.id);
+      toast.success(t('products.productDeleted'));
       await load();
     } catch (e: any) { toast.error(e.message); }
     setDeleteTarget(null);
   };
 
-  const handleRestore = async (p: Product) => {
-    await restoreProduct(p.id);
-    toast.success(t('products.productRestored'));
-    await load();
-  };
-
-  const handleBulkArchive = async () => {
-    for (const id of selectedIds) {
-      await deleteProduct(id, true);
-    }
-    toast.success(t('products.bulkArchived', { count: selectedIds.size }));
-    setSelectedIds(new Set());
-    setShowBulkArchiveConfirm(false);
-    await load();
-  };
-
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    setFormImageUrl(url);
-    toast.success(t('products.imageUploaded'));
-  };
-
-  const toggleProductSelect = (id: string) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  };
-
-  const toggleAllProducts = () => {
-    if (selectedIds.size === paginated.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(paginated.filter(p => !p.isDeleted).map(p => p.id)));
-    }
-  };
-
   const handleDuplicate = async (p: Product) => {
     await createProduct({
       name: `${p.name} (${t('common.copy') || 'copie'})`,
-      description: p.description, sku: `${p.sku}-DUP`, category: p.category, baseUnit: p.baseUnit,
-      units: p.units, pricingRules: p.pricingRules, customerPrices: [],
-      stockBase: 0, isActive: p.isActive, isDeleted: false, updatedAt: new Date().toISOString().split('T')[0],
+      sku: `${p.sku}-DUP`, category: p.category, baseUnit: p.baseUnit,
+      units: p.units, pricingRules: p.pricingRules, stockBase: 0,
+      isActive: p.isActive,
     });
     toast.success(t('products.productDuplicated'));
     await load();
@@ -284,13 +205,12 @@ export default function ProductsPage() {
       const lines = text.split('\n').slice(1).filter(l => l.trim());
       let count = 0;
       for (const line of lines) {
-        const [name, sku, category, baseUnit, description] = line.split(',').map(s => s.replace(/"/g, '').trim());
+        const [name, sku, category, baseUnit] = line.split(',').map(s => s.replace(/"/g, '').trim());
         if (!name || !sku) continue;
         await createProduct({
-          name, description: description || '', sku, category: category || 'Basics', baseUnit: baseUnit || 'piece',
+          name, sku, category: category || 'Basics', baseUnit: baseUnit || 'piece',
           units: [{ id: `u${Date.now()}_${count}`, name: getBaseUnitLabel(baseUnit || 'piece'), conversionToBase: 1 }],
-          pricingRules: [], customerPrices: [], stockBase: 0, isActive: true, isDeleted: false,
-          updatedAt: new Date().toISOString().split('T')[0],
+          pricingRules: [], stockBase: 0, isActive: true,
         });
         count++;
       }
@@ -301,66 +221,23 @@ export default function ProductsPage() {
     reader.readAsText(file);
   };
 
-  const openPriceHistory = async (p: Product) => {
-    setShowPriceHistory(p);
-    const history = await getPriceHistory(p.id);
-    setPriceHistoryData(history);
-  };
-
-  // Customer-specific price save
-  const handleSaveCustomerPrice = async () => {
-    if (!cpProductId || !cpCustomerId || !cpUnitId || !cpPrice) { toast.error(t('common.error')); return; }
-    const product = products.find(p => p.id === cpProductId);
-    const customer = allCustomers.find(c => c.id === cpCustomerId);
-    const unit = product?.units.find(u => u.id === cpUnitId);
-    if (!product || !customer || !unit) return;
-
-    const newCp: CustomerSpecificPrice = {
-      id: `cp${Date.now()}`, customerId: cpCustomerId, customerName: customer.name,
-      unitId: cpUnitId, unitName: unit.name, price: Math.round(parseFloat(cpPrice) * 100),
-      effectiveFrom: cpFrom, effectiveTo: cpTo || undefined,
-    };
-    const updatedPrices = [...(product.customerPrices || []), newCp];
-    await updateProduct(cpProductId, { customerPrices: updatedPrices });
-    await addPriceHistoryEntry({
-      productId: product.id, productName: product.name, customerId: cpCustomerId,
-      customerName: customer.name, unitId: cpUnitId, unitName: unit.name,
-      oldPrice: 0, newPrice: newCp.price, changedBy: 'Manager', reason: 'Prix client spécifique',
-    });
-    toast.success(t('products.customerPriceAdded'));
-    await load();
-    setShowCustomerPriceDialog(false);
-    setCpProductId(''); setCpCustomerId(''); setCpUnitId(''); setCpPrice(''); setCpTo('');
-  };
-
-  const removeCustomerPrice = async (productId: string, cpId: string) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-    const updatedPrices = product.customerPrices.filter(cp => cp.id !== cpId);
-    await updateProduct(productId, { customerPrices: updatedPrices });
-    toast.success(t('products.customerPriceRemoved'));
-    await load();
-    if (selectedProduct?.id === productId) {
-      setSelectedProduct(products.find(p => p.id === productId) || null);
-    }
-  };
-
   const exportData = useMemo(() => filtered.map(p => ({
-    name: p.name, sku: p.sku, category: p.category, description: p.description,
-    baseUnit: getBaseUnitLabel(p.baseUnit), stockBase: p.stockBase,
-    isActive: p.isActive ? t('common.active') : t('common.inactive'),
+    name: p.name, sku: p.sku, category: p.category, baseUnit: getBaseUnitLabel(p.baseUnit),
+    stockBase: p.stockBase, isActive: p.isActive ? t('common.active') : t('common.inactive'),
     units: p.units.map(u => u.name).join(', '), createdAt: p.createdAt,
   })), [filtered, lang]);
 
-  const activeCount = products.filter(p => !p.isDeleted && p.isActive).length;
-  const outOfStockCount = products.filter(p => !p.isDeleted && p.stockBase === 0).length;
-  const deletedCount = products.filter(p => p.isDeleted).length;
+  // Mock price history
+  const priceHistory = showPriceHistory ? showPriceHistory.pricingRules.flatMap(r => [
+    { date: '2024-01-01', segment: r.segment, unit: r.unitName, price: r.price, change: 0 },
+    { date: '2024-06-01', segment: r.segment, unit: r.unitName, price: Math.round(r.price * 0.95), change: -5 },
+    { date: '2024-09-01', segment: r.segment, unit: r.unitName, price: r.price, change: 5.3 },
+  ]) : [];
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="animate-pulse text-muted-foreground">{t('common.loading')}</div></div>;
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('products.productCatalog')}</h1>
@@ -377,26 +254,6 @@ export default function ProductsPage() {
             <Plus className="h-4 w-4" />{t('products.addProduct')}
           </Button>
         </div>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center"><Package className="h-5 w-5 text-primary" /></div>
-          <div><p className="text-2xl font-bold">{products.filter(p => !p.isDeleted).length}</p><p className="text-xs text-muted-foreground">{t('products.totalProducts')}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center"><Package className="h-5 w-5 text-success" /></div>
-          <div><p className="text-2xl font-bold">{activeCount}</p><p className="text-xs text-muted-foreground">{t('common.active')}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-destructive/10 flex items-center justify-center"><AlertTriangle className="h-5 w-5 text-destructive" /></div>
-          <div><p className="text-2xl font-bold">{outOfStockCount}</p><p className="text-xs text-muted-foreground">{t('products.outOfStock')}</p></div>
-        </CardContent></Card>
-        <Card><CardContent className="p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-warning/10 flex items-center justify-center"><Trash2 className="h-5 w-5 text-warning" /></div>
-          <div><p className="text-2xl font-bold">{deletedCount}</p><p className="text-xs text-muted-foreground">{t('products.archived')}</p></div>
-        </CardContent></Card>
       </div>
 
       {/* Filters */}
@@ -422,19 +279,6 @@ export default function ProductsPage() {
                 <SelectItem value="inactive">{t('common.inactive')}</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={stockFilter} onValueChange={setStockFilter}>
-              <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('products.allStock')}</SelectItem>
-                <SelectItem value="in_stock">{t('products.inStock')}</SelectItem>
-                <SelectItem value="out_of_stock">{t('products.outOfStock')}</SelectItem>
-                <SelectItem value="low_stock">{t('products.lowStock')}</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex items-center gap-2">
-              <Switch checked={showDeleted} onCheckedChange={setShowDeleted} />
-              <Label className="text-xs text-muted-foreground">{t('products.showArchived')}</Label>
-            </div>
             <div className="flex gap-1 border rounded-lg p-0.5">
               <Button variant={viewMode === 'table' ? 'secondary' : 'ghost'} size="icon" className="h-8 w-8" onClick={() => setViewMode('table')}>
                 <List className="h-4 w-4" />
@@ -445,25 +289,12 @@ export default function ProductsPage() {
             </div>
             <Badge variant="outline" className="text-muted-foreground">{filtered.length} {t('nav.products').toLowerCase()}</Badge>
           </div>
-          {/* Bulk actions bar */}
-          {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3 mt-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-              <Badge variant="secondary">{t('products.selected', { count: selectedIds.size })}</Badge>
-              <Button size="sm" variant="destructive" onClick={() => setShowBulkArchiveConfirm(true)} className="gap-1">
-                <Trash2 className="h-3.5 w-3.5" />{t('products.bulkArchive')}
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>{t('common.cancel')}</Button>
-            </div>
-          )}
         </CardHeader>
         <CardContent>
           {viewMode === 'table' ? (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox checked={paginated.filter(p => !p.isDeleted).length > 0 && selectedIds.size === paginated.filter(p => !p.isDeleted).length} onCheckedChange={toggleAllProducts} />
-                  </TableHead>
                   <TableHead>{t('products.productName')}</TableHead>
                   <TableHead>{t('products.sku')}</TableHead>
                   <TableHead>{t('products.category')}</TableHead>
@@ -475,68 +306,46 @@ export default function ProductsPage() {
               </TableHeader>
               <TableBody>
                 {paginated.map(p => (
-                  <TableRow key={p.id} className={p.isDeleted ? 'opacity-50 bg-muted/30' : ''}>
-                    <TableCell onClick={e => e.stopPropagation()}>
-                      {!p.isDeleted && <Checkbox checked={selectedIds.has(p.id)} onCheckedChange={() => toggleProductSelect(p.id)} />}
-                    </TableCell>
+                  <TableRow key={p.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center">
                           {p.imageUrl ? <img src={p.imageUrl} alt={p.name} className="h-9 w-9 rounded-lg object-cover" /> : <Package className="h-4 w-4 text-accent" />}
                         </div>
-                        <div>
-                          <span className="font-medium">{p.name}</span>
-                          {p.description && <p className="text-xs text-muted-foreground truncate max-w-[200px]">{p.description}</p>}
-                        </div>
+                        <span className="font-medium">{p.name}</span>
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-xs text-muted-foreground">{p.sku}</TableCell>
                     <TableCell>{p.category}</TableCell>
                     <TableCell>
                       <div className="flex gap-1 flex-wrap">
-                        {p.units.map(u => <Badge key={u.id} variant="outline" className="text-xs">{u.name}{u.conversionToBase > 1 ? ` (=${u.conversionToBase})` : ''}</Badge>)}
+                        {p.units.map(u => <Badge key={u.id} variant="outline" className="text-xs">{u.name}</Badge>)}
                       </div>
                     </TableCell>
+                    <TableCell className="font-medium">{p.stockBase.toLocaleString()} {getBaseUnitLabel(p.baseUnit)}</TableCell>
                     <TableCell>
-                      <span className={`font-medium ${p.stockBase === 0 ? 'text-destructive' : p.stockBase < 100 ? 'text-warning' : ''}`}>
-                        {p.stockBase.toLocaleString()} {getBaseUnitLabel(p.baseUnit)}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {p.isDeleted ? (
-                        <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20">{t('products.archived')}</Badge>
-                      ) : (
-                        <Switch checked={p.isActive} onCheckedChange={() => handleToggleActive(p)} />
-                      )}
+                      <Switch checked={p.isActive} onCheckedChange={() => handleToggleActive(p)} />
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1 justify-end">
-                        {p.isDeleted ? (
-                          <Button variant="ghost" size="sm" onClick={() => handleRestore(p)} className="gap-1">
-                            <RotateCcw className="h-3.5 w-3.5" />{t('products.restore')}
-                          </Button>
-                        ) : (
-                          <>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedProduct(p)} title={t('common.details')}>
-                              <Eye className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditForm(p)} title={t('common.edit')}>
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDuplicate(p)} title={t('products.duplicate')}>
-                              <Copy className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowBarcodeDialog(p)} title={t('products.barcode')}>
-                              <Barcode className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openPriceHistory(p)} title={t('products.priceHistory')}>
-                              <History className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteTarget(p)} title={t('common.delete')}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedProduct(p)} title={t('common.details')}>
+                          <Eye className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditForm(p)} title={t('common.edit')}>
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDuplicate(p)} title={t('products.duplicate')}>
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowBarcodeDialog(p)} title={t('products.barcode')}>
+                          <Barcode className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setShowPriceHistory(p)} title={t('products.priceHistory')}>
+                          <History className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteTarget(p)} title={t('common.delete')}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -546,7 +355,7 @@ export default function ProductsPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {paginated.map(p => (
-                <Card key={p.id} className={`hover:shadow-md transition-shadow cursor-pointer ${p.isDeleted ? 'opacity-50' : ''}`} onClick={() => !p.isDeleted && setSelectedProduct(p)}>
+                <Card key={p.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => setSelectedProduct(p)}>
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
                       <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
@@ -555,7 +364,6 @@ export default function ProductsPage() {
                       <div className="min-w-0 flex-1">
                         <p className="font-medium truncate">{p.name}</p>
                         <p className="text-xs font-mono text-muted-foreground">{p.sku}</p>
-                        {p.description && <p className="text-xs text-muted-foreground truncate">{p.description}</p>}
                       </div>
                       <Badge variant="outline" className={p.isActive ? 'bg-success/10 text-success border-success/20' : 'bg-muted text-muted-foreground'}>
                         {p.isActive ? t('common.active') : t('common.inactive')}
@@ -563,18 +371,11 @@ export default function ProductsPage() {
                     </div>
                     <div className="mt-3 flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">{p.category}</span>
-                      <span className={`font-medium ${p.stockBase === 0 ? 'text-destructive' : ''}`}>{p.stockBase.toLocaleString()} {getBaseUnitLabel(p.baseUnit)}</span>
+                      <span className="font-medium">{p.stockBase.toLocaleString()} {getBaseUnitLabel(p.baseUnit)}</span>
                     </div>
                     <div className="mt-2 flex gap-1 flex-wrap">
                       {p.units.map(u => <Badge key={u.id} variant="outline" className="text-xs">{u.name}</Badge>)}
                     </div>
-                    {p.customerPrices.length > 0 && (
-                      <div className="mt-2">
-                        <Badge variant="outline" className="bg-chart-5/10 text-chart-5 border-chart-5/20 text-xs">
-                          <Users className="h-3 w-3 me-1" />{p.customerPrices.length} {t('products.specificPrices')}
-                        </Badge>
-                      </div>
-                    )}
                     <div className="mt-3 flex gap-1 justify-end">
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openEditForm(p); }}>
                         <Edit className="h-3 w-3 me-1" />{t('common.edit')}
@@ -621,10 +422,6 @@ export default function ProductsPage() {
             <div className="space-y-2">
               <Label>{t('products.productName')} *</Label>
               <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="e.g. Couscous Fin 1kg" />
-            </div>
-            <div className="space-y-2">
-              <Label>{t('products.description')}</Label>
-              <Textarea value={formDescription} onChange={e => setFormDescription(e.target.value)} placeholder={t('products.descriptionPlaceholder')} rows={2} />
             </div>
             <div className="space-y-2">
               <Label>{t('products.sku')} *</Label>
@@ -693,68 +490,10 @@ export default function ProductsPage() {
               <Label>{t('common.active')}</Label>
             </div>
 
-            {formImageUrl ? (
-              <div className="relative rounded-lg border overflow-hidden">
-                <img src={formImageUrl} alt="Product" className="w-full h-32 object-cover" />
-                <div className="absolute top-2 end-2 flex gap-1">
-                  <label className="cursor-pointer">
-                    <Button variant="secondary" size="icon" className="h-7 w-7" asChild><span><ImageIcon className="h-3.5 w-3.5" /></span></Button>
-                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                  </label>
-                  <Button variant="destructive" size="icon" className="h-7 w-7" onClick={() => { setFormImageUrl(''); toast.success(t('products.imageRemoved')); }}>
-                    <X className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <label className="rounded-lg border-2 border-dashed border-muted-foreground/20 p-8 text-center cursor-pointer hover:border-primary/40 transition-colors block">
-                <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-                <p className="text-sm text-muted-foreground">{t('products.uploadImage')}</p>
-                <p className="text-xs text-muted-foreground mt-1">JPG, PNG — max 2 Mo</p>
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-              </label>
-            )}
-
-            {/* Variant Management */}
-            <div className="space-y-3">
-              <Label className="flex items-center gap-1"><Tag className="h-3.5 w-3.5" />{t('products.variants')}</Label>
-              {formVariants.map((v, vi) => (
-                <div key={vi} className="rounded-md border p-2 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{v.name}</span>
-                    <Button variant="ghost" size="sm" className="h-6 text-destructive text-xs" onClick={() => setFormVariants(prev => prev.filter((_, i) => i !== vi))}>
-                      {t('products.removeVariant')}
-                    </Button>
-                  </div>
-                  <div className="flex gap-1 flex-wrap">
-                    {v.values.map((val, vali) => (
-                      <Badge key={vali} variant="secondary" className="gap-1">
-                        {val}
-                        <button onClick={() => setFormVariants(prev => prev.map((fv, i) => i === vi ? { ...fv, values: fv.values.filter((_, j) => j !== vali) } : fv))} className="hover:text-destructive">
-                          <X className="h-2.5 w-2.5" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              ))}
-              <div className="flex gap-2">
-                <Input value={newVariantName} onChange={e => setNewVariantName(e.target.value)} placeholder={t('products.variantName')} className="flex-1" />
-                <Input value={newVariantValue} onChange={e => setNewVariantValue(e.target.value)} placeholder={t('products.variantValue')} className="flex-1" />
-                <Button variant="outline" size="icon" onClick={() => {
-                  if (!newVariantName.trim() || !newVariantValue.trim()) return;
-                  const existing = formVariants.find(v => v.name === newVariantName.trim());
-                  if (existing) {
-                    setFormVariants(prev => prev.map(v => v.name === newVariantName.trim() ? { ...v, values: [...v.values, newVariantValue.trim()] } : v));
-                  } else {
-                    setFormVariants(prev => [...prev, { name: newVariantName.trim(), values: [newVariantValue.trim()] }]);
-                  }
-                  setNewVariantValue('');
-                }} disabled={!newVariantName.trim() || !newVariantValue.trim()}>
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">{t('products.variantHint')}</p>
+            <div className="rounded-lg border-2 border-dashed border-muted-foreground/20 p-8 text-center cursor-pointer hover:border-primary/40 transition-colors">
+              <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">{t('products.uploadImage')}</p>
+              <p className="text-xs text-muted-foreground mt-1">JPG, PNG — max 2 Mo</p>
             </div>
 
             <Button className="w-full" onClick={handleSave} disabled={saving}>
@@ -766,65 +505,8 @@ export default function ProductsPage() {
 
       {/* Product Detail Dialog */}
       <Dialog open={!!selectedProduct} onOpenChange={(open) => { if (!open) setSelectedProduct(null); }}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
-          {selectedProduct && (
-            <ProductDetailDialog
-              product={selectedProduct}
-              customers={allCustomers}
-              t={t}
-              getBaseUnitLabel={getBaseUnitLabel}
-              onAddCustomerPrice={() => { setCpProductId(selectedProduct.id); setShowCustomerPriceDialog(true); }}
-              onRemoveCustomerPrice={(cpId) => removeCustomerPrice(selectedProduct.id, cpId)}
-              onViewPriceHistory={() => openPriceHistory(selectedProduct)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Customer-Specific Price Dialog */}
-      <Dialog open={showCustomerPriceDialog} onOpenChange={setShowCustomerPriceDialog}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>{t('products.addCustomerPrice')}</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <Label>{t('customers.title')}</Label>
-              <Select value={cpCustomerId} onValueChange={setCpCustomerId}>
-                <SelectTrigger><SelectValue placeholder={t('products.selectCustomer')} /></SelectTrigger>
-                <SelectContent>
-                  {allCustomers.map(c => <SelectItem key={c.id} value={c.id}>{c.name} ({c.segment})</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{t('products.unit')}</Label>
-              <Select value={cpUnitId} onValueChange={setCpUnitId}>
-                <SelectTrigger><SelectValue placeholder={t('products.unit')} /></SelectTrigger>
-                <SelectContent>
-                  {products.find(p => p.id === cpProductId)?.units.map(u => (
-                    <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>{t('products.price')} (DZD)</Label>
-              <Input type="number" step="0.01" placeholder="0.00" value={cpPrice} onChange={e => setCpPrice(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('products.effectiveFrom')}</Label>
-                <Input type="date" value={cpFrom} onChange={e => setCpFrom(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('pricing.effectiveTo')}</Label>
-                <Input type="date" value={cpTo} onChange={e => setCpTo(e.target.value)} />
-              </div>
-            </div>
-            <div className="rounded-lg bg-info/5 border border-info/20 p-3">
-              <p className="text-xs text-info">{t('products.customerPricePriorityHint')}</p>
-            </div>
-            <Button className="w-full" onClick={handleSaveCustomerPrice}>{t('common.save')}</Button>
-          </div>
+        <DialogContent className="max-w-2xl">
+          {selectedProduct && <ProductDetailDialog product={selectedProduct} t={t} getBaseUnitLabel={getBaseUnitLabel} />}
         </DialogContent>
       </Dialog>
 
@@ -855,40 +537,38 @@ export default function ProductsPage() {
 
       {/* Price History Dialog */}
       <Dialog open={!!showPriceHistory} onOpenChange={(open) => { if (!open) setShowPriceHistory(null); }}>
-        <DialogContent className="max-w-2xl max-h-[70vh] overflow-y-auto">
+        <DialogContent className="max-w-lg">
           {showPriceHistory && (
             <>
               <DialogHeader><DialogTitle>{t('products.priceHistory')} — {showPriceHistory.name}</DialogTitle></DialogHeader>
-              {priceHistoryData.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">{t('products.noPriceHistory')}</p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{t('common.date')}</TableHead>
-                      <TableHead>{t('products.segment')}</TableHead>
-                      <TableHead>{t('products.unit')}</TableHead>
-                      <TableHead>{t('products.oldPrice')}</TableHead>
-                      <TableHead>{t('products.newPrice')}</TableHead>
-                      <TableHead>{t('products.changedBy')}</TableHead>
-                      <TableHead>{t('products.reason')}</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('common.date')}</TableHead>
+                    <TableHead>{t('products.segment')}</TableHead>
+                    <TableHead>{t('products.unit')}</TableHead>
+                    <TableHead>{t('products.price')}</TableHead>
+                    <TableHead>{t('products.variation')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {priceHistory.map((h, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-xs">{h.date}</TableCell>
+                      <TableCell><SegmentBadge segment={h.segment as any} /></TableCell>
+                      <TableCell className="text-xs">{h.unit}</TableCell>
+                      <TableCell className="font-medium">{(h.price / 100).toFixed(2)} DZD</TableCell>
+                      <TableCell>
+                        {h.change === 0 ? <Badge variant="outline">—</Badge> :
+                          <Badge variant="outline" className={h.change > 0 ? 'text-destructive' : 'text-success'}>
+                            {h.change > 0 ? '+' : ''}{h.change}%
+                          </Badge>
+                        }
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {priceHistoryData.map(h => (
-                      <TableRow key={h.id}>
-                        <TableCell className="text-xs">{new Date(h.timestamp).toLocaleDateString()}</TableCell>
-                        <TableCell>{h.segment ? <SegmentBadge segment={h.segment} /> : h.customerName || '—'}</TableCell>
-                        <TableCell className="text-xs">{h.unitName}</TableCell>
-                        <TableCell className="text-muted-foreground">{(h.oldPrice / 100).toFixed(2)} DZD</TableCell>
-                        <TableCell className="font-medium">{(h.newPrice / 100).toFixed(2)} DZD</TableCell>
-                        <TableCell className="text-xs">{h.changedBy}</TableCell>
-                        <TableCell className="text-xs text-muted-foreground">{h.reason}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                </TableBody>
+              </Table>
             </>
           )}
         </DialogContent>
@@ -920,34 +600,14 @@ export default function ProductsPage() {
         open={!!deleteTarget}
         onOpenChange={() => setDeleteTarget(null)}
         title={t('common.areYouSure')}
-        description={t('products.softDeleteHint')}
+        description={t('common.cannotUndo')}
         onConfirm={handleDelete}
-      />
-
-      {/* Bulk Archive Confirm */}
-      <ConfirmDialog
-        open={showBulkArchiveConfirm}
-        onOpenChange={(v) => { if (!v) setShowBulkArchiveConfirm(false); }}
-        title={t('products.bulkArchive')}
-        description={t('products.bulkArchiveConfirm', { count: selectedIds.size })}
-        onConfirm={handleBulkArchive}
       />
     </div>
   );
 }
 
-// ─── Product Detail with Pricing Tabs ───
-function ProductDetailDialog({
-  product: p, customers, t, getBaseUnitLabel, onAddCustomerPrice, onRemoveCustomerPrice, onViewPriceHistory,
-}: {
-  product: Product;
-  customers: Customer[];
-  t: (key: string, opts?: Record<string, unknown>) => string;
-  getBaseUnitLabel: (v: string) => string;
-  onAddCustomerPrice: () => void;
-  onRemoveCustomerPrice: (cpId: string) => void;
-  onViewPriceHistory: () => void;
-}) {
+function ProductDetailDialog({ product: p, t, getBaseUnitLabel }: { product: Product; t: (key: string, opts?: Record<string, unknown>) => string; getBaseUnitLabel: (v: string) => string }) {
   return (
     <>
       <DialogHeader>
@@ -956,17 +616,13 @@ function ProductDetailDialog({
           {p.name}
           <Badge variant="outline" className="ms-2 font-mono text-xs">{p.sku}</Badge>
         </DialogTitle>
-        {p.description && <p className="text-sm text-muted-foreground mt-1">{p.description}</p>}
       </DialogHeader>
       <Tabs defaultValue="units" className="mt-4">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList>
           <TabsTrigger value="units">{t('products.units')}</TabsTrigger>
-          <TabsTrigger value="segment_pricing">{t('products.segmentPricing')}</TabsTrigger>
-          <TabsTrigger value="customer_pricing">{t('products.customerPricing')}</TabsTrigger>
+          <TabsTrigger value="pricing">{t('products.pricingRules')}</TabsTrigger>
           <TabsTrigger value="stock">{t('products.stock')}</TabsTrigger>
         </TabsList>
-
-        {/* Units Tab */}
         <TabsContent value="units" className="space-y-3 mt-4">
           <p className="text-sm text-muted-foreground">{t('products.baseUnit')}: <span className="font-medium text-foreground">{getBaseUnitLabel(p.baseUnit)}</span></p>
           <Table>
@@ -985,104 +641,36 @@ function ProductDetailDialog({
               ))}
             </TableBody>
           </Table>
-          <div className="rounded-lg bg-info/5 border border-info/20 p-3">
-            <p className="text-xs text-info"><ArrowUpDown className="h-3 w-3 inline me-1" />{t('products.unitConversionNote')}</p>
-          </div>
         </TabsContent>
-
-        {/* Segment Pricing Tab */}
-        <TabsContent value="segment_pricing" className="space-y-3 mt-4">
+        <TabsContent value="pricing" className="space-y-3 mt-4">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">{t('products.dynamicPricing')}</p>
-            <Button variant="outline" size="sm" className="gap-1" onClick={onViewPriceHistory}>
-              <History className="h-3.5 w-3.5" /> {t('products.priceHistory')}
-            </Button>
+            <Button variant="outline" size="sm" className="gap-1"><Plus className="h-3.5 w-3.5" /> {t('products.addRule')}</Button>
           </div>
           <Table>
             <TableHeader><TableRow>
               <TableHead>{t('products.segment')}</TableHead>
               <TableHead>{t('products.unit')}</TableHead>
-              <TableHead>{t('products.costPrice')}</TableHead>
               <TableHead>{t('products.price')}</TableHead>
-              <TableHead>{t('products.margin')}</TableHead>
               <TableHead>{t('products.effectiveFrom')}</TableHead>
-              <TableHead>{t('products.promo')}</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {p.pricingRules.map(r => {
-                const margin = r.costPrice ? (((r.price - r.costPrice) / r.costPrice) * 100).toFixed(1) : null;
-                const isExpired = r.effectiveTo && new Date(r.effectiveTo) < new Date();
-                return (
-                  <TableRow key={r.id} className={isExpired ? 'opacity-50' : ''}>
-                    <TableCell><SegmentBadge segment={r.segment} /></TableCell>
-                    <TableCell>{r.unitName}</TableCell>
-                    <TableCell className="text-muted-foreground">{r.costPrice ? `${(r.costPrice / 100).toFixed(2)} DZD` : '—'}</TableCell>
-                    <TableCell className="font-bold">{(r.price / 100).toFixed(2)} DZD</TableCell>
-                    <TableCell>{margin ? <span className="text-success">+{margin}%</span> : '—'}</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{r.effectiveFrom}{r.effectiveTo ? ` → ${r.effectiveTo}` : ''}</TableCell>
-                    <TableCell>
-                      {r.isPromo && <Badge className="bg-chart-4/10 text-chart-4 border-chart-4/20 text-xs">{r.promoLabel || 'Promo'}</Badge>}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {p.pricingRules.map(r => (
+                <TableRow key={r.id}>
+                  <TableCell><SegmentBadge segment={r.segment} /></TableCell>
+                  <TableCell>{r.unitName}</TableCell>
+                  <TableCell className="font-bold">{(r.price / 100).toFixed(2)} DZD</TableCell>
+                  <TableCell className="text-muted-foreground">{r.effectiveFrom}</TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </TabsContent>
-
-        {/* Customer-Specific Pricing Tab */}
-        <TabsContent value="customer_pricing" className="space-y-3 mt-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium">{t('products.customerSpecificPrices')}</p>
-              <p className="text-xs text-muted-foreground">{t('products.customerPricePriority')}</p>
-            </div>
-            <Button size="sm" className="gap-1" onClick={onAddCustomerPrice}>
-              <Plus className="h-3.5 w-3.5" /> {t('products.addCustomerPrice')}
-            </Button>
-          </div>
-          {p.customerPrices.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
-              <p className="text-sm">{t('products.noCustomerPrices')}</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>{t('customers.title')}</TableHead>
-                <TableHead>{t('products.unit')}</TableHead>
-                <TableHead>{t('products.price')}</TableHead>
-                <TableHead>{t('products.effectiveFrom')}</TableHead>
-                <TableHead>{t('common.actions')}</TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {p.customerPrices.map(cp => (
-                  <TableRow key={cp.id}>
-                    <TableCell className="font-medium">{cp.customerName}</TableCell>
-                    <TableCell>{cp.unitName}</TableCell>
-                    <TableCell className="font-bold">{(cp.price / 100).toFixed(2)} DZD</TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{cp.effectiveFrom}{cp.effectiveTo ? ` → ${cp.effectiveTo}` : ''}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onRemoveCustomerPrice(cp.id)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-          <div className="rounded-lg bg-warning/5 border border-warning/20 p-3">
-            <p className="text-xs text-warning font-medium">{t('products.pricingPriorityExplainer')}</p>
-          </div>
-        </TabsContent>
-
-        {/* Stock Tab */}
         <TabsContent value="stock" className="mt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-lg border p-4">
               <p className="text-sm text-muted-foreground">{t('products.totalStockBase')}</p>
-              <p className={`text-2xl font-bold ${p.stockBase === 0 ? 'text-destructive' : ''}`}>{p.stockBase.toLocaleString()}</p>
+              <p className="text-2xl font-bold">{p.stockBase.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">{getBaseUnitLabel(p.baseUnit)}</p>
             </div>
             {p.units.filter(u => u.conversionToBase > 1).map(u => (
@@ -1092,9 +680,6 @@ function ProductDetailDialog({
                 <p className="text-xs text-muted-foreground">{u.name}</p>
               </div>
             ))}
-          </div>
-          <div className="mt-4 rounded-lg bg-info/5 border border-info/20 p-3">
-            <p className="text-xs text-info">{t('products.stockConversionNote')}</p>
           </div>
         </TabsContent>
       </Tabs>

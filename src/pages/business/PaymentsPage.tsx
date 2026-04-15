@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { ColumnDef } from '@tanstack/react-table';
-import { getPayments, getInvoices, createPayment, refundPayment } from '@/lib/fake-api';
+import { getPayments, getInvoices } from '@/lib/fake-api';
 import type { Payment, PaymentMethod, Invoice } from '@/lib/fake-api/types';
 import { PageHeader } from '@/components/PageHeader';
 import { DataTable } from '@/components/DataTable';
@@ -15,11 +15,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Plus, DollarSign, CreditCard, CheckCircle, AlertCircle, RotateCcw, FileText, Download, Scale } from 'lucide-react';
+import { Plus, DollarSign, CreditCard, CheckCircle, AlertCircle, RotateCcw, FileText } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
 
 const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
   completed: 'success', pending: 'warning', failed: 'error', refunded: 'warning',
@@ -27,7 +25,6 @@ const statusMap: Record<string, 'success' | 'warning' | 'error'> = {
 
 export default function PaymentsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -35,7 +32,6 @@ export default function PaymentsPage() {
   const [dateTo, setDateTo] = useState('');
   const [recordOpen, setRecordOpen] = useState(false);
   const [refundTarget, setRefundTarget] = useState<Payment | null>(null);
-  const [reconcileOpen, setReconcileOpen] = useState(false);
 
   // Record payment form
   const [formInvoiceId, setFormInvoiceId] = useState('');
@@ -62,73 +58,24 @@ export default function PaymentsPage() {
   const failedCount = payments.filter(p => p.status === 'failed').length;
   const refundedAmount = payments.filter(p => p.status === 'refunded').reduce((s, p) => s + p.amount, 0);
 
-  // Reconciliation data
-  const invoicesWithPayments = invoices.filter(i => i.paidAmount > 0 && i.status !== 'cancelled');
-  const reconciledCount = invoicesWithPayments.filter(i => i.remainingAmount === 0).length;
-  const unreconciledCount = invoicesWithPayments.filter(i => i.remainingAmount > 0).length;
-  const totalOutstanding = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled').reduce((s, i) => s + i.remainingAmount, 0);
-
-  const handleRecordPayment = async () => {
+  const handleRecordPayment = () => {
     if (!formInvoiceId || !formAmount) { toast.error(t('common.error')); return; }
     const invoice = invoices.find(i => i.id === formInvoiceId);
     if (!invoice) return;
-    await createPayment({
-      invoiceId: formInvoiceId,
-      invoiceNumber: invoice.invoiceNumber,
-      customerId: invoice.customerId,
-      customerName: invoice.customerName,
-      amount: parseFloat(formAmount),
-      method: formMethod,
-      status: 'completed',
-      reference: formReference || `REF-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
-    });
+    // In a real app this would call an API
     toast.success(t('payments.paymentRecorded', { amount: fmt(parseFloat(formAmount)) }));
-    queryClient.invalidateQueries({ queryKey: ['payments'] });
-    queryClient.invalidateQueries({ queryKey: ['invoices'] });
     setRecordOpen(false);
     setFormInvoiceId(''); setFormAmount(''); setFormReference('');
   };
 
-  const handleRefund = async () => {
+  const handleRefund = () => {
     if (!refundTarget) return;
-    await refundPayment(refundTarget.id);
     toast.success(t('payments.refundProcessed', { amount: fmt(refundTarget.amount) }));
-    queryClient.invalidateQueries({ queryKey: ['payments'] });
     setRefundTarget(null);
   };
 
   const handleGenerateReceipt = (payment: Payment) => {
-    const receiptContent = [
-      '═══════════════════════════════',
-      '         REÇU DE PAIEMENT',
-      '═══════════════════════════════',
-      `Réf: ${payment.reference}`,
-      `Date: ${payment.date}`,
-      `Client: ${payment.customerName}`,
-      `Facture: ${payment.invoiceNumber}`,
-      `Montant: ${fmt(payment.amount)}`,
-      `Méthode: ${payment.method}`,
-      `Statut: ${payment.status}`,
-      '═══════════════════════════════',
-    ].join('\n');
-    const blob = new Blob([receiptContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `receipt-${payment.reference}.txt`; a.click();
-    URL.revokeObjectURL(url);
     toast.success(t('payments.receiptGenerated', { ref: payment.reference }));
-  };
-
-  const handleExportCSV = () => {
-    const header = 'Date,Invoice,Customer,Amount,Method,Reference,Status\n';
-    const rows = filteredPayments.map(p =>
-      `${p.date},"${p.invoiceNumber}","${p.customerName}",${p.amount},"${p.method}","${p.reference}","${p.status}"`
-    ).join('\n');
-    const blob = new Blob([header + rows], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'payments.csv'; a.click();
-    URL.revokeObjectURL(url);
-    toast.success(t('common.exported'));
   };
 
   const columns: ColumnDef<Payment>[] = [
@@ -158,11 +105,7 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6 p-6">
       <PageHeader title={t('payments.title')} description={t('payments.subtitle')}>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleExportCSV}><Download className="h-4 w-4 me-2" />{t('common.export')}</Button>
-          <Button variant="outline" onClick={() => setReconcileOpen(true)}><Scale className="h-4 w-4 me-2" />{t('payments.reconciliation')}</Button>
-          <Button onClick={() => setRecordOpen(true)}><Plus className="h-4 w-4 me-2" />{t('payments.record')}</Button>
-        </div>
+        <Button onClick={() => setRecordOpen(true)}><Plus className="h-4 w-4 me-2" />{t('payments.record')}</Button>
       </PageHeader>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -181,7 +124,7 @@ export default function PaymentsPage() {
             <SelectItem value="cash">{t('payments.methods.cash')}</SelectItem>
             <SelectItem value="bank_transfer">{t('payments.methods.bank_transfer')}</SelectItem>
             <SelectItem value="cheque">{t('payments.methods.cheque')}</SelectItem>
-            <SelectItem value="mobile_payment">{t('payments.methods.mobile_payment')}</SelectItem>
+            <SelectItem value="baridimob">{t('payments.methods.baridimob')}</SelectItem>
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -232,7 +175,7 @@ export default function PaymentsPage() {
                   <SelectItem value="cash">{t('payments.methods.cash')}</SelectItem>
                   <SelectItem value="bank_transfer">{t('payments.methods.bank_transfer')}</SelectItem>
                   <SelectItem value="cheque">{t('payments.methods.cheque')}</SelectItem>
-                  <SelectItem value="mobile_payment">{t('payments.methods.mobile_payment')}</SelectItem>
+                  <SelectItem value="baridimob">{t('payments.methods.baridimob')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -258,50 +201,6 @@ export default function PaymentsPage() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Reconciliation Dialog */}
-      <Dialog open={reconcileOpen} onOpenChange={setReconcileOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{t('payments.reconciliation')}</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="grid grid-cols-2 gap-4">
-              <Card>
-                <CardContent className="pt-4 text-center">
-                  <p className="text-2xl font-bold text-success">{reconciledCount}</p>
-                  <p className="text-xs text-muted-foreground">{t('payments.reconciled')}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-4 text-center">
-                  <p className="text-2xl font-bold text-warning">{unreconciledCount}</p>
-                  <p className="text-xs text-muted-foreground">{t('payments.unreconciled')}</p>
-                </CardContent>
-              </Card>
-            </div>
-            <Card>
-              <CardContent className="pt-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">{t('payments.totalOutstanding')}</span>
-                  <span className="text-lg font-bold text-destructive">{fmt(totalOutstanding)}</span>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-sm text-muted-foreground">{t('payments.totalCollected')}</span>
-                  <span className="text-lg font-bold text-success">{fmt(totalCollected)}</span>
-                </div>
-              </CardContent>
-            </Card>
-            <div className="space-y-2 max-h-48 overflow-y-auto">
-              <p className="text-sm font-medium">{t('payments.unreconciledInvoices')}</p>
-              {invoices.filter(i => i.remainingAmount > 0 && i.status !== 'cancelled').map(inv => (
-                <div key={inv.id} className="flex justify-between items-center text-sm border rounded-lg p-2">
-                  <span>{inv.invoiceNumber} — {inv.customerName}</span>
-                  <Badge variant="outline" className="text-destructive">{fmt(inv.remainingAmount)}</Badge>
-                </div>
-              ))}
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
     </div>

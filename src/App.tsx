@@ -49,9 +49,6 @@ const AccountingPage = lazy(() => import("./pages/business/AccountingPage"));
 const ReportsPage = lazy(() => import("./pages/business/ReportsPage"));
 const SalesReportPage = lazy(() => import("./pages/business/SalesReportPage"));
 const TaxReportPage = lazy(() => import("./pages/business/TaxReportPage"));
-const InventoryReportPage = lazy(() => import("./pages/business/InventoryReportPage"));
-const CustomerReportPage = lazy(() => import("./pages/business/CustomerReportPage"));
-const DeliveryReportPage = lazy(() => import("./pages/business/DeliveryReportPage"));
 const CustomersPage = lazy(() => import("./pages/business/CustomersPage"));
 const UsersPage = lazy(() => import("./pages/business/UsersPage"));
 const BusinessSettingsPage = lazy(() => import("./pages/business/BusinessSettingsPage"));
@@ -125,9 +122,6 @@ const App = () => (
                 <Route path="reports" element={<ReportsPage />} />
                 <Route path="reports/sales" element={<SalesReportPage />} />
                 <Route path="reports/tax" element={<TaxReportPage />} />
-                <Route path="reports/inventory" element={<InventoryReportPage />} />
-                <Route path="reports/customers" element={<CustomerReportPage />} />
-                <Route path="reports/delivery" element={<DeliveryReportPage />} />
                 <Route path="customers" element={<CustomersPage />} />
                 <Route path="users" element={<UsersPage />} />
                 <Route path="settings" element={<BusinessSettingsPage />} />

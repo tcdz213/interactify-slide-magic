@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -9,90 +9,75 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { HelpCircle, MessageSquare, BookOpen, ExternalLink, Search, Clock, CheckCircle, AlertCircle, Filter } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { HelpCircle, MessageSquare, BookOpen, ExternalLink, Search, Play, Headphones, Clock, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const faqKeys = ['createOrder', 'addProduct', 'manageStock', 'inviteUsers', 'exportData', 'contactSupport'];
 
-const docLinks = [
-  { title: 'Guide de démarrage', url: '#', icon: BookOpen, category: 'getting-started' },
-  { title: 'Documentation API', url: '#', icon: ExternalLink, category: 'api' },
-  { title: 'Gestion des stocks', url: '#', icon: BookOpen, category: 'inventory' },
-  { title: 'Facturation et paiements', url: '#', icon: BookOpen, category: 'billing' },
-  { title: 'Gestion des livraisons', url: '#', icon: BookOpen, category: 'delivery' },
-  { title: 'Rapports et analytics', url: '#', icon: BookOpen, category: 'reports' },
-];
-
-type Ticket = {
-  id: string;
-  subject: string;
-  priority: string;
-  status: 'open' | 'in_progress' | 'resolved';
-  date: string;
-  message: string;
-};
+interface Ticket { id: string; subject: string; priority: string; status: 'open' | 'in_progress' | 'resolved'; createdAt: string; lastUpdate: string; }
 
 const MOCK_TICKETS: Ticket[] = [
-  { id: 'TK-001', subject: 'Problème d\'export CSV', priority: 'high', status: 'in_progress', date: '2024-12-10', message: 'L\'export CSV ne fonctionne pas pour les commandes' },
-  { id: 'TK-002', subject: 'Question facturation TVA', priority: 'medium', status: 'resolved', date: '2024-12-08', message: 'Comment configurer les taux TVA?' },
-  { id: 'TK-003', subject: 'Ajout utilisateur bloqué', priority: 'low', status: 'open', date: '2024-12-12', message: 'Impossible d\'ajouter un nouvel utilisateur' },
+  { id: 'TKT-001', subject: 'Problème d\'export CSV', priority: 'medium', status: 'resolved', createdAt: '2025-04-10', lastUpdate: '2025-04-11' },
+  { id: 'TKT-002', subject: 'Erreur lors de la création de commande', priority: 'high', status: 'in_progress', createdAt: '2025-04-12', lastUpdate: '2025-04-12' },
+];
+
+const VIDEO_TUTORIALS = [
+  { title: 'Démarrage rapide', duration: '5:30', category: 'Général' },
+  { title: 'Créer votre premier produit', duration: '3:45', category: 'Produits' },
+  { title: 'Gestion des commandes', duration: '7:20', category: 'Commandes' },
+  { title: 'Planifier une tournée de livraison', duration: '4:15', category: 'Livraisons' },
+  { title: 'Facturation et paiements', duration: '6:00', category: 'Finance' },
+  { title: 'Paramètres et personnalisation', duration: '4:50', category: 'Paramètres' },
+];
+
+const KNOWLEDGE_BASE = [
+  { title: 'Guide de démarrage', category: 'Général', icon: BookOpen },
+  { title: 'Documentation API', category: 'Technique', icon: ExternalLink },
+  { title: 'Gestion des stocks', category: 'Inventaire', icon: BookOpen },
+  { title: 'Facturation et paiements', category: 'Finance', icon: BookOpen },
+  { title: 'Configuration des prix', category: 'Produits', icon: BookOpen },
+  { title: 'Gestion des utilisateurs', category: 'Admin', icon: BookOpen },
 ];
 
 export default function HelpPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('faq');
-  const [faqSearch, setFaqSearch] = useState('');
-  const [docFilter, setDocFilter] = useState('all');
-  const [tickets, setTickets] = useState<Ticket[]>(MOCK_TICKETS);
-  const [newTicket, setNewTicket] = useState({ subject: '', priority: 'medium', message: '' });
-  const [ticketFilter, setTicketFilter] = useState('all');
-
-  const filteredFaqKeys = useMemo(() => {
-    if (!faqSearch) return faqKeys;
-    return faqKeys.filter(key => {
-      const q = t(`business.faq_${key}_q`).toLowerCase();
-      const a = t(`business.faq_${key}_a`).toLowerCase();
-      return q.includes(faqSearch.toLowerCase()) || a.includes(faqSearch.toLowerCase());
-    });
-  }, [faqSearch, t]);
-
-  const filteredDocs = useMemo(() => {
-    if (docFilter === 'all') return docLinks;
-    return docLinks.filter(d => d.category === docFilter);
-  }, [docFilter]);
-
-  const filteredTickets = useMemo(() => {
-    if (ticketFilter === 'all') return tickets;
-    return tickets.filter(t => t.status === ticketFilter);
-  }, [tickets, ticketFilter]);
+  const [tickets, setTickets] = useState(MOCK_TICKETS);
+  const [searchKB, setSearchKB] = useState('');
+  const [chatMessages, setChatMessages] = useState<{ from: string; text: string }[]>([
+    { from: 'bot', text: 'Bonjour ! Comment puis-je vous aider ?' },
+  ]);
+  const [chatInput, setChatInput] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTicket.subject || !newTicket.message) return;
-    const ticket: Ticket = {
-      id: `TK-${String(tickets.length + 1).padStart(3, '0')}`,
-      subject: newTicket.subject,
-      priority: newTicket.priority,
-      status: 'open',
-      date: new Date().toISOString().split('T')[0],
-      message: newTicket.message,
+    const form = e.target as HTMLFormElement;
+    const subject = (form.elements.namedItem('subject') as HTMLInputElement).value;
+    const newTicket: Ticket = {
+      id: `TKT-${String(tickets.length + 1).padStart(3, '0')}`, subject, priority: 'medium', status: 'open',
+      createdAt: new Date().toISOString().split('T')[0], lastUpdate: new Date().toISOString().split('T')[0],
     };
-    setTickets(prev => [ticket, ...prev]);
-    setNewTicket({ subject: '', priority: 'medium', message: '' });
+    setTickets(prev => [newTicket, ...prev]);
     toast.success(t('business.ticketSubmitted'));
-    setActiveTab('tickets');
+    form.reset();
   };
 
-  const statusIcon = (status: Ticket['status']) => {
-    if (status === 'resolved') return <CheckCircle className="h-3.5 w-3.5 text-success" />;
-    if (status === 'in_progress') return <Clock className="h-3.5 w-3.5 text-warning" />;
-    return <AlertCircle className="h-3.5 w-3.5 text-info" />;
+  const sendChat = () => {
+    if (!chatInput.trim()) return;
+    setChatMessages(prev => [...prev, { from: 'user', text: chatInput }]);
+    const input = chatInput;
+    setChatInput('');
+    setTimeout(() => {
+      setChatMessages(prev => [...prev, { from: 'bot', text: `Merci pour votre question concernant "${input}". Un agent vous répondra sous peu. En attendant, consultez notre base de connaissances.` }]);
+    }, 1000);
   };
 
-  const statusLabel = (status: Ticket['status']) => {
-    if (status === 'resolved') return t('help.resolved', 'Résolu');
-    if (status === 'in_progress') return t('help.inProgress', 'En cours');
-    return t('help.open', 'Ouvert');
+  const filteredKB = KNOWLEDGE_BASE.filter(kb => kb.title.toLowerCase().includes(searchKB.toLowerCase()) || kb.category.toLowerCase().includes(searchKB.toLowerCase()));
+
+  const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' }> = {
+    open: { label: 'Ouvert', variant: 'outline' },
+    in_progress: { label: 'En cours', variant: 'default' },
+    resolved: { label: 'Résolu', variant: 'secondary' },
   };
 
   return (
@@ -102,142 +87,169 @@ export default function HelpPage() {
         <p className="text-sm text-muted-foreground">{t('business.helpDesc')}</p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
+      <Tabs defaultValue="faq">
+        <TabsList className="flex-wrap">
           <TabsTrigger value="faq"><HelpCircle className="h-4 w-4 me-1" />{t('business.faq')}</TabsTrigger>
-          <TabsTrigger value="docs"><BookOpen className="h-4 w-4 me-1" />{t('business.documentation')}</TabsTrigger>
-          <TabsTrigger value="tickets">
-            <MessageSquare className="h-4 w-4 me-1" />{t('help.tickets', 'Tickets')}
-            {tickets.filter(t => t.status !== 'resolved').length > 0 && (
-              <Badge variant="secondary" className="ml-1.5 h-5 w-5 p-0 text-xs flex items-center justify-center">{tickets.filter(t => t.status !== 'resolved').length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="new"><MessageSquare className="h-4 w-4 me-1" />{t('help.newTicket', 'Nouveau ticket')}</TabsTrigger>
+          <TabsTrigger value="tickets"><MessageSquare className="h-4 w-4 me-1" />{t('help.tickets', 'Tickets')}</TabsTrigger>
+          <TabsTrigger value="chat"><Headphones className="h-4 w-4 me-1" />{t('help.liveChat', 'Chat en direct')}</TabsTrigger>
+          <TabsTrigger value="kb"><BookOpen className="h-4 w-4 me-1" />{t('help.knowledgeBase', 'Base de connaissances')}</TabsTrigger>
+          <TabsTrigger value="videos"><Play className="h-4 w-4 me-1" />{t('help.videos', 'Tutoriels vidéo')}</TabsTrigger>
         </TabsList>
 
-        {/* FAQ Tab */}
-        <TabsContent value="faq" className="mt-4 space-y-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder={t('help.searchFaq', 'Rechercher dans la FAQ...')} value={faqSearch} onChange={e => setFaqSearch(e.target.value)} />
-          </div>
+        {/* FAQ */}
+        <TabsContent value="faq" className="mt-4">
           <Card>
-            <CardContent className="pt-4">
-              {filteredFaqKeys.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-8">{t('common.noData', 'Aucun résultat')}</p>
-              ) : (
-                <Accordion type="single" collapsible className="w-full">
-                  {filteredFaqKeys.map((key, i) => (
-                    <AccordionItem key={key} value={`item-${i}`}>
-                      <AccordionTrigger className="text-sm">{t(`business.faq_${key}_q`)}</AccordionTrigger>
-                      <AccordionContent className="text-sm text-muted-foreground">{t(`business.faq_${key}_a`)}</AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              )}
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base"><HelpCircle className="h-4 w-4 text-primary" />{t('business.faq')}</CardTitle>
+              <CardDescription>{t('business.faqDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible className="w-full">
+                {faqKeys.map((key, i) => (
+                  <AccordionItem key={key} value={`item-${i}`}>
+                    <AccordionTrigger className="text-sm">{t(`business.faq_${key}_q`)}</AccordionTrigger>
+                    <AccordionContent className="text-sm text-muted-foreground">{t(`business.faq_${key}_a`)}</AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Documentation Tab */}
-        <TabsContent value="docs" className="mt-4 space-y-4">
-          <Select value={docFilter} onValueChange={setDocFilter}>
-            <SelectTrigger className="w-[200px]"><SelectValue placeholder={t('help.filterCategory', 'Catégorie')} /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('common.all', 'Toutes')}</SelectItem>
-              <SelectItem value="getting-started">{t('help.gettingStarted', 'Démarrage')}</SelectItem>
-              <SelectItem value="api">API</SelectItem>
-              <SelectItem value="inventory">{t('help.inventory', 'Stock')}</SelectItem>
-              <SelectItem value="billing">{t('help.billing', 'Facturation')}</SelectItem>
-              <SelectItem value="delivery">{t('help.delivery', 'Livraison')}</SelectItem>
-              <SelectItem value="reports">{t('help.reports', 'Rapports')}</SelectItem>
-            </SelectContent>
-          </Select>
-          <div className="grid gap-3 md:grid-cols-2">
-            {filteredDocs.map((link, i) => (
-              <a key={i} href={link.url} className="flex items-center gap-3 rounded-lg border p-4 hover:bg-muted/50 transition-colors">
-                <link.icon className="h-5 w-5 text-muted-foreground" />
-                <div className="flex-1">
-                  <span className="text-sm font-medium">{link.title}</span>
-                  <p className="text-xs text-muted-foreground capitalize">{link.category.replace('-', ' ')}</p>
-                </div>
-                <ExternalLink className="h-3 w-3 text-muted-foreground" />
-              </a>
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* Tickets Tab */}
+        {/* Tickets */}
         <TabsContent value="tickets" className="mt-4 space-y-4">
-          <div className="flex gap-3">
-            <Select value={ticketFilter} onValueChange={setTicketFilter}>
-              <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t('common.all', 'Tous')}</SelectItem>
-                <SelectItem value="open">{t('help.open', 'Ouvert')}</SelectItem>
-                <SelectItem value="in_progress">{t('help.inProgress', 'En cours')}</SelectItem>
-                <SelectItem value="resolved">{t('help.resolved', 'Résolu')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-3">
-            {filteredTickets.map(ticket => (
-              <Card key={ticket.id}>
-                <CardContent className="pt-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        {statusIcon(ticket.status)}
-                        <span className="text-sm font-medium">{ticket.subject}</span>
-                        <Badge variant="outline" className="text-xs">{ticket.id}</Badge>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">{ticket.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{ticket.date}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge variant={ticket.priority === 'high' ? 'destructive' : ticket.priority === 'medium' ? 'secondary' : 'outline'}>
-                        {ticket.priority === 'high' ? t('business.priorityHigh') : ticket.priority === 'medium' ? t('business.priorityMedium') : t('business.priorityLow')}
-                      </Badge>
-                      <Badge variant="outline">{statusLabel(ticket.status)}</Badge>
-                    </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base"><MessageSquare className="h-4 w-4 text-primary" />{t('business.contactSupport')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2"><Label>{t('business.subject')}</Label><Input name="subject" placeholder={t('business.subjectPlaceholder')} required /></div>
+                  <div className="space-y-2">
+                    <Label>{t('business.priority')}</Label>
+                    <Select defaultValue="medium">
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">{t('business.priorityLow')}</SelectItem>
+                        <SelectItem value="medium">{t('business.priorityMedium')}</SelectItem>
+                        <SelectItem value="high">{t('business.priorityHigh')}</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-            {filteredTickets.length === 0 && <p className="text-center text-sm text-muted-foreground py-8">{t('common.noData', 'Aucun ticket')}</p>}
+                  <div className="space-y-2"><Label>{t('business.message')}</Label><Textarea placeholder={t('business.messagePlaceholder')} rows={4} required /></div>
+                  <Button type="submit">{t('business.submitTicket')}</Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle className="text-base">{t('help.ticketHistory', 'Historique des tickets')}</CardTitle></CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>{t('business.subject')}</TableHead>
+                      <TableHead>{t('common.status')}</TableHead>
+                      <TableHead>{t('common.date')}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {tickets.map(ticket => (
+                      <TableRow key={ticket.id}>
+                        <TableCell className="font-mono text-xs">{ticket.id}</TableCell>
+                        <TableCell className="text-sm">{ticket.subject}</TableCell>
+                        <TableCell><Badge variant={statusConfig[ticket.status].variant}>{statusConfig[ticket.status].label}</Badge></TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{ticket.createdAt}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </div>
         </TabsContent>
 
-        {/* New Ticket Tab */}
-        <TabsContent value="new" className="mt-4">
+        {/* Live Chat */}
+        <TabsContent value="chat" className="mt-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2"><MessageSquare className="h-4 w-4 text-primary" />{t('business.contactSupport')}</CardTitle>
-              <CardDescription>{t('business.contactSupportDesc')}</CardDescription>
+              <CardTitle className="flex items-center gap-2 text-base"><Headphones className="h-4 w-4 text-primary" />{t('help.liveChat', 'Chat en direct')}</CardTitle>
+              <CardDescription>{t('help.chatDesc', 'Discutez avec notre assistant ou un agent')}</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>{t('business.subject')}</Label>
-                  <Input placeholder={t('business.subjectPlaceholder')} value={newTicket.subject} onChange={e => setNewTicket(p => ({ ...p, subject: e.target.value }))} required />
+              <div className="border rounded-lg h-80 flex flex-col">
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {chatMessages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.from === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[70%] rounded-lg px-3 py-2 text-sm ${msg.from === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="space-y-2">
-                  <Label>{t('business.priority')}</Label>
-                  <Select value={newTicket.priority} onValueChange={v => setNewTicket(p => ({ ...p, priority: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">{t('business.priorityLow')}</SelectItem>
-                      <SelectItem value="medium">{t('business.priorityMedium')}</SelectItem>
-                      <SelectItem value="high">{t('business.priorityHigh')}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="border-t p-3 flex gap-2">
+                  <Input value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder={t('help.typeMessage', 'Tapez votre message...')} onKeyDown={e => e.key === 'Enter' && sendChat()} />
+                  <Button onClick={sendChat}>{t('help.send', 'Envoyer')}</Button>
                 </div>
-                <div className="space-y-2">
-                  <Label>{t('business.message')}</Label>
-                  <Textarea placeholder={t('business.messagePlaceholder')} rows={4} value={newTicket.message} onChange={e => setNewTicket(p => ({ ...p, message: e.target.value }))} required />
-                </div>
-                <Button type="submit">{t('business.submitTicket')}</Button>
-              </form>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Knowledge Base */}
+        <TabsContent value="kb" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base"><BookOpen className="h-4 w-4 text-primary" />{t('help.knowledgeBase', 'Base de connaissances')}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="relative">
+                <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input value={searchKB} onChange={e => setSearchKB(e.target.value)} placeholder={t('help.searchKB', 'Rechercher dans la documentation...')} className="ps-9" />
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {filteredKB.map((doc, i) => (
+                  <a key={i} href="#" className="flex items-center gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors">
+                    <doc.icon className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex-1">
+                      <span className="text-sm font-medium">{doc.title}</span>
+                      <p className="text-xs text-muted-foreground">{doc.category}</p>
+                    </div>
+                    <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                  </a>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Video Tutorials */}
+        <TabsContent value="videos" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base"><Play className="h-4 w-4 text-primary" />{t('help.videos', 'Tutoriels vidéo')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {VIDEO_TUTORIALS.map((video, i) => (
+                  <div key={i} className="rounded-lg border overflow-hidden cursor-pointer hover:shadow-md transition-shadow" onClick={() => toast.info(`Lecture: ${video.title}`)}>
+                    <div className="h-28 bg-muted flex items-center justify-center">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Play className="h-5 w-5 text-primary ms-0.5" />
+                      </div>
+                    </div>
+                    <div className="p-3">
+                      <p className="text-sm font-medium">{video.title}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="secondary" className="text-xs">{video.category}</Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" />{video.duration}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -4,34 +4,35 @@
 `/business/api`
 
 ## Status
-- Complete: 65%
+- Complete: 50%
 - UI Status: ✅ Complete
-- Logic Status: ⚠️ Create/revoke in state, no persistence
+- Logic Status: ⚠️ State changes, no persistence
 - API Status: ❌ None
-- i18n: ✅ Wired
 - Production Ready: No
 
 ## Purpose
-Manage API keys for external integrations.
+Manage API keys for external integrations — create, revoke, monitor usage.
 
 ## Existing Features
-- 4 KPIs (Total Calls, Active Keys, etc.)
-- API key list with show/hide, copy
+- 4 KPIs (Total Calls, Active Keys, Avg/Day, Error Rate)
+- API key list with show/hide, copy, delete
+- Usage chart (7-day)
 - Create key dialog with scope checkboxes
-- Usage chart
-- Filter support
+- Scope badges per key
 
 ## Existing User Actions
 - ✅ Show/hide key
 - ✅ Copy key
-- ✅ Create key (dialog, state)
+- ⚠️ Create key (dialog form, state only)
 - ⚠️ Revoke key (state only)
 
 ## Missing Features
 - [ ] Real API key generation
 - [ ] Key rotation
 - [ ] Rate limit configuration
+- [ ] Usage analytics detail
 - [ ] Webhook management
+- [ ] API documentation link
 
 ## Final Score
-**65/100**
+**50/100**

@@ -1,194 +1,171 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart3, TrendingUp, Users, Package, Truck, Receipt, Download, Clock, Calendar, Star, FileText, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { BarChart3, TrendingUp, Users, Package, Truck, Receipt, Clock, Calendar, Download, Star } from 'lucide-react';
 import { toast } from 'sonner';
 
-const reportCategories = [
-  { key: 'sales', icon: TrendingUp, route: '/business/reports/sales', color: 'text-chart-2', bgColor: 'bg-chart-2/10' },
-  { key: 'tax', icon: Receipt, route: '/business/reports/tax', color: 'text-chart-3', bgColor: 'bg-chart-3/10' },
-  { key: 'inventory', icon: Package, route: '/business/reports/inventory', color: 'text-chart-4', bgColor: 'bg-chart-4/10' },
-  { key: 'customers', icon: Users, route: '/business/reports/customers', color: 'text-chart-5', bgColor: 'bg-chart-5/10' },
-  { key: 'delivery', icon: Truck, route: '/business/reports/delivery', color: 'text-primary', bgColor: 'bg-primary/10' },
-];
-
-const recentReports = [
-  { id: 'rr1', name: 'Rapport Ventes Décembre 2024', type: 'sales', date: '2024-12-15', format: 'PDF', size: '2.4 MB' },
-  { id: 'rr2', name: 'Déclaration TVA Q4 2024', type: 'tax', date: '2024-12-10', format: 'PDF', size: '1.1 MB' },
-  { id: 'rr3', name: 'État Stock Semaine 50', type: 'inventory', date: '2024-12-09', format: 'Excel', size: '3.8 MB' },
-  { id: 'rr4', name: 'Analyse Clients Novembre', type: 'customers', date: '2024-12-01', format: 'PDF', size: '1.7 MB' },
-  { id: 'rr5', name: 'Performance Livraisons Novembre', type: 'delivery', date: '2024-11-30', format: 'PDF', size: '980 KB' },
+const reports = [
+  { key: 'sales', icon: TrendingUp, route: '/business/reports/sales', color: 'text-primary', ready: true },
+  { key: 'tax', icon: Receipt, route: '/business/reports/tax', color: 'text-success', ready: true },
+  { key: 'inventory', icon: Package, route: '/business/reports/inventory', color: 'text-warning', ready: true },
+  { key: 'customers', icon: Users, route: '/business/reports/customers', color: 'text-info', ready: true },
+  { key: 'delivery', icon: Truck, route: '/business/reports/delivery', color: 'text-destructive', ready: true },
 ];
 
 const scheduledReports = [
-  { id: 'sr1', name: 'Rapport Ventes Hebdomadaire', frequency: 'weekly', nextRun: '2024-12-22', format: 'PDF', active: true },
-  { id: 'sr2', name: 'Déclaration TVA Mensuelle (G50)', frequency: 'monthly', nextRun: '2025-01-05', format: 'PDF', active: true },
-  { id: 'sr3', name: 'État Stock Quotidien', frequency: 'daily', nextRun: '2024-12-16', format: 'Excel', active: false },
+  { id: 1, name: 'Weekly Sales Summary', frequency: 'Weekly', nextRun: '2025-04-18', lastRun: '2025-04-11', status: 'active' },
+  { id: 2, name: 'Monthly Inventory Report', frequency: 'Monthly', nextRun: '2025-05-01', lastRun: '2025-04-01', status: 'active' },
+  { id: 3, name: 'Quarterly Tax Declaration', frequency: 'Quarterly', nextRun: '2025-07-01', lastRun: '2025-04-01', status: 'paused' },
+];
+
+const recentReports = [
+  { id: 1, name: 'Sales Report - March 2025', type: 'Sales', generatedAt: '2025-04-01 09:30', format: 'PDF' },
+  { id: 2, name: 'G50 Tax Report - Q1 2025', type: 'Tax', generatedAt: '2025-04-02 14:00', format: 'PDF' },
+  { id: 3, name: 'Inventory Snapshot - April 2025', type: 'Inventory', generatedAt: '2025-04-10 08:00', format: 'Excel' },
+  { id: 4, name: 'Customer Analytics - Q1 2025', type: 'Customers', generatedAt: '2025-04-05 11:15', format: 'PDF' },
 ];
 
 export default function ReportsPage() {
   const { t } = useTranslation();
-  const [search, setSearch] = useState('');
-  const [favorites, setFavorites] = useState<Set<string>>(new Set(['sales', 'tax']));
-
-  const toggleFavorite = (key: string) => {
-    setFavorites(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
-
-  const filteredReports = reportCategories.filter(r =>
-    !search || t(`reports.${r.key}.title`).toLowerCase().includes(search.toLowerCase()) || t(`reports.${r.key}.description`).toLowerCase().includes(search.toLowerCase())
-  );
-
-  const handleDownload = (name: string) => toast.success(t('reports.downloading', { name }));
+  const [tab, setTab] = useState('reports');
 
   return (
-    <div className="space-y-6 p-6">
-      <PageHeader title={t('reports.title')} description={t('reports.subtitle')}>
-        <div className="relative w-64">
-          <Search className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder={t('reports.searchReports')} value={search} onChange={e => setSearch(e.target.value)} className="ps-9" />
-        </div>
-      </PageHeader>
+    <div className="space-y-6 p-6 animate-fade-in">
+      <PageHeader title={t('reports.title')} description={t('reports.subtitle')} />
 
-      <Tabs defaultValue="catalog">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="catalog">{t('reports.catalog')}</TabsTrigger>
-          <TabsTrigger value="recent">{t('reports.recentReports')}</TabsTrigger>
-          <TabsTrigger value="scheduled">{t('reports.scheduledReports')}</TabsTrigger>
+          <TabsTrigger value="reports">{t('reports.allReports', 'All Reports')}</TabsTrigger>
+          <TabsTrigger value="scheduled">{t('reports.scheduled', 'Scheduled')}</TabsTrigger>
+          <TabsTrigger value="history">{t('reports.history', 'History')}</TabsTrigger>
+          <TabsTrigger value="custom">{t('reports.customBuilder', 'Custom Builder')}</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="catalog" className="mt-4">
-          {/* Favorites */}
-          {favorites.size > 0 && (
-            <div className="mb-6">
-              <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2"><Star className="h-4 w-4" />{t('reports.favorites')}</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {reportCategories.filter(r => favorites.has(r.key)).map(r => (
-                  <Card key={r.key} className="hover:shadow-md transition-shadow border-primary/20">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-lg ${r.bgColor} ${r.color}`}><r.icon className="h-5 w-5" /></div>
-                        <div className="flex-1">
-                          <CardTitle className="text-base">{t(`reports.${r.key}.title`)}</CardTitle>
-                          <CardDescription className="text-xs">{t(`reports.${r.key}.description`)}</CardDescription>
-                        </div>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleFavorite(r.key)}>
-                          <Star className="h-3.5 w-3.5 fill-primary text-primary" />
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <Link to={r.route}><Button variant="outline" size="sm" className="w-full">{t('reports.generate')}</Button></Link>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* All Reports */}
-          <h3 className="text-sm font-semibold text-muted-foreground mb-3">{t('reports.allReports')}</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredReports.map(r => (
-              <Card key={r.key} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
+        <TabsContent value="reports" className="mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {reports.map(r => (
+              <Card key={r.key} className="hover:shadow-md transition-shadow group">
+                <CardHeader>
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${r.bgColor} ${r.color}`}><r.icon className="h-5 w-5" /></div>
-                    <div className="flex-1">
+                    <div className={`p-2.5 rounded-lg bg-muted ${r.color}`}><r.icon className="h-5 w-5" /></div>
+                    <div>
                       <CardTitle className="text-base">{t(`reports.${r.key}.title`)}</CardTitle>
-                      <CardDescription className="text-xs">{t(`reports.${r.key}.description`)}</CardDescription>
+                      <CardDescription>{t(`reports.${r.key}.description`)}</CardDescription>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleFavorite(r.key)}>
-                      <Star className={`h-3.5 w-3.5 ${favorites.has(r.key) ? 'fill-primary text-primary' : ''}`} />
-                    </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <Link to={r.route}><Button variant="outline" size="sm" className="w-full">{t('reports.generate')}</Button></Link>
+                <CardContent className="space-y-3">
+                  <Link to={r.route}>
+                    <Button variant="outline" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                      <BarChart3 className="h-4 w-4 me-2" />{t('reports.generate')}
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
-            {filteredReports.length === 0 && <div className="col-span-3 text-center py-8 text-muted-foreground">{t('common.noResults')}</div>}
           </div>
-        </TabsContent>
-
-        <TabsContent value="recent" className="mt-4">
-          <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4" />{t('reports.recentReports')}</CardTitle></CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('common.name')}</TableHead>
-                    <TableHead>{t('common.type')}</TableHead>
-                    <TableHead>{t('common.date')}</TableHead>
-                    <TableHead>{t('reports.format')}</TableHead>
-                    <TableHead>{t('reports.size')}</TableHead>
-                    <TableHead>{t('common.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentReports.map(r => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium flex items-center gap-2"><FileText className="h-4 w-4 text-muted-foreground" />{r.name}</TableCell>
-                      <TableCell><Badge variant="outline">{t(`reports.${r.type}.title`)}</Badge></TableCell>
-                      <TableCell className="text-sm">{new Date(r.date).toLocaleDateString()}</TableCell>
-                      <TableCell><Badge variant="secondary">{r.format}</Badge></TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{r.size}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="sm" className="gap-1" onClick={() => handleDownload(r.name)}>
-                          <Download className="h-3.5 w-3.5" />{t('common.download')}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="scheduled" className="mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Calendar className="h-4 w-4" />{t('reports.scheduledReports')}</CardTitle></CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('common.name')}</TableHead>
-                    <TableHead>{t('reports.frequency')}</TableHead>
-                    <TableHead>{t('reports.nextRun')}</TableHead>
-                    <TableHead>{t('reports.format')}</TableHead>
-                    <TableHead>{t('common.status')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {scheduledReports.map(r => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium">{r.name}</TableCell>
-                      <TableCell><Badge variant="outline">{t(`reports.${r.frequency}`)}</Badge></TableCell>
-                      <TableCell className="text-sm">{new Date(r.nextRun).toLocaleDateString()}</TableCell>
-                      <TableCell><Badge variant="secondary">{r.format}</Badge></TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={r.active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'}>
-                          {r.active ? t('common.active') : t('common.inactive')}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2"><Clock className="h-4 w-4 text-primary" />{t('reports.scheduledReports', 'Scheduled Reports')}</CardTitle>
+                <Button size="sm" onClick={() => toast.info(t('reports.scheduleNew', 'Schedule new report'))}>{t('reports.scheduleReport', 'Schedule Report')}</Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {scheduledReports.map(sr => (
+                <div key={sr.id} className="flex items-center justify-between rounded-lg border p-4">
+                  <div>
+                    <p className="text-sm font-medium">{sr.name}</p>
+                    <p className="text-xs text-muted-foreground">{sr.frequency} • {t('reports.nextRun', 'Next')}: {sr.nextRun}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={sr.status === 'active' ? 'default' : 'secondary'}>{sr.status === 'active' ? t('common.active') : t('reports.paused', 'Paused')}</Badge>
+                    <Button variant="outline" size="sm" onClick={() => toast.success(t('reports.reportGenerated', 'Report generated'))}>{t('reports.runNow', 'Run Now')}</Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base">{t('reports.recentReports', 'Recent Reports')}</CardTitle></CardHeader>
+            <CardContent className="space-y-3">
+              {recentReports.map(rr => (
+                <div key={rr.id} className="flex items-center justify-between rounded-lg border p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">{rr.name}</p>
+                      <p className="text-xs text-muted-foreground">{rr.generatedAt}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline">{rr.format}</Badge>
+                    <Button variant="ghost" size="sm" onClick={() => toast.success(t('reports.downloaded', 'Report downloaded'))}>
+                      <Download className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="custom" className="mt-4">
+          <Card>
+            <CardHeader><CardTitle className="text-base flex items-center gap-2"><Star className="h-4 w-4 text-primary" />{t('reports.customReportBuilder', 'Custom Report Builder')}</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('reports.dataSource', 'Data Source')}</label>
+                  <select className="w-full rounded-md border bg-background px-3 py-2 text-sm">
+                    <option>Orders</option>
+                    <option>Products</option>
+                    <option>Customers</option>
+                    <option>Deliveries</option>
+                    <option>Invoices</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{t('reports.dateRange', 'Date Range')}</label>
+                  <div className="flex gap-2">
+                    <Input type="date" className="flex-1" />
+                    <Input type="date" className="flex-1" />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('reports.metrics', 'Metrics')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {['Revenue', 'Quantity', 'Count', 'Average', 'Growth %'].map(m => (
+                    <Badge key={m} variant="outline" className="cursor-pointer hover:bg-primary/10">{m}</Badge>
                   ))}
-                </TableBody>
-              </Table>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{t('reports.groupBy', 'Group By')}</label>
+                <div className="flex flex-wrap gap-2">
+                  {['Day', 'Week', 'Month', 'Product', 'Customer', 'Driver', 'Region'].map(g => (
+                    <Badge key={g} variant="outline" className="cursor-pointer hover:bg-primary/10">{g}</Badge>
+                  ))}
+                </div>
+              </div>
+              <Button className="w-full" onClick={() => toast.success(t('reports.reportGenerated', 'Report generated'))}>
+                <BarChart3 className="h-4 w-4 me-2" />{t('reports.generate')}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

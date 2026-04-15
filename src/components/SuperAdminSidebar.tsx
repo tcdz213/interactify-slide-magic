@@ -7,16 +7,36 @@ import {
   SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarHeader, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 
-const navKeys = [
-  { key: 'nav.dashboard', url: '/admin', icon: LayoutDashboard },
-  { key: 'nav.tenants', url: '/admin/tenants', icon: Building2 },
-  { key: 'nav.subscriptions', url: '/admin/subscriptions', icon: CreditCard },
-  { key: 'admin.accounts', url: '/admin/accounts', icon: Users },
-  { key: 'admin.billing', url: '/admin/billing', icon: Receipt },
-  { key: 'admin.auditLogs', url: '/admin/audit-logs', icon: FileText },
-  { key: 'nav.analytics', url: '/admin/analytics', icon: BarChart3 },
-  { key: 'saas.whiteLabel', url: '/admin/white-label', icon: Paintbrush },
-  { key: 'nav.settings', url: '/admin/settings', icon: Settings },
+const sections = [
+  {
+    labelKey: 'nav.overview',
+    items: [
+      { key: 'nav.dashboard', url: '/admin', icon: LayoutDashboard },
+      { key: 'nav.analytics', url: '/admin/analytics', icon: BarChart3 },
+    ],
+  },
+  {
+    labelKey: 'admin.tenantMgmt',
+    items: [
+      { key: 'nav.tenants', url: '/admin/tenants', icon: Building2 },
+      { key: 'admin.accounts', url: '/admin/accounts', icon: Users },
+      { key: 'nav.subscriptions', url: '/admin/subscriptions', icon: CreditCard },
+    ],
+  },
+  {
+    labelKey: 'nav.finance',
+    items: [
+      { key: 'admin.billing', url: '/admin/billing', icon: Receipt },
+    ],
+  },
+  {
+    labelKey: 'nav.system',
+    items: [
+      { key: 'admin.auditLogs', url: '/admin/audit-logs', icon: FileText },
+      { key: 'saas.whiteLabel', url: '/admin/white-label', icon: Paintbrush },
+      { key: 'nav.settings', url: '/admin/settings', icon: Settings },
+    ],
+  },
 ];
 
 export function SuperAdminSidebar() {
@@ -42,33 +62,35 @@ export function SuperAdminSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-sidebar-foreground/40 text-xs uppercase tracking-wider">
-            {!collapsed && t('nav.platform')}
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navKeys.map((item) => {
-                const title = t(item.key);
-                return (
-                  <SidebarMenuItem key={item.key}>
-                    <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={title}>
-                      <NavLink
-                        to={item.url}
-                        end
-                        className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {sections.map((section) => (
+          <SidebarGroup key={section.labelKey}>
+            <SidebarGroupLabel className="text-sidebar-foreground/40 text-xs uppercase tracking-wider">
+              {!collapsed && t(section.labelKey)}
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {section.items.map((item) => {
+                  const title = t(item.key);
+                  return (
+                    <SidebarMenuItem key={item.key}>
+                      <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={title}>
+                        <NavLink
+                          to={item.url}
+                          end
+                          className="text-sidebar-foreground/70 hover:text-sidebar-accent-foreground hover:bg-sidebar-accent/50"
+                          activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                        >
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span>{title}</span>}
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
       <SidebarFooter className="p-4">
         {!collapsed && (

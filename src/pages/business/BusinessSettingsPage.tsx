@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,259 +6,274 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
-import { Building2, Warehouse, Receipt, Globe, Bell, Key, Plus, Pencil, Trash2, Upload, Save } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Building2, Receipt, Bell, Key, Upload, Palette, Clock, Globe, CheckCircle, Plug } from 'lucide-react';
 import { toast } from 'sonner';
 
-type WarehouseEntry = { id: number; name: string; address: string; manager: string; capacity: number; utilization: number };
-type NotifPref = { key: string; email: boolean; push: boolean; sms: boolean };
-type Integration = { id: number; name: string; type: string; status: 'active' | 'inactive'; apiKey: string };
+const STORAGE_KEY = 'jawda_settings';
 
-const INITIAL_WAREHOUSES: WarehouseEntry[] = [
-  { id: 1, name: 'Entrepôt Principal', address: 'Zone Industrielle Rouiba, Alger', manager: 'Rachid B.', capacity: 5000, utilization: 72 },
-  { id: 2, name: 'Dépôt Ouest', address: 'Zone Logistique, Oran', manager: 'Fatima Z.', capacity: 3000, utilization: 58 },
-];
+interface Settings {
+  company: { name: string; email: string; phone: string; address: string; nif: string; nis: string; rc: string; ai: string };
+  tax: { tvaStandard: number; tvaReduced: number; currency: string; timezone: string };
+  invoice: { prefix: string; nextNumber: number; footer: string; dueDays: number; template: string };
+  notifications: Record<string, boolean>;
+}
 
-const INITIAL_NOTIFS: NotifPref[] = [
-  { key: 'newOrder', email: true, push: true, sms: false },
-  { key: 'lowStock', email: true, push: true, sms: true },
-  { key: 'deliveryComplete', email: false, push: true, sms: false },
-  { key: 'paymentReceived', email: true, push: false, sms: false },
-];
-
-const INITIAL_INTEGRATIONS: Integration[] = [
-  { id: 1, name: 'CCP / Baridimob', type: 'payment', status: 'active', apiKey: 'brdi_***k4f' },
-  { id: 2, name: 'Yassir Delivery', type: 'logistics', status: 'inactive', apiKey: '' },
-];
+const defaultSettings: Settings = {
+  company: { name: 'Mama Foods', email: 'admin@mamafoods.com', phone: '+213 555 0101', address: 'Zone Industrielle, Alger', nif: '001216000000000', nis: '198012345678901', rc: '16/00-0012345B19', ai: '16000123456' },
+  tax: { tvaStandard: 19, tvaReduced: 9, currency: 'DZD', timezone: 'Africa/Algiers' },
+  invoice: { prefix: 'FA-', nextNumber: 1042, footer: 'Merci pour votre confiance.', dueDays: 30, template: 'standard' },
+  notifications: { newOrder: true, lowStock: true, deliveryComplete: true, paymentReceived: true, invoiceOverdue: true, dailyReport: false },
+};
 
 export default function BusinessSettingsPage() {
   const { t } = useTranslation();
-  const [company, setCompany] = useState({ name: 'Mama Foods', email: 'admin@mamafoods.com', phone: '+213 555 0101', address: 'Zone Industrielle, Alger', nif: '00012345678901', nis: '19-47-1234567-01', rc: '16/00-1234567B19' });
-  const [warehouses, setWarehouses] = useState<WarehouseEntry[]>(INITIAL_WAREHOUSES);
-  const [notifPrefs, setNotifPrefs] = useState<NotifPref[]>(INITIAL_NOTIFS);
-  const [integrations, setIntegrations] = useState<Integration[]>(INITIAL_INTEGRATIONS);
-  const [taxConfig, setTaxConfig] = useState({ tvaStandard: '19', tvaReduced: '9', currency: 'DZD', timezone: 'Africa/Algiers', invoicePrefix: 'FAC-', language: 'fr' });
-  const [warehouseDialog, setWarehouseDialog] = useState<{ open: boolean; editing?: WarehouseEntry }>({ open: false });
-  const [whForm, setWhForm] = useState({ name: '', address: '', manager: '', capacity: 0 });
-  const [integrationDialog, setIntegrationDialog] = useState(false);
-  const [intForm, setIntForm] = useState({ name: '', type: 'payment', apiKey: '' });
+  const [settings, setSettings] = useState<Settings>(() => {
+    try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s) : defaultSettings; } catch { return defaultSettings; }
+  });
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [hasChanges, setHasChanges] = useState(false);
 
-  const handleSaveCompany = () => { toast.success(t('business.settingsSaved')); };
-  const handleSaveTax = () => { toast.success(t('business.settingsSaved')); };
-
-  const handleOpenWhDialog = (wh?: WarehouseEntry) => {
-    if (wh) {
-      setWhForm({ name: wh.name, address: wh.address, manager: wh.manager, capacity: wh.capacity });
-    } else {
-      setWhForm({ name: '', address: '', manager: '', capacity: 0 });
-    }
-    setWarehouseDialog({ open: true, editing: wh });
+  const update = <K extends keyof Settings>(section: K, field: string, value: unknown) => {
+    setSettings(prev => ({ ...prev, [section]: { ...prev[section], [field]: value } }));
+    setHasChanges(true);
   };
 
-  const handleSaveWarehouse = () => {
-    if (!whForm.name) return;
-    if (warehouseDialog.editing) {
-      setWarehouses(prev => prev.map(w => w.id === warehouseDialog.editing!.id ? { ...w, ...whForm } : w));
-      toast.success(t('common.success', 'Entrepôt modifié'));
-    } else {
-      setWarehouses(prev => [...prev, { id: Date.now(), ...whForm, utilization: 0 }]);
-      toast.success(t('common.success', 'Entrepôt ajouté'));
-    }
-    setWarehouseDialog({ open: false });
+  const handleSave = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+    toast.success(t('business.settingsSaved'));
+    setHasChanges(false);
   };
 
-  const handleDeleteWarehouse = (id: number) => {
-    setWarehouses(prev => prev.filter(w => w.id !== id));
-    toast.success(t('common.deleted', 'Supprimé'));
+  const handleLogoUpload = () => {
+    setLogoPreview('/placeholder.svg');
+    toast.success(t('settings.logoUploaded', 'Logo téléchargé'));
   };
 
-  const toggleNotif = (key: string, channel: 'email' | 'push' | 'sms') => {
-    setNotifPrefs(prev => prev.map(n => n.key === key ? { ...n, [channel]: !n[channel] } : n));
-  };
-
-  const handleAddIntegration = () => {
-    if (!intForm.name) return;
-    setIntegrations(prev => [...prev, { id: Date.now(), name: intForm.name, type: intForm.type, status: 'inactive', apiKey: intForm.apiKey }]);
-    toast.success(t('common.success', 'Intégration ajoutée'));
-    setIntegrationDialog(false);
-    setIntForm({ name: '', type: 'payment', apiKey: '' });
-  };
-
-  const toggleIntegration = (id: number) => {
-    setIntegrations(prev => prev.map(i => i.id === id ? { ...i, status: i.status === 'active' ? 'inactive' : 'active' } : i));
-  };
+  const integrations = [
+    { id: 'erp', name: 'ERP / Sage', status: 'disconnected', desc: 'Synchroniser avec votre ERP' },
+    { id: 'sms', name: 'Twilio SMS', status: 'connected', desc: 'Notifications SMS aux clients' },
+    { id: 'maps', name: 'Google Maps', status: 'connected', desc: 'Géolocalisation et routage' },
+    { id: 'payment', name: 'CIB / EDAHABIA', status: 'disconnected', desc: 'Paiement en ligne' },
+  ];
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">{t('business.settingsTitle')}</h1>
-        <p className="text-sm text-muted-foreground">{t('business.settingsDesc')}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t('business.settingsTitle')}</h1>
+          <p className="text-sm text-muted-foreground">{t('business.settingsDesc')}</p>
+        </div>
+        <Button onClick={handleSave} disabled={!hasChanges} className="gap-2">
+          <CheckCircle className="h-4 w-4" />
+          {t('common.save')}
+        </Button>
       </div>
 
       <Tabs defaultValue="company">
         <TabsList className="flex-wrap">
           <TabsTrigger value="company"><Building2 className="h-4 w-4 me-1" />{t('business.companyProfile')}</TabsTrigger>
-          <TabsTrigger value="warehouses"><Warehouse className="h-4 w-4 me-1" />{t('nav.warehouses')}</TabsTrigger>
           <TabsTrigger value="tax"><Receipt className="h-4 w-4 me-1" />{t('business.taxConfig')}</TabsTrigger>
+          <TabsTrigger value="invoice"><Palette className="h-4 w-4 me-1" />{t('settings.invoiceTemplate', 'Modèle facture')}</TabsTrigger>
           <TabsTrigger value="notifications"><Bell className="h-4 w-4 me-1" />{t('business.notificationsTab')}</TabsTrigger>
-          <TabsTrigger value="integrations"><Key className="h-4 w-4 me-1" />{t('business.integrations')}</TabsTrigger>
+          <TabsTrigger value="integrations"><Plug className="h-4 w-4 me-1" />{t('business.integrations')}</TabsTrigger>
         </TabsList>
 
-        {/* Company Tab */}
+        {/* Company Profile */}
         <TabsContent value="company" className="space-y-4 mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">{t('business.companyProfile')}</CardTitle><CardDescription>{t('business.companyProfileDesc')}</CardDescription></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-base">{t('business.companyProfile')}</CardTitle>
+              <CardDescription>{t('business.companyProfileDesc')}</CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2"><Label>{t('business.companyName')}</Label><Input value={company.name} onChange={e => setCompany(p => ({ ...p, name: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>{t('common.email')}</Label><Input value={company.email} onChange={e => setCompany(p => ({ ...p, email: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>{t('common.phone')}</Label><Input value={company.phone} onChange={e => setCompany(p => ({ ...p, phone: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>{t('common.address')}</Label><Input value={company.address} onChange={e => setCompany(p => ({ ...p, address: e.target.value }))} /></div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2"><Label>NIF</Label><Input value={company.nif} onChange={e => setCompany(p => ({ ...p, nif: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>NIS</Label><Input value={company.nis} onChange={e => setCompany(p => ({ ...p, nis: e.target.value }))} /></div>
-                <div className="space-y-2"><Label>RC</Label><Input value={company.rc} onChange={e => setCompany(p => ({ ...p, rc: e.target.value }))} /></div>
-              </div>
-              <div className="space-y-2">
-                <Label>{t('business.logoUpload')}</Label>
-                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center text-muted-foreground text-sm cursor-pointer hover:bg-muted/30 transition-colors">
-                  <Upload className="h-6 w-6 mx-auto mb-2" />
-                  {t('business.dragDropLogo')}
+                <div className="space-y-2">
+                  <Label>{t('business.companyName')}</Label>
+                  <Input value={settings.company.name} onChange={e => update('company', 'name', e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('common.email')}</Label>
+                  <Input value={settings.company.email} onChange={e => update('company', 'email', e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('common.phone')}</Label>
+                  <Input value={settings.company.phone} onChange={e => update('company', 'phone', e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('common.address')}</Label>
+                  <Input value={settings.company.address} onChange={e => update('company', 'address', e.target.value)} />
                 </div>
               </div>
-              <Button onClick={handleSaveCompany}><Save className="h-4 w-4 me-2" />{t('common.save')}</Button>
+
+              {/* Legal IDs (Algeria) */}
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-semibold mb-3">{t('settings.legalIds', 'Identifiants fiscaux')}</h3>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2"><Label>NIF</Label><Input value={settings.company.nif} onChange={e => update('company', 'nif', e.target.value)} /></div>
+                  <div className="space-y-2"><Label>NIS</Label><Input value={settings.company.nis} onChange={e => update('company', 'nis', e.target.value)} /></div>
+                  <div className="space-y-2"><Label>RC</Label><Input value={settings.company.rc} onChange={e => update('company', 'rc', e.target.value)} /></div>
+                  <div className="space-y-2"><Label>AI</Label><Input value={settings.company.ai} onChange={e => update('company', 'ai', e.target.value)} /></div>
+                </div>
+              </div>
+
+              {/* Logo */}
+              <div className="border-t pt-4">
+                <Label>{t('business.logoUpload')}</Label>
+                <div
+                  className="mt-2 border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={handleLogoUpload}
+                >
+                  {logoPreview ? (
+                    <img src={logoPreview} alt="Logo" className="h-16 mx-auto" />
+                  ) : (
+                    <div className="text-muted-foreground">
+                      <Upload className="h-8 w-8 mx-auto mb-2" />
+                      <p className="text-sm">{t('business.dragDropLogo')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Warehouses Tab */}
-        <TabsContent value="warehouses" className="mt-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div><CardTitle className="text-base">{t('nav.warehouses')}</CardTitle><CardDescription>{t('business.warehouseDesc')}</CardDescription></div>
-              <Button size="sm" onClick={() => handleOpenWhDialog()}><Plus className="h-4 w-4 me-1" />{t('business.addWarehouse')}</Button>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('common.name')}</TableHead>
-                    <TableHead>{t('common.address')}</TableHead>
-                    <TableHead>{t('business.manager')}</TableHead>
-                    <TableHead>{t('business.capacity')}</TableHead>
-                    <TableHead>{t('business.utilization')}</TableHead>
-                    <TableHead>{t('common.actions')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {warehouses.map(wh => (
-                    <TableRow key={wh.id}>
-                      <TableCell className="font-medium">{wh.name}</TableCell>
-                      <TableCell className="text-muted-foreground">{wh.address}</TableCell>
-                      <TableCell>{wh.manager}</TableCell>
-                      <TableCell>{wh.capacity.toLocaleString()}</TableCell>
-                      <TableCell><Badge variant={wh.utilization > 80 ? 'destructive' : 'secondary'}>{wh.utilization}%</Badge></TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => handleOpenWhDialog(wh)}><Pencil className="h-3 w-3" /></Button>
-                          <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => handleDeleteWarehouse(wh.id)}><Trash2 className="h-3 w-3" /></Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Tax Tab */}
+        {/* Tax & Currency */}
         <TabsContent value="tax" className="mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">{t('business.taxConfig')}</CardTitle><CardDescription>{t('business.taxConfigDesc')}</CardDescription></CardHeader>
+            <CardHeader>
+              <CardTitle className="text-base">{t('business.taxConfig')}</CardTitle>
+              <CardDescription>{t('business.taxConfigDesc')}</CardDescription>
+            </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2"><Label>{t('business.tvaStandard')}</Label><Input value={taxConfig.tvaStandard} onChange={e => setTaxConfig(p => ({ ...p, tvaStandard: e.target.value }))} type="number" /></div>
-                <div className="space-y-2"><Label>{t('business.tvaReduced')}</Label><Input value={taxConfig.tvaReduced} onChange={e => setTaxConfig(p => ({ ...p, tvaReduced: e.target.value }))} type="number" /></div>
-                <div className="space-y-2"><Label>{t('settings.invoicePrefix', 'Préfixe facture')}</Label><Input value={taxConfig.invoicePrefix} onChange={e => setTaxConfig(p => ({ ...p, invoicePrefix: e.target.value }))} /></div>
+                <div className="space-y-2">
+                  <Label>{t('business.tvaStandard')}</Label>
+                  <Input type="number" value={settings.tax.tvaStandard} onChange={e => update('tax', 'tvaStandard', +e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('business.tvaReduced')}</Label>
+                  <Input type="number" value={settings.tax.tvaReduced} onChange={e => update('tax', 'tvaReduced', +e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('business.currencyDisplay')}</Label>
+                  <div className="flex items-center gap-3">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    <Input value={settings.tax.currency} disabled className="w-24" />
+                    <span className="text-sm text-muted-foreground">{t('business.currencyNote')}</span>
+                  </div>
+                </div>
                 <div className="space-y-2">
                   <Label>{t('settings.timezone', 'Fuseau horaire')}</Label>
-                  <Select value={taxConfig.timezone} onValueChange={v => setTaxConfig(p => ({ ...p, timezone: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Africa/Algiers">Africa/Algiers (UTC+1)</SelectItem>
-                      <SelectItem value="Europe/Paris">Europe/Paris (UTC+1/+2)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <Select value={settings.tax.timezone} onValueChange={v => update('tax', 'timezone', v)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Africa/Algiers">Africa/Algiers (GMT+1)</SelectItem>
+                        <SelectItem value="Europe/Paris">Europe/Paris (GMT+2)</SelectItem>
+                        <SelectItem value="UTC">UTC</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Invoice Template */}
+        <TabsContent value="invoice" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t('settings.invoiceTemplate', 'Modèle facture')}</CardTitle>
+              <CardDescription>{t('settings.invoiceTemplateDesc', 'Personnalisez vos factures')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-2">
+                  <Label>{t('settings.invoicePrefix', 'Préfixe')}</Label>
+                  <Input value={settings.invoice.prefix} onChange={e => update('invoice', 'prefix', e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('settings.nextNumber', 'Prochain numéro')}</Label>
+                  <Input type="number" value={settings.invoice.nextNumber} onChange={e => update('invoice', 'nextNumber', +e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>{t('settings.dueDays', 'Échéance (jours)')}</Label>
+                  <Input type="number" value={settings.invoice.dueDays} onChange={e => update('invoice', 'dueDays', +e.target.value)} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>{t('business.currencyDisplay')}</Label>
-                <div className="flex items-center gap-3">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <Input value={taxConfig.currency} disabled className="w-24" />
-                  <span className="text-sm text-muted-foreground">{t('business.currencyNote')}</span>
+                <Label>{t('settings.invoiceFooter', 'Pied de page')}</Label>
+                <Textarea value={settings.invoice.footer} onChange={e => update('invoice', 'footer', e.target.value)} rows={3} />
+              </div>
+              <div className="space-y-2">
+                <Label>{t('settings.templateStyle', 'Style du modèle')}</Label>
+                <div className="grid grid-cols-3 gap-3">
+                  {['standard', 'modern', 'minimal'].map(tpl => (
+                    <div
+                      key={tpl}
+                      onClick={() => { update('invoice', 'template', tpl); }}
+                      className={`cursor-pointer rounded-lg border-2 p-4 text-center transition-all ${settings.invoice.template === tpl ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}
+                    >
+                      <Palette className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+                      <p className="text-sm font-medium capitalize">{tpl}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <Button onClick={handleSaveTax}><Save className="h-4 w-4 me-2" />{t('common.save')}</Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Notifications Tab */}
+        {/* Notifications */}
         <TabsContent value="notifications" className="mt-4">
           <Card>
-            <CardHeader><CardTitle className="text-base">{t('business.notificationsTab')}</CardTitle><CardDescription>{t('business.notifDesc')}</CardDescription></CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('settings.notification', 'Notification')}</TableHead>
-                    <TableHead className="text-center">Email</TableHead>
-                    <TableHead className="text-center">Push</TableHead>
-                    <TableHead className="text-center">SMS</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {notifPrefs.map(n => (
-                    <TableRow key={n.key}>
-                      <TableCell>
-                        <p className="text-sm font-medium">{t(`business.notif_${n.key}`)}</p>
-                        <p className="text-xs text-muted-foreground">{t(`business.notif_${n.key}_desc`)}</p>
-                      </TableCell>
-                      <TableCell className="text-center"><Switch checked={n.email} onCheckedChange={() => toggleNotif(n.key, 'email')} /></TableCell>
-                      <TableCell className="text-center"><Switch checked={n.push} onCheckedChange={() => toggleNotif(n.key, 'push')} /></TableCell>
-                      <TableCell className="text-center"><Switch checked={n.sms} onCheckedChange={() => toggleNotif(n.key, 'sms')} /></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <CardHeader>
+              <CardTitle className="text-base">{t('business.notificationsTab')}</CardTitle>
+              <CardDescription>{t('business.notifDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {Object.entries(settings.notifications).map(([key, enabled]) => (
+                <div key={key} className="flex items-center justify-between rounded-lg border p-4">
+                  <div>
+                    <p className="text-sm font-medium">{t(`business.notif_${key}`, key)}</p>
+                    <p className="text-xs text-muted-foreground">{t(`business.notif_${key}_desc`, '')}</p>
+                  </div>
+                  <Switch checked={enabled} onCheckedChange={v => { setSettings(prev => ({ ...prev, notifications: { ...prev.notifications, [key]: v } })); setHasChanges(true); }} />
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Integrations Tab */}
+        {/* Integrations */}
         <TabsContent value="integrations" className="mt-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <div><CardTitle className="text-base">{t('business.integrations')}</CardTitle><CardDescription>{t('business.integrationsDesc')}</CardDescription></div>
-              <Button size="sm" onClick={() => setIntegrationDialog(true)}><Plus className="h-4 w-4 me-1" />{t('settings.addIntegration', 'Ajouter')}</Button>
+            <CardHeader>
+              <CardTitle className="text-base">{t('business.integrations')}</CardTitle>
+              <CardDescription>{t('business.integrationsDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {integrations.map(int => (
-                <div key={int.id} className="flex items-center justify-between rounded-lg border p-4">
-                  <div>
-                    <p className="text-sm font-medium">{int.name}</p>
-                    <p className="text-xs text-muted-foreground">{int.type} • {int.apiKey || 'No API key'}</p>
-                  </div>
+              {integrations.map(integ => (
+                <div key={integ.id} className="flex items-center justify-between rounded-lg border p-4">
                   <div className="flex items-center gap-3">
-                    <Badge variant={int.status === 'active' ? 'default' : 'secondary'}>{int.status === 'active' ? t('common.active', 'Actif') : t('common.inactive', 'Inactif')}</Badge>
-                    <Switch checked={int.status === 'active'} onCheckedChange={() => toggleIntegration(int.id)} />
+                    <Plug className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium">{integ.name}</p>
+                      <p className="text-xs text-muted-foreground">{integ.desc}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={integ.status === 'connected' ? 'default' : 'secondary'}>
+                      {integ.status === 'connected' ? t('settings.connected', 'Connecté') : t('settings.disconnected', 'Déconnecté')}
+                    </Badge>
+                    <Button variant="outline" size="sm" onClick={() => toast.success(integ.status === 'connected' ? 'Déconnecté' : 'Connecté')}>
+                      {integ.status === 'connected' ? t('settings.disconnect', 'Déconnecter') : t('settings.connect', 'Connecter')}
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -266,53 +281,6 @@ export default function BusinessSettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Warehouse Dialog */}
-      <Dialog open={warehouseDialog.open} onOpenChange={o => !o && setWarehouseDialog({ open: false })}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{warehouseDialog.editing ? t('common.edit', 'Modifier') : t('business.addWarehouse')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-2"><Label>{t('common.name')}</Label><Input value={whForm.name} onChange={e => setWhForm(p => ({ ...p, name: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>{t('common.address')}</Label><Input value={whForm.address} onChange={e => setWhForm(p => ({ ...p, address: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>{t('business.manager')}</Label><Input value={whForm.manager} onChange={e => setWhForm(p => ({ ...p, manager: e.target.value }))} /></div>
-            <div className="space-y-2"><Label>{t('business.capacity')}</Label><Input type="number" value={whForm.capacity} onChange={e => setWhForm(p => ({ ...p, capacity: Number(e.target.value) }))} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setWarehouseDialog({ open: false })}>{t('common.cancel', 'Annuler')}</Button>
-            <Button onClick={handleSaveWarehouse}>{t('common.save')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Integration Dialog */}
-      <Dialog open={integrationDialog} onOpenChange={setIntegrationDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('settings.addIntegration', 'Ajouter intégration')}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-2"><Label>{t('common.name')}</Label><Input value={intForm.name} onChange={e => setIntForm(p => ({ ...p, name: e.target.value }))} /></div>
-            <div className="space-y-2">
-              <Label>{t('common.type', 'Type')}</Label>
-              <Select value={intForm.type} onValueChange={v => setIntForm(p => ({ ...p, type: v }))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="payment">{t('settings.payment', 'Paiement')}</SelectItem>
-                  <SelectItem value="logistics">{t('settings.logistics', 'Logistique')}</SelectItem>
-                  <SelectItem value="accounting">{t('settings.accounting', 'Comptabilité')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2"><Label>API Key</Label><Input value={intForm.apiKey} onChange={e => setIntForm(p => ({ ...p, apiKey: e.target.value }))} placeholder="sk_..." /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIntegrationDialog(false)}>{t('common.cancel', 'Annuler')}</Button>
-            <Button onClick={handleAddIntegration}>{t('common.save')}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

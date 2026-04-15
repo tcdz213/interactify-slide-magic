@@ -4,33 +4,38 @@
 `/business/inventory/adjustments`
 
 ## Status
-- Complete: 75%
+- Complete: 55%
 - UI Status: ✅ Complete
-- Logic Status: ✅ Create dialog, filters
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- Logic Status: ⚠️ Display only
+- API Status: ❌ Fake API
 - Production Ready: No
 
 ## Purpose
-Track and approve stock adjustments — damage, expiry, count corrections.
+Track and approve stock adjustments — damage, expiry, count corrections, returns, transfers.
 
 ## Existing Features
 - Adjustments table with status badges
-- Reason categorization
-- Create adjustment dialog
-- Filter support
-- 235 lines
+- Reason categorization (damage, expiry, count_correction, return, transfer)
+- Approval status (pending/approved/rejected)
 
 ## Existing User Actions
 - ✅ View adjustments
-- ✅ Create adjustment
-- ✅ Filter adjustments
+- ❌ Create adjustment
+- ❌ Approve/reject adjustment
+- ❌ Filter/search
+
+## Backend/API Needed
+- `GET /inventory/adjustments`
+- `POST /inventory/adjustments`
+- `PUT /inventory/adjustments/:id/approve`
+- `PUT /inventory/adjustments/:id/reject`
 
 ## Missing Features
-- [ ] Real backend API
-- [ ] Approve/reject workflow
+- [ ] Create adjustment form
+- [ ] Approval workflow
 - [ ] Approval history/comments
+- [ ] Search and filters
 - [ ] Export
 
 ## Final Score
-**75/100**
+**55/100**

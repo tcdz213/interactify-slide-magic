@@ -4,11 +4,10 @@
 `/business/users`
 
 ## Status
-- Complete: 70%
+- Complete: 50%
 - UI Status: ✅ Complete
-- Logic Status: ✅ Search, filter, edit, dialogs
-- API Status: ⚠️ Fake API
-- i18n: ✅ Wired
+- Logic Status: ⚠️ Display only
+- API Status: ❌ Fake API
 - Production Ready: No
 
 ## Purpose
@@ -16,22 +15,20 @@ Manage tenant users — invite, assign roles, deactivate.
 
 ## Existing Features
 - User table with roles and status
-- Search users
-- Filter support
-- Edit user dialog
+- Last login display
 
 ## Existing User Actions
 - ✅ View users
-- ✅ Search users
-- ✅ Filter users
-- ✅ Edit user
+- ❌ Invite user
+- ❌ Change role
+- ❌ Deactivate user
 
 ## Missing Features
-- [ ] Real backend API
 - [ ] Invite user flow
 - [ ] Role assignment
+- [ ] Permission management
 - [ ] User activity log
 - [ ] Password reset
 
 ## Final Score
-**70/100**
+**50/100**
