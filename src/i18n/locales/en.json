@@ -1066,5 +1066,73 @@
     "comparePlans": "Compare plans",
     "choosePlan": "Choose",
     "api": "API"
+  },
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "testimonials": "Testimonials",
+      "contact": "Contact",
+      "getStarted": "Get Started"
+    },
+    "hero": {
+      "badge": "B2B Distribution Platform",
+      "title": "Jawda Pro",
+      "subtitle": "The complete B2B distribution management platform. Multi-tenant, multi-unit, dynamic pricing — everything your distribution business needs.",
+      "ctaAdmin": "Super Admin",
+      "ctaBusiness": "Business Manager",
+      "noCC": "No credit card required",
+      "freeTier": "Free tier available",
+      "setup": "Setup in minutes"
+    },
+    "features": {
+      "heading": "Everything you need to manage distribution",
+      "subheading": "A complete suite built for Algerian distributors",
+      "multiTenant": { "title": "Multi-Tenant", "desc": "Isolated data per company with shared infrastructure" },
+      "smartCatalog": { "title": "Smart Catalog", "desc": "Multi-unit products with dynamic segment pricing" },
+      "logistics": { "title": "Full Logistics", "desc": "Order lifecycle from draft to delivery & settlement" },
+      "analytics": { "title": "Real-time Analytics", "desc": "Revenue tracking, inventory, and operations KPIs" },
+      "security": { "title": "Enterprise Security", "desc": "Role-based access, audit logs, and data encryption" },
+      "i18n": { "title": "Multilingual", "desc": "Full support for French, English, and Arabic with RTL" }
+    },
+    "mobile": {
+      "heading": "Mobile Apps",
+      "subheading": "Empower your field teams with dedicated mobile interfaces",
+      "driver": { "title": "Driver App", "desc": "Route navigation, delivery confirmation, and proof of delivery", "cta": "Open Driver App" },
+      "sales": { "title": "Sales Rep App", "desc": "On-the-go order taking, customer visits, and collections", "cta": "Open Sales App" }
+    },
+    "pricing": {
+      "heading": "Simple, transparent pricing",
+      "subheading": "Choose the plan that fits your business",
+      "month": "mo",
+      "popular": "Most Popular",
+      "contactUs": "Contact Us",
+      "cta": "Get Started",
+      "plans": {
+        "starter": { "name": "Starter", "f1": "Up to 5 users", "f2": "1 warehouse", "f3": "Basic reports", "f4": "Email support" },
+        "business": { "name": "Business", "f1": "Up to 25 users", "f2": "5 warehouses", "f3": "Advanced analytics", "f4": "Priority support" },
+        "enterprise": { "name": "Enterprise", "f1": "Unlimited users", "f2": "Unlimited warehouses", "f3": "Custom integrations", "f4": "Dedicated account manager" }
+      }
+    },
+    "testimonials": {
+      "heading": "Trusted by distributors across Algeria",
+      "role1": "Operations Manager, Distrib Alger",
+      "quote1": "Jawda Pro transformed how we manage our distribution network. Delivery times dropped by 30%.",
+      "role2": "Sales Director, BioFood DZ",
+      "quote2": "The multi-tenant system lets us manage all our branches from a single dashboard.",
+      "role3": "Logistics Manager, MedDistrib",
+      "quote3": "Route optimization and real-time tracking have been game changers for our fleet."
+    },
+    "contact": {
+      "heading": "Ready to transform your distribution?",
+      "subheading": "Get in touch with our team to start your journey",
+      "cta": "Start Free Trial"
+    },
+    "footer": {
+      "rights": "All rights reserved.",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "legal": "Legal Notice"
+    }
   }
 }

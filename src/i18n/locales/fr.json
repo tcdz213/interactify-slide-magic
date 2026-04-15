@@ -1063,5 +1063,73 @@
     "comparePlans": "Comparer les plans",
     "choosePlan": "Choisir",
     "api": "API"
+  },
+  "landing": {
+    "nav": {
+      "features": "Fonctionnalités",
+      "pricing": "Tarifs",
+      "testimonials": "Témoignages",
+      "contact": "Contact",
+      "getStarted": "Commencer"
+    },
+    "hero": {
+      "badge": "Plateforme de distribution B2B",
+      "title": "Jawda Pro",
+      "subtitle": "La plateforme complète de gestion de distribution B2B. Multi-tenant, multi-unité, tarification dynamique — tout ce dont votre entreprise a besoin.",
+      "ctaAdmin": "Super Admin",
+      "ctaBusiness": "Gestionnaire",
+      "noCC": "Sans carte bancaire",
+      "freeTier": "Offre gratuite disponible",
+      "setup": "Installation en minutes"
+    },
+    "features": {
+      "heading": "Tout ce qu'il faut pour gérer la distribution",
+      "subheading": "Une suite complète conçue pour les distributeurs algériens",
+      "multiTenant": { "title": "Multi-Tenant", "desc": "Données isolées par entreprise sur infrastructure partagée" },
+      "smartCatalog": { "title": "Catalogue intelligent", "desc": "Produits multi-unités avec tarification dynamique par segment" },
+      "logistics": { "title": "Logistique complète", "desc": "Cycle de vie des commandes du brouillon à la livraison" },
+      "analytics": { "title": "Analyses en temps réel", "desc": "Suivi du chiffre d'affaires, stocks et KPIs opérationnels" },
+      "security": { "title": "Sécurité entreprise", "desc": "Contrôle d'accès par rôle, journaux d'audit et chiffrement" },
+      "i18n": { "title": "Multilingue", "desc": "Support complet du français, anglais et arabe avec RTL" }
+    },
+    "mobile": {
+      "heading": "Applications mobiles",
+      "subheading": "Équipez vos équipes terrain avec des interfaces mobiles dédiées",
+      "driver": { "title": "App Chauffeur", "desc": "Navigation, confirmation de livraison et preuve de livraison", "cta": "Ouvrir App Chauffeur" },
+      "sales": { "title": "App Commercial", "desc": "Prise de commande, visites clients et encaissements", "cta": "Ouvrir App Commercial" }
+    },
+    "pricing": {
+      "heading": "Tarification simple et transparente",
+      "subheading": "Choisissez le plan qui convient à votre entreprise",
+      "month": "mois",
+      "popular": "Le plus populaire",
+      "contactUs": "Contactez-nous",
+      "cta": "Commencer",
+      "plans": {
+        "starter": { "name": "Starter", "f1": "Jusqu'à 5 utilisateurs", "f2": "1 entrepôt", "f3": "Rapports de base", "f4": "Support par email" },
+        "business": { "name": "Business", "f1": "Jusqu'à 25 utilisateurs", "f2": "5 entrepôts", "f3": "Analyses avancées", "f4": "Support prioritaire" },
+        "enterprise": { "name": "Entreprise", "f1": "Utilisateurs illimités", "f2": "Entrepôts illimités", "f3": "Intégrations sur mesure", "f4": "Gestionnaire de compte dédié" }
+      }
+    },
+    "testimonials": {
+      "heading": "La confiance des distributeurs à travers l'Algérie",
+      "role1": "Directeur des opérations, Distrib Alger",
+      "quote1": "Jawda Pro a transformé notre gestion de distribution. Les délais de livraison ont baissé de 30%.",
+      "role2": "Directrice commerciale, BioFood DZ",
+      "quote2": "Le système multi-tenant nous permet de gérer toutes nos filiales depuis un seul tableau de bord.",
+      "role3": "Responsable logistique, MedDistrib",
+      "quote3": "L'optimisation des tournées et le suivi en temps réel ont révolutionné notre flotte."
+    },
+    "contact": {
+      "heading": "Prêt à transformer votre distribution ?",
+      "subheading": "Contactez notre équipe pour démarrer",
+      "cta": "Essai gratuit"
+    },
+    "footer": {
+      "rights": "Tous droits réservés.",
+      "privacy": "Politique de confidentialité",
+      "terms": "Conditions d'utilisation",
+      "legal": "Mentions légales"
+    }
   }
 }
